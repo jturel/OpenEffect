@@ -1,0 +1,150 @@
+<HTML>
+<HEAD>
+<TITLE>Properties</TITLE>
+<link rel="stylesheet" href="../norm_window.css" type="text/css">
+<SCRIPT LANGUAGE="JavaScript">
+<!--
+var tab, comp, imgPath = "files/img/";
+function showProps(){
+  clearIt();
+  comp = top.design.component[top.design.Active];
+  insRow('Type:','<span class="captionText">'+comp.title+'</span>');
+  insRow('Caption',makeInput("string", "comp.caption", comp.caption, "", "", ""));
+  if(comp.def_val_type != "none") insRow('Value',makeInput(comp.def_val_type, "comp.def_val", comp.def_val, "", "", ""));
+
+  for(var i = 0; i < comp.param.length; i++){
+    var namen = "", typez = "";
+    for(var j = 0; j < comp.param[i].attrs.length; j++){
+      if(comp.param[i].attrs[j] == "name") namen = comp.param[i].vals[j];
+      if(comp.param[i].attrs[j] == "type") typez = comp.param[i].vals[j];
+    }
+    insRow(namen,makeInput(typez, "comp.param["+i+"].value", comp.param[i].value, "", "", ""));
+  }  
+  
+  for(var i = 0; i < comp.elms.length; i++){
+    var namen = "", min="", max="", def=null, defIndex = -1;
+    for(var j = 0; j < comp.elms[i].attrs.length; j++) {
+      if(comp.elms[i].attrs[j] == "name")     namen = comp.elms[i].vals[j];
+      if(comp.elms[i].attrs[j] == "default"){ def   = comp.elms[i].vals[j]; defIndex = j;}
+      if(comp.elms[i].attrs[j] == "mincount") min   = comp.elms[i].vals[j];
+      if(comp.elms[i].attrs[j] == "maxcount") max   = comp.elms[i].vals[j];
+    }
+    insRow(namen, makeInput("multipleElms", "selall"+i, comp.elms[i].elm.length, max, min, " id='selPar"+i+"' paramNo='"+i+"' currNo='" + comp.elms[i].elm.length +"' onchange='changeProps()' ActionStr='setParamNo(\"selPar\","+i+")' def='"+defIndex+"'"));
+    for(var j = 0; j < comp.elms[i].elm.length; j++) {
+      var txt1 = makeInput("string", "comp.elms["+i+"].elm["+j+"].caption", comp.elms[i].elm[j].caption, "", "", "");
+      var txt2 = makeInput("string", "comp.elms["+i+"].elm["+j+"].value",   comp.elms[i].elm[j].value, "", "", "");
+      var txt3 = (def!=null)?makeInput("multRadio", "comp.elms["+i+"].vals["+defIndex+"]", j, "", "", ((def==comp.elms[i].elm[j].value)?" checked":"")):"";
+      insRow(txt1,txt2,"",txt3);
+    }  
+  }
+  insRow();
+}
+function makeInput(type, val, preset, max, min, oncl){
+  switch (type) {
+    case "multRadio":    return '<INPUT TYPE="radio" NAME="'+val+'" value="'+preset+'" typez="multiradio"'+oncl+'>';
+    case "string":       return '<INPUT TYPE="text" NAME="'+val+'" value="'+preset+'" typez="string" class="inputz">';
+    case "number":       return '<INPUT TYPE="text" NAME="'+val+'" value="'+preset+'" typez="number" class="inputz">';
+    case "logical":      return '<SELECT NAME="'+val+'" typez="logical" class="inputz"><OPTION value="yes"'+((preset=="yes")?" selected":"")+'>Yes</OPTION><OPTION value="no"'+((preset=="no")?" selected":"")+'>No</OPTION></SELECT>';
+    case "multipleElms": str = '';
+                         for(var k = parseInt(min); k < (parseInt(max)+1); k++) str += '<option value='+k+((k==preset)?' selected':'') +'>'+k+'</option>';
+                         return '<SELECT NAME="'+val+'"'+oncl+'" class="inputz">'+str+'</SELECT>';
+    default:             return '<INPUT TYPE="text" NAME="'+val+'" value="'+preset+'" typez="string" class="inputz">';
+  }
+}
+function insRow(txt1,txt2,no,txt3){
+  if(txt1==""||typeof(txt1)=="undefined"){
+    tb = document.all.mainTable;
+    newRow = tb.insertRow();
+    newCell = tb.rows[newRow.rowIndex].insertCell();
+    newCell.innerHTML = '<table width="100%" border="0" cellspacing="5" cellpadding="0"><tr><td align="right" valign=bottom><INPUT TYPE="button" NAME="ok" value="Ok" onclick="setChange()" class="buttonz"></td></tr></table>';
+  } else {
+    if(no==""||typeof(no)=="undefined") no = tab.rows.length;
+    newRow = tab.insertRow(no);
+    newCell = tab.rows[newRow.rowIndex].insertCell();
+    newCell.className = "captionText";
+    newCell.innerHTML = txt1;
+    newCell = tab.rows[newRow.rowIndex].insertCell();
+    newCell.innerHTML = txt2;
+    newCell.align = "right";
+    if(txt3==""||typeof(txt3)=="undefined") newCell.colSpan = 2;
+    else {
+      newCell = tab.rows[newRow.rowIndex].insertCell();
+      newCell.innerHTML = txt3;
+      newCell.align = "right";
+    }
+  }
+}
+function getRowNumber(el){
+  while(el.tagName!='TR' && el.tagName!='BODY') el = el.parentElement;
+  return ((el.tagName=='TR')?el.rowIndex:-1);
+}
+function changeProps(){
+  el = event.srcElement;
+  n = getRowNumber(el);
+  if(n!=-1){
+    currNo = parseInt(el.currNo);
+    elval = parseInt(el.value);
+    if(elval > currNo) {
+      for(var i = 0; i < elval - currNo; i++) {
+        var txt1 = makeInput("string", "comp.elms["+el.paramNo+"].elm["+(currNo+i)+"].caption", "", "", "", "");
+        var txt2 = makeInput("string", "comp.elms["+el.paramNo+"].elm["+(currNo+i)+"].value", "", "", "", "");
+        var txt3 = (el.def!="-1")?makeInput("multRadio", "comp.elms["+el.paramNo+"].vals["+el.def+"]", i+currNo+1, "", "", ""):"";
+        insRow(txt1, txt2, n+i+currNo+1,txt3);
+      }
+    } else for(var i = 0; i < currNo - elval; i++) tab.deleteRow(n+currNo-i);
+    el.currNo = el.value;
+  }
+}
+function setParamNo(pref, no){
+  no = parseInt(no);
+  newNo = parseInt(eval('document.all.'+pref+no+'.value'));
+  top.design.adjustParams(comp, no, newNo);
+}
+function setChange(){
+  for(var i = 0; i < fr.elements.length; i++) if(fr.elements[i].value!="Ok" && typeof(fr.elements[i].paramNo) != "undefined") eval(fr.elements[i].ActionStr);
+  for(var i = 0; i < fr.elements.length; i++) {
+    if(fr.elements[i].value!="Ok" && typeof(fr.elements[i].paramNo) == "undefined" && fr.elements[i].typez!="multiradio") eval(fr.elements[i].name+'=fr.elements['+i+'].value');
+    else if (fr.elements[i].typez=="multiradio" && fr.elements[i].checked) eval(fr.elements[i].name+'=fr.elements['+i+'].parentElement.parentElement.children[1].children[0].value'); 
+  }
+ top.design.resetActive();
+}
+function init(){
+  tab = document.all.comps;
+}
+function clearIt(){
+  for(var i = tab.rows.length; i > 0; i--) tab.deleteRow(i-1);
+  tb = document.all.mainTable;
+  for(var i = tb.rows.length; i > 2; i--) tb.deleteRow(i-1);
+}
+//-->
+</SCRIPT></HEAD>
+
+<BODY bgColor=#E7EBFF onload="init()" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
+<FORM METHOD="" ACTION="" name="fr">
+<table width="100%" height="99%" border="0" cellspacing="0" cellpadding="0" class="main" id="mainTable">
+  <tr> 
+    <td> 
+      <table width="100%" border="0" id="winhead" cellspacing="0" cellpadding="0" class="captionText">
+        <tr valign="middle" align="left"> 
+          <td width="20"><img src="../img/template/template.gif" width="20" height="20"></td>
+          <td>COMPONENT PROPERTIES</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr> 
+    <td align=left valign=top height="100%">
+      <table width="100%" border="0" cellspacing="10" cellpadding="0" height="100%" class="bodyWithText">
+        <tr> 
+          <td valign=top> 
+            <table border="0" cellspacing="2" cellpadding="0" class="browse" width="100%" id="comps">
+            </table>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+<TABLE>
+</FORM>
+</BODY>
+</HTML>

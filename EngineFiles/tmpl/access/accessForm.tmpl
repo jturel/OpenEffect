@@ -1,0 +1,51 @@
+<html>
+<head>
+<title>Please, enter your password</title>
+<script language="JavaScript">
+
+if(window!=top)top.document.location = window.document.location;
+
+function setFormFocus() {
+  document.forms[0].{LOGIN_NAME}.focus(); 
+  document.forms[0].{LOGIN_NAME}.select();
+}
+</script>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<link rel="stylesheet" href="files/login.css" type="text/css">
+</head>
+
+<body bgcolor="#FFFFFF" text="#000000" onload="setFormFocus();">
+<form action="{FORM_ACTION}" method="POST">
+<table width="100%" border="0" cellspacing="0" cellpadding="0" height="100%">
+  <tr>
+    <td align="center" valign="middle"> 
+      <table border="0" cellspacing="10" cellpadding="0" background="files/img/splash.gif" width="502" height="332">
+        <tr> 
+          <td width="330" height="110"></td>
+          <td></td>
+        </tr>
+        <tr> 
+          <td class="text" height="30" align="right">##Login##:</td>
+          <td align="right"> 
+            <input type="text" name="{LOGIN_NAME}" class="input">
+          </td>
+        </tr>
+        <tr> 
+          <td class="text" align="right" height="20">##Password##:</td>
+          <td align="right"> 
+            <input type="password" name="{PASS_NAME}" class="input">
+          </td>
+        </tr>
+        <tr> 
+          <td width="233"></td>
+          <td valign="top" align="right"> 
+            <input type="submit" name="accessFormSubmitButton" value="##Submit## &gt;&gt;" class="input">
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</forms>
+</body>
+</html>

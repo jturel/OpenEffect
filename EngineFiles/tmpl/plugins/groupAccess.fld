@@ -1,0 +1,23 @@
+<?
+
+  $fields  = array(array("name" => "name", "type" => 1),
+                   array("name" => "ID",   "type" => 1),
+                   array("name" => "inheritAccess", "type" => 3),
+                   array("name" => "list", "type" => 2, "select" => "list", "nodb" => true));
+
+   global $lists;
+   $lists["list"]  = array();
+  $SqlStr = "SELECT r.RoleID, r.Name, gs.Access FROM ".$this->kernel->tab_cfg->get("groupXroleTable")." gs
+             LEFT JOIN ".$this->kernel->tab_cfg->get("roleTable")." r ON r.RoleID = gs.roleID
+             WHERE GrpID = ".$this->parent->groupNr."
+                    AND r.Name IS NOT NULL
+                    AND r.Name != ''";
+  $result = $this->kernel->db->query($SqlStr);
+  if ($result && $count = $result->numrows()) for ($Cn = 0; $Cn < $count; $Cn++) {
+     list($roleID, $role, $access) = $result->getrow();
+     $lists["list"][] = array("name" => "$role [$access]", "value" => $roleID);
+     $lists["role"][] = array("NAME" => $role, "ID" => $roleID,"ACCESS" => $access);
+//     print  "[[".count($lists["role"])."]<br>";
+  }
+
+?>

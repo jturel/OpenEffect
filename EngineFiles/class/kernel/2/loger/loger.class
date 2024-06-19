@@ -1,0 +1,123 @@
+<?
+/**
+* Copyright (C) 2002 SIA ESOFTS.
+*
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License 
+* version 2 as published by the Free Software Foundation.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the SIA ESOFTS, 38/40 Blaumana str., 
+* Riga, LV - 1011, LATVIA, e-mail office@esoft.lv 
+*
+* This General Public License does not permit incorporating your program into
+* proprietary programs. Should you require to License Open Effect under the
+* commercial License, please contact SIA ESOFTS for up-to-date information.
+*/
+
+
+
+/***************************************
+*  Loger class
+*  
+***************************************/
+
+  // Check extends classes
+  $this->checkClass("streamClass",     "logerClass");
+  $this->checkClass("streamItemClass", "logerItemClass");
+
+
+######################################################################
+#
+# Main loger class
+#
+
+  class logerClass extends streamClass {
+     var $className = "logerClass";          // Class name
+     var $childClassName = "logerItemClass"; // Child class name
+   
+
+     // Constructor
+     // $parent - pointer on parent object
+     function logerClass(&$parent) {
+        $this->streamClass(&$parent);
+        $this->regStream(DEFAULT_LOG_STREAM);
+     }
+     
+     // Push Log string in stream
+     // $str - string push in log
+     // $zone - log zone stream
+     function put($str, $zone = DEFAULT_LOG_STREAM, $level = 1) {
+        if (!is_object($this->items[$zone])) return false;
+        $this->zones[$zone]->put($str, $level);
+        return true;
+     }
+     
+     // reg function
+     function &reg($name) {
+        return $this->regStream($name);
+     }
+  }
+ 
+
+
+######################################################################
+#
+# Item loger class
+#
+
+ 
+  class logerItemClass extends streamItemClass {
+
+     var $className = "logerItemClass";     // Class name
+     var $fileName  = DEFAULT_LOG_FILE;     // log file name
+     var $dbName    = DEFAULT_LOG_DB_TABLE; // table where will be store log strings
+     var $output    = DEFAULT_LOG_OUTPUT;   // In which stream will be send data
+     var $outItems  = array();
+     var $level     = 10;                   // Log level
+  
+  
+     // Constructor
+     // $parent - pointer on parent onject
+     // $name - name of stream
+     function logerItemClass(&$parent, $name) {
+        $this->streamItemClass(&$parent, $name);
+        $this->setOutput();
+     }
+     
+     
+     // Set log output
+     // $str - string with output streams [log,file,db,screen]
+     function setOutput($str = "") {
+        if ($str) $this->output = $str;
+        $str = strtoupper(" ".$this->output);
+        $this->outItems = array();
+        if (strpos($str, "SCREEN") && class_exists("logerItemClass_screen"))
+           $this->outItems[] = new logerItemClass_screen($this);
+        if (strpos($str, "LOG")    && class_exists("logerItemClass_phplog"))
+           $this->outItems[] = new logerItemClass_phplog($this);
+        if (strpos($str, "FILE")   && class_exists("logerItemClass_file"))
+           $this->outItems[] = new logerItemClass_file($this);
+        if (strpos($str, "DB")     && class_exists("logerItemClass_db"))
+           $this->outItems[] = new logerItemClass_db($this);
+     }
+     
+     
+     // Send Message to streams
+     // $str - message for send
+     function put($str, $level = 5) {
+        if ($this->kernel->cfg) $this->level = $this->kernel->cfg->get("errorLogLevel");
+        if ($level > $this->level) return;
+//        global $debugip;
+        if ($this->kernel->debug_ip) {
+           list($usec, $sec) = explode(' ',microtime()); 
+           $time = ((float)$usec + (float)$sec) - $this->kernel->debug_time; 
+           $this->kernel->debug_log .= "<tr><td>$level</td><td>$time</td><td>$this->streamName</td><td>".$str.'</td></tr>';
+        }
+        for ($Cn = 0; $Cn < count($this->outItems); $Cn++)
+            $this->outItems[$Cn]->put($str);
+     }
+  }
+ 
+
+?>

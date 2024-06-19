@@ -1,0 +1,34 @@
+<html>
+<head>
+<title></title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<!-- BEGIN first_block -->
+<SCRIPT LANGUAGE="JavaScript">
+<!--
+function openWin() {
+    var target = "_blank";
+    var option = "dialogHeight: 100px; dialogWidth: 350px; dialogTop: 100px; dialogLeft: 100px; edge: Raised; center: Yes; help: No; resizable: Yes; status: No; dialogHide: Yes; unadorned: Yes; scroll: No;";
+    window.showModalDialog("parse.php?18&&&dir=",target, option);
+}
+document.onload=openWin;
+//-->
+</SCRIPT>
+<!-- end first_block -->
+<!-- BEGIN second_block -->
+<SCRIPT LANGUAGE="JavaScript">
+<!--
+function refreshWin() {
+	parent.upload.location.href=parent.upload.location.href;
+}
+document.onload=refreshWin;
+//-->
+</SCRIPT>
+<!-- end second_block -->
+</head>
+<body>
+<form action="{_LINK_SELF}" method="post" name="mainForm">
+<input type="Hidden" name="dir" value="{DIR}">
+<input class="input" type="Text" name="dirName" size="30" value="">
+</form>
+</body>
+</html>

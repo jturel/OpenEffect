@@ -1,0 +1,92 @@
+<?
+
+/***************************************
+*  Class Loader class
+*  Load classes from specific dir or dirs
+*  
+***************************************/
+
+
+  class classLoaderClass {
+     var $className = "classLoaderClass";
+//     var $mic = 0;
+  
+     // Run constructor
+     // $dirName - directory name where locate classes
+     // $subDir  - (true,false) include subDirectories
+     function classLoaderClass($dirName, $subDir = true) {
+        if (!is_dir($dirName)) return false;
+               $dir = dir($dirName);
+               while($entry = $dir->read()) {
+                  $fName = "$dirName/$entry";
+                  if (is_file($fName)) $files[] = $entry;
+                  if (is_dir($fName) && $subDir && $entry != "." && $entry != "..")
+                     $dirs[] = $entry;
+               }
+
+        // Load class files
+               if (is_array($files) && count($files)) {
+                  sort($files);
+                  while(list($key, $val) = each($files))
+                     $this->loadClass("$dirName/$val");
+               }
+
+        // Enter to class dir
+               if ($subDir && is_array($dirs) && count($dirs)) {
+                  sort($dirs);
+                  while(list($key, $val) = each($dirs))
+                    $this->classLoaderClass("$dirName/$val", true);
+               }
+               return true;
+     }
+     
+     // Load class
+     // $fileName - file name (with path) which include in system
+     function loadClass($fileName) {
+/*         global $microtime;
+         list($usec, $sec) = explode(' ',microtime());
+         $mic =  ((float)$usec + (float)$sec);
+         print "[".($mic-$microtime)."] Load class : $fileName<BR>";
+//         if (!$microtime)
+            $microtime = $mic;
+*/
+        $this->log("Load class : $fileName");
+        include_once $fileName;
+     }
+     
+     // Error if can't find extends classes
+     // $extClass - extended class
+     // $class - what class want create
+     // $die - true|false - if true then script die
+     // RETURN : true if class exists and false if not
+     function checkClass($extClass, $class = "", $die = true) {
+        if (!class_exists($extClass)) {
+           $str = "";
+           if ($class) $str = "Can't create '$class' class, ";
+                  $str .= "can't find '$extClass' class";
+                  $this->log($str);
+                  if ($die) print "<b><br><br>$str<br><br></b>";
+                  if ($die) die();
+                  return false;
+               }
+               return true;
+     }
+     
+     // Output to log
+     function log($str) {
+        if (!CLASS_LOADER_LOG) return;
+        $str = CLASS_LOADER_LOG_PREFIX." $str";
+     
+        // PHP output log
+        error_log($str, 0);
+               // To file output log
+               $fp = fopen(CLASS_LOADER_LOG_FILE, "a");
+               if ($fp) {
+                  fwrite($fp, $str."\n");
+                  fclose($fp);
+               }
+     }
+     
+  } // finished CLASS LOADER class
+
+?>

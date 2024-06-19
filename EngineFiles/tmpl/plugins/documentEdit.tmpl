@@ -1,0 +1,129 @@
+<!-- BEGIN close_block -->
+<script language="JavaScript">
+<!--
+   self.location.href = 'parse.php?4&{_GROUP_ID}&&'+Math.round(Math.random()*100);
+// -->
+</script>
+<!-- END close_block -->
+
+<script language="JavaScript">
+<!--
+function openWin(formNr) {
+  var target = "_blank";
+  var option = "status=no,top=10,left=10,height=300,width=200,resizable=yes";
+  window.open(formNr, target, option);
+}
+function previewF() {
+  dataStr = '{PREVIEW_URL}?26&&&template={templateID}&ID={ID}&groupID={_GROUP_ID}';
+  for(var i = 0; i < mainForm.elements.length; i++) dataStr+='&'+mainForm.elements[i].name+'='+mainForm.elements[i].value;
+  openWin(dataStr);
+}
+var ActiveSet=false;
+function setActiveWin(doIt){
+  if(doIt && !ActiveSet) top.topFrame.SetActive(3, "{ID}");;
+  ActiveSet=doIt;
+  if(typeof(document.all.winhead)=='object') document.all.winhead.className = (doIt)?'mainSelected':'caption';
+}
+function bonf(){
+  if(typeof(top.leftFrame.document.all.winhead)=='object') top.leftFrame.setActiveWin(false);
+  if(typeof(top.searchFrame.document.all.winhead)=='object') top.searchFrame.setActiveWin(false);
+  setActiveWin(true)
+}
+function syncIt(){
+  top.leftFrame.syncRight("{_GROUP_ID}"<!-- BEGIN tree_block -->,"{ID}"<!-- END tree_block -->);
+}
+
+document.onclick=bonf;
+
+function AddDocument(doc) {
+  self.location.href = 'parse.php?5&{_GROUP_ID}&'+doc;
+}
+function ShowUpload2(el){
+  option = "dialogHeight: 500px; dialogWidth: 800px; dialogTop: 100px; dialogLeft: 100px; edge: Raised; center: Yes; help: No; resizable: Yes; status: No; dialogHide: Yes; unadorned: Yes; scroll: No;";
+  arr = showModalDialog("parse.php?24","", option);
+  if(typeof(arr)!='undefined') document.getElementById('inputID'+el.id.substr(5)).value = arr;
+}
+//-->
+</script>
+
+<script language=JavaScript>
+function ShowUpload1(Name){
+  var option = "dialogHeight: 500px; dialogWidth: 800px; dialogTop: 100px; dialogLeft: 100px; edge: Raised; center: Yes; help: Yes; resizable: Yes; status: Yes; dialogHide: Yes; unadorned: Yes; scroll: No;";
+  var arr = showModalDialog("parse.php?24","", option);
+}
+var langPref = '/engine';
+function setLang(el){
+  var whatRepl = langPref;
+  for(var i = 0; i < el.options.length; i++) if(document.location.href.indexOf('/'+el.options[i].value+langPref)!=-1){whatRepl= '/' + el.options[i].value + whatRepl; break;}
+  if(whatRepl != '/'+el.value+langPref)document.location.href=document.location.href.replace(whatRepl, '/'+el.value+langPref);
+}
+</script>
+
+<center>
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" class="main">
+    <form action="{_LINK_SELF}" method="post" name="mainForm">
+    <input type="Hidden" name="_id" value="{ID}">
+    <input type="Hidden" name="_template" value="{templateID}">
+    <input type="Hidden" name="_groupid" value="{_groupid}">
+    <input type="Hidden" name="_language" value="{_language}">
+    <input type="Hidden" name="_name" value="{_name}">
+     <tr>
+      <td>
+        <table id="winhead" width="100%" border="0" cellspacing="0" cellpadding="0" class="caption">
+          <tr valign="middle" align="left">
+            <td width="20"><img src="files/img/gn_document.gif" width="18" height="18"></td>
+            <td width="100%" class="captionText"><b>##DOCUMENT##</b></td>
+            <td width="20"><img src="files/img/sync.gif" alt="##Syncronize##" width="18" height="18" onclick="syncIt();" hspace="10" style="cursor:hand;"></td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr> 
+      <td align="center" class="bg_color_light">
+        <table border="0" cellspacing="10" cellpadding="0" width="100%">
+          <tr>
+            <td width="24" align="right" valign="middle"><img src="files/img/gn_language.gif" hspace="2" vspace="2"></td>
+            <td width="70" align="right" valign="top">{LANGUAGE}</td>
+            <td align="right" style="cursor:hand; text-decoration:underline;" onclick="document.location.href='parse.php?4&{_GROUP_ID}&&'+Math.round(Math.random()*100);" class="list" nowrap width="100%">##back to document list##</td>
+          </tr>
+          <tr> 
+            <td colspan="3">
+              {CONTENT}
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <table border="0" cellspacing="5" cellpadding="0" width="100%">
+          <tr valign="middle">
+            <!--td width="100">
+              <table width="122" border="0" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td width="22"><img src="files/img/gn_preview.gif" width="18" height="18" onClick="previewF()"></td>
+                  <td width="100" class="list"><a href="#" onClick="previewF()">##preview##</a></td>
+                </tr>
+              </table>
+            </td-->
+            <td width="100%">&nbsp;</td>
+<script language="JavaScript">
+<!--
+if("{ID}"!=""){
+  document.write('<td class="list" width="12%">'+
+              '<table width="100%" border="0" cellspacing="0" cellpadding="0">'+
+                '<tr><td width="22"><input type="checkbox" name="as_new" value="checkbox"></td>'+
+                '<td class="list"><nobr>##as new##</nobr></td></tr></table></td>');
+}
+// -->
+</script>
+            <td valign="top" width="55">
+              <input type="submit" name="save" value="##Save##" class="input">
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </form>
+  </table>
+</center>

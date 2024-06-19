@@ -1,0 +1,37 @@
+<?
+
+#
+# Text class
+#
+#####################################
+  
+  class text extends linkClass {
+  
+     // Constructor
+     function text($str = "") {
+        $this->linkClass();
+	
+	// set variables
+	$this->text = $str;
+     }
+     
+     
+     // Form tags 
+     function formTags() {
+        $this->tag  = $this->text;
+	$this->sTag = "";
+	$this->fTag = "";
+	$this->setAttr();
+     }
+     
+     // Set attributes
+     function setAttr() {
+        if ($this->bold)      { $this->sTag = "<B>".$this->sTag;      $fTag .= "</B>";      }
+        if ($this->italic)    { $this->sTag = "<I>".$this->sTag;      $fTag .= "</I>";      }
+        if ($this->strike)    { $this->sTag = "<STRIKE>".$this->sTag; $fTag .= "</STRIKE>"; }
+        if ($this->underline) { $this->sTag = "<U>".$this->sTag;      $fTag .= "</U>";      }
+     }
+     
+  }
+ 
+?>

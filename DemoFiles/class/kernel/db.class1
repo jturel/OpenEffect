@@ -1,0 +1,594 @@
+<?php
+if (!defined( "_DB_LAYER")) {
+               define("_DB_LAYER", 1);
+
+class dbClass {
+               var $type;
+               var $schemearr;
+               var $dbh;
+               var $options = array();
+               var $classname = 'db';
+               var $queries = array();
+
+               # SCHEME is connection scheme name defined in dbh_local.inc
+               # or array which defines the scheme in place
+               #
+               # OPTIONS is various options defining behaviour of dbh
+               # - 'debug' - various debugging information is printed out, useless unless you`re debugging dbh
+               # - 'debug_sql' - prints all sql queries sent to server to error_log()
+               # - 'halt_on_error' - in any error terminates executing of script
+               # - 'errors_to' - sends email to addresses specified there when dbh error occours
+               # - 'mail_cc' - carbon copy error messages to addresses specified there
+               function dbClass(&$parent,$scheme = DEFAULT_DB_SCHEME, $options = "") { 
+
+                              $this->parent = &$parent;         // create pointer on parent object
+                              $this->kernel = &$parent->kernel; // create pointer on kernel object
+
+                              
+                              $this->kernel->debug_sql .= 'Start;<br>';
+
+                              $this->initscheme($scheme);
+
+                              # add supplied options
+                              if (is_array($options)) {
+                                             while (list($key, $val) = each($options)) {
+                                                $this->option($key, $val);
+                                             }
+                              }
+
+                              if ($this->option('bail_on_error')) {
+                                             global $PHP_SELF;
+                                             error_log("dbh: $PHP_SELF: bail_on_error deprecated");
+                                             $this->option('halt_on_error', 1);
+                              }
+
+                              if (!IsSet($this->type)) {
+                                             error_log("dbh: db scheme \"$scheme\" is not defined");
+                                             if ($this->option('halt_on_error')) {
+                                                            echo "DBH error; bailin out";
+                                                            exit;
+                                             }
+                                             return 0;
+                              }
+                              $class = 'db_' . $this->type;
+                              $this->dbh = new $class($this);
+               }
+
+               # set`s and retrieves scheme
+               function initscheme($scheme) {
+                              if (is_array($scheme)) {
+                                             # user has specifed it`s own scheme
+                                             $this->schemearr = $scheme;
+                              } else {
+                                             include(DB_CONF_DIR."db_schemes.conf.php");
+
+                                             $this->schemearr = $db_schemes[$scheme];
+                              }
+                              $this->type = $this->schemearr['type'];
+                              return $this->schemearr;
+               }
+
+               function scheme($arg, $val="") {
+                              if ($val) {
+                                             $v = $this->schemearr[$arg];
+                                             $this->schemearr[$arg] = $val;
+                                             return $v;
+                              } else {
+                                             return $this->schemearr[$arg];
+                              }
+               }
+
+               // handles options used by dbh; with value sets new value for option, returning the old value
+               // without $val returns current value of option named $arg
+               function option($arg, $val="") {
+                              if ($val) {
+                                             $v = $this->options[$arg];
+                                             $this->options[$arg] = $val;
+                                             return $v;
+                              } else {
+                                             return $this->options[$arg];
+                              }
+               }
+
+               // handle open() call over to specific database handler
+               function open($options = "") {
+                              return $this->dbh->open();
+               }
+
+               // handle close() call over to specific database handler
+               function close() {
+                              return $this->dbh->close();
+               }
+
+               // reports error in errorlog and mails report
+               function error($str) {
+                              global $SERVER_NAME, $SERVER_ADMIN, $PHP_SELF;
+
+                              $str = str_replace("\n", ' ', $str);
+                              $str = $this->scheme('database') . ":" . trim(ereg_replace(' {2,}', ' ', $str));
+
+                              error_log("dbh ($PHP_SELF): $str");
+
+                              if ($this->scheme('errors_to')) {
+                                             mail($this->scheme('errors_to'),
+                                                            "[PHP-dbh] error on $SERVER_NAME in $PHP_SELF",
+                                                            $str,
+                                                            "Reply-To: $SERVER_ADMIN\n".
+                                                            "CC: ". $this->option('mail_cc') ."\n".
+                                                            "X-Mailer: PHP/" . phpversion());
+                              }
+
+                              if ($this->option('halt_on_error')) {
+                                             echo "DBH error; bailin out";
+                                             exit;
+                              }
+               }
+
+               # these two are wrapper functions which create statement handle
+               # FIXME: the new instance cannot be controlled by parent class, eg toggle debugging.
+               function query($query="") {
+                              $class = "db_". $this->type. "_query";
+                              return new $class($this->dbh, $query);
+               }
+
+               function q() {
+                              $class = "db_". $this->type. "_query";
+                              $c = new $class($this->dbh);
+                              $c->q(func_get_args());
+                              return $c;
+               }
+
+               # update Oracle locale according to language given (delfi specific)
+               function updateLocale($lang) {
+                              if ($this->type == 'oracle') {
+                                             switch ($lang) {
+                                             case 2:
+                                                            $locale = 'RUS_WINDOWS_1251';
+                                                            break;
+                                             default:
+                                                            $locale = 'EST_ISO_8859_1';
+                                             }
+                                             new db_oracle_query($this->dbh, "begin dc.portal.set_locale('$locale'); end;");
+                              } else {
+                                             $this->error("updateLocale not implemented for selected scheme type `".$this->type."'");
+                                             exit;
+                              }
+               }
+
+               # fetch next unique_id from OIDTable (delfi specific)
+               function nextid() {
+                              if ($this->type == 'mysql') {
+                                             $sth = new db_mysql_query($this->dbh, "LOCK TABLES OIDTable WRITE");
+                                             $sth->query("SELECT ID FROM OIDTable");
+                                             $row = $sth->getrow();
+                                             $sth->query("UPDATE OIDTable SET ID=ID+1");
+                                             $sth->query("UNLOCK TABLES");
+                                             $sth->free();
+                                             return 1 + $row[ID];
+                              } else {
+                                             $this->error("nextid not implemented for selected scheme type `".$this->type."'");
+                                             exit;
+                              }
+               }
+
+}
+
+class db_class {
+               var $super ; // class db
+               var $classname = 'db_class';
+               var $connect_id; // connection id to database
+
+               function db_class(&$super) { 
+                              $this->super = &$super;
+
+               }
+
+               function option($option, $value="") {
+                              return $this->super->option($option, $value);
+               }
+               function scheme($arg) {
+                              return $this->super->scheme($arg);
+               }
+
+               // Function used by the constructor of query. Notifies the
+               // this object of the existance of a query_result for later cleanup
+               // internal function, don't use it yourself.
+               function addquery(&$query_id) {
+                              $this->super->queries[] = &$query_id;
+               }
+
+               function free(&$query_id) {
+                              for ($i = 0; $i < sizeof($this->super->queries); $i++) {
+                                             if ($this->super->queries[$i] == $query_id) {
+                                                            $res = @mysql_free_result($query_id);
+                                                            array_splice($this->super->queries, $i);
+                                                            return $res;
+                                             }
+                              }
+                              # we didn`t found the query_id from array. release it anyway and return false;
+                              mysql_free_result($query_id);
+                              return false;
+               }
+
+               function error($msg) {
+                              $this->super->error($msg);
+               }
+
+};
+
+class db_query_class {
+               var $classname = 'db_query_class';
+               var $super; // our parent class
+               var $result;
+               var $db;
+
+               // Constructor of the query object.
+               function db_query_class(&$super, $query="") {
+                              $this->super = &$super;
+                              $this->db = &$super->db;
+                              $this->query($query);
+               }
+
+               function q($fmt) {
+                              $argv = func_get_args();
+
+                              if (gettype($argv[0]) == 'array') {
+                                             $argv = $argv[0];
+                                             $argc = count($argv);
+                              } else {
+                                             $argc = func_num_args();
+
+                                             /* static fast (and without quote problem) jump */
+                                             switch ($argc) {
+                                                            case 1: return $this->query(sprintf($fmt, $argv[1]));
+                                                            case 2: return $this->query(sprintf($fmt, $argv[1], $argv[2]));
+                                                            case 3: return $this->query(sprintf($fmt, $argv[1], $argv[2], $argv[3]));
+                                                            case 4: return $this->query(sprintf($fmt, $argv[1], $argv[2], $argv[3], $argv[4]));
+                                                            case 5: return $this->query(sprintf($fmt, $argv[1], $argv[2], $argv[3], $argv[4], $argv[5]));
+                                                            case 6: return $this->query(sprintf($fmt, $argv[1], $argv[2], $argv[3], $argv[4], $argv[5], $argv[6]));
+                                                            case 7: return $this->query(sprintf($fmt, $argv[1], $argv[2], $argv[3], $argv[4], $argv[5], $argv[6], $argv[7]));
+                                                            case 8: return $this->query(sprintf($fmt, $argv[1], $argv[2], $argv[3], $argv[4], $argv[5], $argv[6], $argv[7], $argv[8]));
+                                             }
+                              }
+
+                              for ($i = 0; $i < $argc; $i++) {
+                                             $argv[$i] = AddSlashes($argv[$i]);
+                              }
+                              $code = "return \$this->query(sprintf('" . implode("', '", $argv) . "'));";
+                              return eval($code);
+               }
+
+               function option($option, $value="") {
+                              return $this->super->option($option, $value);
+               }
+               function scheme($arg) {
+                              return $this->super->scheme($arg);
+               }
+
+               function query($query = "") { $this->super->error(   'query() unimplemented'); }
+               function affected()         { $this->super->error('affected() unimplemented'); }
+               function getrow()           { $this->super->error(  'getrow() unimplemented'); }
+               function numrows()          { $this->super->error( 'numrows() unimplemented'); }
+               function numcols()          { $this->super->error( 'numcols() unimplemented'); }
+               function colname($column=0) { $this->super->error( 'colname() unimplemented'); }
+               function errno()            { $this->super->error(   'errno() unimplemented'); }
+               function error($hand="")    { $this->super->error(   'error() unimplemented'); }
+               function field($field)      { $this->super->error(   'field() unimplemented'); }
+               function seek($position)    { $this->super->error(    'seek() unimplemented'); }
+               function free($stmt)        { $this->super->error(    'free() unimplemented'); }
+
+};
+
+
+
+class db_mysql extends db_class {
+               var $classname = 'db_mysql';
+
+               function open() {
+                              if ($this->connect_id) {
+                                             @mysql_close($this->connect_id);
+                              }
+
+                              $this->connect_id = mysql_pconnect($this->scheme('host'), $this->scheme('user'), $this->scheme('password')); 
+                              if ($this->connect_id) {
+                                             $result = @mysql_select_db($this->scheme('database'), $this->connect_id);
+                                             if (!$result) {
+                                                            @mysql_close($this->connect_id);
+                                                            $this->connect_id = $result;
+                                             }
+                                             return $this->connect_id;
+                              } else {
+                                             return 0;
+                              }
+               }
+
+               // Closes the database connection and frees any query results left.
+               function close() {
+                              if ($this->super->queries && is_array($this->super->queries)) {
+                                             reset($this->super->queries);
+                                             while (list($key, $val) = each($this->super->queries)) {
+                                                            @mysql_free_result($val);
+                                             }
+                              }
+                              $result = @mysql_close($this->connect_id);
+                              $this->connect_id = 0;
+                              return $result;
+               }
+}
+
+
+class db_mysql_query extends db_query_class {
+               var $classname = 'db_mysql_query';
+               var $row;
+
+               // executes the query, notifies the db object of the query result to clean up later
+               function query($query="") {
+                              if ($this->result) {
+                                             $this->free();
+                              }
+
+                              if ($query != "") {
+                                             if ($this->option('debug_sql')) {
+                                                            $str = str_replace("\n", ' ', $query);
+                                                            $str = trim(ereg_replace(' {2,}', ' ', $str));
+                                                            error_log("DBH[". getmypid()."] $str");
+                                             }
+                                             if (function_exists('apache_note') && ($hit_ID = apache_note("cookie_hit_ID"))) {
+                                                            $query = "/* $hit_ID */ $query";
+                                             }
+
+                                             ##################
+                                             #   Debug (RB)   #
+                                             ##################
+                                             if ($this->super->super->kernel->debug_ip){
+                                                list($usec, $sec) = explode(" ",microtime());
+                                                $mic =  ((float)$usec + (float)$sec);
+                                             }
+//                                           print microtime()."<br>";
+
+                                             $this->result = mysql_query($query, $this->super->connect_id);
+
+                                             ##################
+                                             #   Debug (RB)   #
+                                             ##################
+/*                                             $this->super->super->kernel->debug_sql .= $query.';1<br>';
+                                             $this->super->super->super->kernel->debug_sql .= $query.';2<br>';
+                                             $this->db->kernel->debug_sql .= $query.';3<br>';
+                                             $this->db->super->kernel->debug_sql .= $query.';4<br>';
+                                             $this->db->super->super->kernel->debug_sql .= $query.';5<br>';
+                                             $this->db->super->kernel->debug_sql .= $query.';6<br>';
+*/
+                                             if ($mic) {
+                                                $this->super->super->kernel->debug_sql .= "<TR><TD>$query.;</TD>";
+                                                list($usec, $sec) = explode(" ",microtime());
+                                                $mic =  ((float)$usec + (float)$sec)-$mic;
+                                               $this->super->super->kernel->debug_sql_total += $mic;
+                                                $this->super->super->kernel->debug_sql .= "<TD>[$mic]</TD></TR>";
+                                             }
+//                                           print $query.";<br>";
+//                                           print microtime()."<br><br>";
+//                                           flush();
+
+                                             if (!$this->result) {
+                                                            $this->super->error("[$query]\n" . $this->error());
+                                             }
+                                             $this->super->addquery($this->result);
+                              }
+               }
+
+               // Get number of affected rows in previous MySQL operation
+               function affected() {
+                              return @mysql_affected_rows($this->super->connect_id);
+               }
+   
+               // Gets the next row for processing with $this->field function later.
+               function getrow() {
+
+                              $this->row = @mysql_fetch_array($this->result);
+#                             if ($this->option('debug')) {
+#                             }
+                              return $this->row;
+               }
+   
+               // Gets the number of rows returned in the query
+               function numrows() {
+                              $result = @mysql_num_rows($this->result);
+                              return $result;
+               }
+
+               function numcols() {
+                              $result = @mysql_num_fields($this->result);
+                              return $result;
+               }
+
+               function colname($column = 0) {
+                              if ($column)
+                                             $result = mysql_field_name($this->result, $column);
+                              return $result;
+               }
+
+               // Gets the number of error for this query (0 = success)
+               function errno() {
+                              $result = mysql_errno($this->super->connect_id);
+                              return $result;
+               }
+
+               // Gets the last error message reported for this query
+               function error() {
+                              $result = mysql_error($this->super->connect_id);
+                              return $result;
+               }
+
+               // get the value of the field with name $field
+               // in the current row or in row $row if supplied
+               function field($field, $row="-1") {
+                              if ($row != -1) {
+                                             $result = @mysql_result($this->result, $row, $field);
+                              } else {
+                                             $result = $this->row[$field];
+                              }
+
+                              if (isset($result)) {
+                                             return $result;
+                              } else {
+                                             return '0';
+                              }
+               }
+
+               // move cursor to given line
+               function seek($position) {
+                  return @mysql_data_seek($this->result, $position);
+               }
+
+               function free() {
+                              $res = $this->super->free($this->result);
+                              $this->result = 0;
+                              return $res;
+               }
+}; // End class
+
+
+
+
+
+class db_oracle extends db_class {
+
+               function db_oracle(&$super) { 
+                              putenv('ORACLE_HOME=/export/lib/oracle');
+                              putenv('ORA_NLS33=/export/lib/oracle/ocommon/nls/admin/data');
+                              # call our parent class constructor.
+                              $this->db_class($super);
+               }
+
+               function open() {
+                              $lang = $this->scheme('NLS_LANG');
+                              if ($lang) {
+                                             putenv("NLS_LANG=$lang");
+                              }
+
+                              $this->connect_id = OCILogon($this->scheme('user'), $this->scheme('password'), $this->scheme('SID'));
+                              if (!$this->connect_id) {
+                                             $e = OCIError(); # bad func, no args
+                                             $this->super->error($e['message']);
+                              }
+                              return $this->connect_id;
+               }
+
+               // Closes the database connection and frees any query results left.
+               function close() {
+                              if ($this->super->queries && is_array($this->super->queries)) {
+                                             reset($this->super->queries);
+                                             while (list($key, $val) = each($this->super->queries)) {
+                                                            OCIFreeStatement($val);
+                                             }
+                              }
+                              $result = OCILogoff($this->connect_id);
+                              $this->connect_id = 0;
+                              return $result;
+               }
+
+/* // do not use this function
+               function error() {
+                              $e = OCIError();
+                              return $e['message'];
+               }*/
+
+}
+
+class db_oracle_query extends db_query_class {
+               var $classname = 'db_oracle_query';
+               var $stmt;
+               var $row;
+
+               function query($query = "") {
+                              if ($query != "") {
+                                             if ($this->option('debug_sql')) {
+                                                            $str = str_replace("\n", ' ', $query);
+                                                            $str = trim(ereg_replace(' {2,}', ' ', $str));
+                                                            error_log("DBH[". getmypid()."] $str");
+                                             }
+
+                                             if (!$this->super->connect_id) {
+                                                            $this->super->error("[$query]\nquery attempt without oracle connection");
+                                                            return 0;
+                                             }
+                                             $this->stmt = @OCIParse($this->super->connect_id, $query);
+                                             if (!$this->stmt) {
+                                                            $this->super->error("[$query]\n". $this->error($this->super->connect_id));
+                                                            return 0;
+                                             }
+                                             $result = OCIExecute($this->stmt, OCI_COMMIT_ON_SUCCESS);
+                                             if (!$result) {
+                                                            $this->super->error("[$query]\n" . $this->error($this->stmt));
+                                                            return 0;
+                                             }
+                                             $this->super->addquery($this->stmt);
+                              }
+                              return 1;
+               }
+
+               // Gets the next row for processing with $this->field function later.
+               function getrow() {
+                              $result = @OCIFetchInto($this->stmt, $this->row, OCI_RETURN_NULLS+OCI_ASSOC+OCI_NUM);
+                              if ($result)
+                                             return $this->row;
+                              else
+                                             return 0;
+               }
+   
+               function numrows() {
+               // Gets the number of rows returned in the query
+                              $result = @OCIRowCount($this->stmt);
+                              return $result;
+               }
+
+               function numcols() {
+                              $result = OCINumCols($this->stmt);
+                              return $result;
+               }
+
+               function colname($column=0) {
+                              if ($column)
+                                             $result = OCIColumnName($this->stmt, $column + 1);
+                              return $result;
+               }
+
+               function error($hand = "") {
+               // Gets the last error message reported for this query
+               # would be neat it could think itself which to use ($stmt or $conn) not passing it here :)
+               # $this->error() is for stmt, $this->super->error() is for $conn
+#                             $e = OCIError($this->stmt);
+#                             return $e['message'];
+                              if ($hand != "") {
+                                             $e = OCIError($hand);
+                                             return $e['message'];
+                              } else {
+                                             return '$hand to error() missing';
+                              }
+               }
+
+               function field($field) {
+               // get the value of the field with name $field
+                              $result = $this->row[strtoupper($field)];
+
+                              if (IsSet($result)) {
+                                             return $result;
+                              } else {
+                                             return '0';
+                              }
+               }
+
+               function free($stmt) {
+                              if ($stmt != "") {
+                                             return OCIFreeStatement($stmt);
+                              } else {
+                                             return OCIFreeStatement($this->stmt);
+                              }
+               }
+
+}; // End class
+
+
+} // if !defined _db_layer
+// vim:ts=4:sw=4
+?>

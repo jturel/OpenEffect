@@ -1,0 +1,38 @@
+<?
+
+/***************************************
+*  Plugin main class
+*  
+***************************************/
+
+  $this->checkClass("linkerClass", "pluginClass");
+  
+
+  class pluginClass extends linkerClass {
+     var $className = "pluginClass";       // Class name
+     var $html = "";
+    
+     // Constructor
+     // $parent - pointer on parent object
+     function pluginClass(&$parent, $cfg = "") {
+        $this->linkerClass(&$parent);
+	
+	if (!is_object($cfg)) {
+	   if ($cfg) {
+       	      $this->kernel->classLoader->checkClass("confItemClass");
+  	      $cfgObj = new confItemClass($this, "CONF");
+	      $cfgObj->rootDir = CONF_PLUGIN_DIR;
+	      $cfgObj->scan($cfg);
+	      $this->cfg = $cfgObj;
+	   }
+	} else $this->cfg = $cfg;
+     }
+
+     // Get HTML code
+     function getHtml() {
+        return $this->html;
+     }
+     
+  } // finished pluginClass class
+ 
+?>

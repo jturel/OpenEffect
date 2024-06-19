@@ -1,0 +1,104 @@
+<?
+/**
+* Copyright (C) 2002 SIA ESOFTS.
+*
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License 
+* version 2 as published by the Free Software Foundation.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the SIA ESOFTS, 38/40 Blaumana str., 
+* Riga, LV - 1011, LATVIA, e-mail office@esoft.lv 
+*
+* This General Public License does not permit incorporating your program into
+* proprietary programs. Should you require to License Open Effect under the
+* commercial License, please contact SIA ESOFTS for up-to-date information.
+*/
+
+
+
+/***************************************
+*  URL Decode
+*  
+***************************************/
+
+  $this->checkClass("linkerClass", "urlDecodeClass");
+  
+
+  define("urlSeporator", "&");
+  
+  class urlDecodeClass extends linkerClass {
+     var $className = "urlDecodeClass";       // Class name
+    
+     // set default value 
+     var $formNr  = 0;
+     var $groupNr = 0;
+     var $docNr   = 0;
+  
+     // Constructor
+     // $parent - pointer on parent object
+     function urlDecodeClass(&$parent) {
+        $this->linkerClass(&$parent);
+    $this->setDefaultValues();
+    
+    global $QUERY_STRING, $SCRIPT_NAME;
+    $this->log = &$this->kernel->loger->reg("URL DECODE");
+    $this->log->put("start class");
+    $this->log->put("query string : $QUERY_STRING");
+    
+    $this->scan($QUERY_STRING);
+    $this->scanLang($SCRIPT_NAME);
+     }
+
+     
+     // Set default values (read from config files)
+     function setDefaultValues() {
+        $this->formNr  = $this->kernel->cfg->get("defaultFormNr");
+        $this->groupNr = $this->kernel->cfg->get("defaultGroupNr");
+        $this->docNr   = $this->kernel->cfg->get("defaultDocNr");
+    
+    $this->langID   = $this->kernel->cfg->get("defaultLangID");
+    $this->langName = $this->kernel->cfg->get("defaultLangName");
+     }
+
+     
+     // Get form,group,doc Number from URL
+     function scan(&$urlStr) {
+        $expStr = explode(urlSeporator, $urlStr);
+
+    if ($expStr[0]) $this->formNr  = $expStr[0];
+    if ($expStr[1]) $this->groupNr = $expStr[1];
+    if ($expStr[2]) $this->docNr   = $expStr[2];
+
+    if ($this->formNr <= 0) {
+       $this->kernel->error->die = true;
+       $this->kernel->error->parse("Can't find form", array($this->formNr));
+    }
+
+        $this->log->put("values : [formNr:".$this->formNr."][groupNr:".$this->groupNr."][docNr:".$this->docNr."]");
+
+     }
+     
+     // Get language from URL string
+     function scanLang(&$urlStr) {
+        $expStr = explode("/", $urlStr);
+
+        if (count($expStr) <= 2) return false;
+        $lngDir = $expStr[count($expStr) - 2];
+    
+    $lngConf = $this->kernel->cfger->reg("LANGUAGE CONFIG", 
+               CONF_DIR.$this->kernel->cfg->get("langConfFile"));
+    if (!$lngConf->check($lngDir))
+          $values = $lngConf->get("DEFAULT");
+     else $values = $lngConf->get($lngDir);
+
+        $this->langID   = $values[0];
+        $this->langName = $values[1];
+     
+        $this->log->put("set current language : [Dir: $lngDir, ID: ".$values[0].", Name: ".$values[1]."]");
+     }
+
+
+  } // finished urlDecodeClass
+ 
+?>

@@ -1,0 +1,330 @@
+<?
+/**
+* Copyright (C) 2002 SIA ESOFTS.
+*
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License 
+* version 2 as published by the Free Software Foundation.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the SIA ESOFTS, 38/40 Blaumana str., 
+* Riga, LV - 1011, LATVIA, e-mail office@esoft.lv 
+*
+* This General Public License does not permit incorporating your program into
+* proprietary programs. Should you require to License Open Effect under the
+* commercial License, please contact SIA ESOFTS for up-to-date information.
+*/
+
+
+
+/*********************************************
+*
+*  Ruslan Bondar : rus@esoft.lv     
+*  31.05.01
+*  Addictional api constructor plugin
+*
+*********************************************/
+
+
+class rus_api extends pluginClass {
+
+//var $month = array('Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec');
+
+   // Constructor
+   function rus_api(&$parent, $cfg='',$log = 0) {
+      $this->root_dir = TMPL_DIR;
+//      $this->pluginClass(&$parent, $cfg);
+      $this->pluginClass(&$parent);
+      $this->log = $log;
+//      $this->log = 0;
+
+      if ($this->log) $this->log = $this->kernel->loger->reg("Ruslan Api CONSTRUCTOR");
+
+      $this->inittable('TxtContents','txtTable','db_TxtContents');
+      $this->inittable('TxtDetails','txtLinkTable','db_TxtDetails');
+      $this->inittable('DocLinks','docXgroupTable','db_DocLinks');
+      $this->inittable('Groups','groupTable','db_Groups');
+      $this->inittable('Documents','docTable','db_Documents');
+      if (!$this->kernel->rus_cache)
+        $this->kernel->rus_cash = array();
+   }
+
+   function inittable($name,$conf_kern,$conf_plug){
+      if (is_object($this->parent->cfg)) 
+          $this->$name = ($this->parent->cfg->check($conf_plug))?$this->parent->cfg->get($conf_plug):$this->kernel->tab_cfg->get($conf_kern);
+      else
+          $this->$name = $this->kernel->tab_cfg->get($conf_kern);
+      $this->parent->$name = $this->$name;
+
+   }
+   // Return an named array of document fields with values
+   function SetFields($ID=0,$fields=0){
+         if (!$ID) {
+//          print "Call Rusel, plz";
+          return array();
+         }
+         if ($this->kernel->rus_cache[$ID]) return $this->kernel->rus_cache[$ID];
+         $langID = $this->kernel->langID;
+         if (is_array($fields)){
+          for ($i=0;$i<count($fields);$i++){
+            if ($add) $add .= '||';
+            $add .= "a.name ='$fields[$i]'";
+          }
+          $add = "AND ($add)";
+         }
+         $SqlStr = "select a.name, a.content from $this->TxtContents a, $this->TxtDetails b where a.ID = b.TxtID and b.DocID=$ID and (a.Lang=0 || a.Lang=$langID)$add";
+         if ($this->log) $this->log->put("Get SQL for Document id [$SqlStr]");        
+         $ret = array('ID' => $ID);
+         $result = $this->kernel->db->query($SqlStr);
+         if ($result && $count = $result->numrows()) {
+                for ($i=0;$i<$count;$i++){
+                    list ($name,$contents) = $result->getrow();
+                    if ($this->log) $this->log->put("Read field [$name] $contents");
+                    $ret[$name] = $contents."";
+                }
+         }
+        $this->kernel->rus_cache[$ID] = $ret;
+        return $ret;
+   }
+
+   // Return an named array of document And Document Date LastUpdate and Priority
+   function SetFieldsEx($ID=0,$fields=0){
+         if (!$ID) {
+//          print "Call Rusel, plz";
+          return array();
+         }
+         $langID = $this->kernel->langID;
+         $ID = intval($ID);
+         $SqlStr = "SELECT Name, RecTime, LastUpdate, TemplateId FROM $this->Documents where ID = $ID and Visible";
+         if ($this->log) $this->log->put("Get SQL for Document Ex id [$SqlStr]");        
+         $result = $this->kernel->db->query($SqlStr);
+
+         if ($result && $count = $result->numrows()) {
+                list ($Name, $RecTime, $LastUpdate, $Priority) = $result->getrow();
+                $RecTime = strtotime($RecTime);
+                $LastUpdate = strtotime($LastUpdate);
+                $ret = $this->SetFields($ID);
+                $ret['RecTime']    = date('H:M',$RecTime);
+                $ret['RecDate']    = date('d-m-Y',$RecTime);
+                $ret['RecMonth']   = date('M',$RecTime);
+//                $ret['RecMonthT']  = $this->month[date("m",$RecTime)];
+                $ret['RecDay']     = date('d',$RecTime);
+                $ret['LastUpdate'] = date('d-m-Y',$LastUpdate);
+                $ret['TemplateID'] = $TemplateId;
+                $ret['Priority']   = $Priority;
+                $ret['_Name']   = $Name;
+         }
+        return $ret;
+   }
+      
+   // return Id of group by name (first group by id if name is equal)
+   function GetGroupID($Grp){
+      $SqlStr = "SELECT ID FROM $this->Groups where name = '$Grp' order by ID LIMIT 0,1";
+      if ($this->log) $this->log->put("SQL for Group id [$SqlStr]");        
+      $result = $this->kernel->db->query($SqlStr);
+      if ($result && $count = $result->numrows()) {
+                list ($ID) = $result->getrow();
+                return $ID+0;
+      }
+   }
+
+   // IF have ID return ID
+   // in false, create new ID
+   function getnextID($id) {
+      if ($id) return $id;
+      return $this->kernel->db->nextid();
+   }   
+
+   // return Id of first document in group
+   function GetLastDocumentID($GrpID=0){ 
+        return $this->GetLFDocumentID($GrpID,1);
+   }
+
+   // return Id of last document in group
+   function GetFirstDocumentID($GrpID=0){
+        return $this->GetLFDocumentID($GrpID,0);
+   }
+
+   // return number of First/Last document id in group  $pos = (""|"asc")||"desc"
+   function GetLFDocumentID($GrpID=0,$pos){
+         $GrpID += 0;      
+         $pos = (!$pos)?'desc':'';
+         $SqlStr = "select DocID from $this->DocLinks a, $this->Documents b where a.GrpID = $GrpID and a.DocID = b.ID and b.visible order by a.DocID $pos LIMIT 0,1";
+         if ($this->log) $this->log->put("SQL for getting Last / First id [$SqlStr]");
+         $result = $this->kernel->db->query($SqlStr);
+         if ($result && $count = $result->numrows()) {
+                list ($ID) = $result->getrow();
+                return $ID;
+         }
+         return -1;
+   }
+
+   // return array of group curent documetnt in.
+   function GetGroupDocumentIn($DocID=0){
+         $DocID+=0;      
+         $SqlStr = "select GrpID from $this->DocLinks where DocID = $DocID order by GrpID";
+         if ($this->log) $this->log->put("SQL for getting all group document in id [$SqlStr]");
+         $result = $this->kernel->db->query($SqlStr);
+         if ($result&&$count=$result->numrows()) {
+            for ($i =0;$i<$count;$i++){
+                list($id) = $result->getrow();
+                if ($this->log) $this->log->put("Read field [$id]");
+                $ret[$i] = $id;
+            }
+         } else $ret = array();
+         return $ret;
+   }
+        
+   // return group by root group and document they contain
+   function GetInGroup($RootGrpID,$DocID){
+        $RootGrpID+=0;$DocID+=0;
+        $SqlStr = "select a.GrpId from $this->DocLinks a, $this->Groups b"
+                 ." where a.GrpID=b.ID and b.parentId = $RootGrpID and a.DocID = $DocID";
+        if ($this->log) $this->log->put("SQL for getting all group document[$DocID] in id and group root[$RootGrpID] [$SqlStr]");
+        $result = $this->kernel->db->query($SqlStr);
+         if ($result&&$count=$result->numrows()) {
+            for ($i =0;$i<$count;$i++){
+                list($id) = $result->getrow();
+                if (!$this->kernel->api->checkGrpSecurity($id, "R")) continue;
+                if ($this->log) $this->log->put("Read field [$id]");
+                $ret[$i] = $id;
+            }
+         } else $ret = array();
+         return $ret;
+   }
+
+   function GetInDocuments($RootGrpID,$DocID){
+   
+        $RootGrpID+=0;$DocID+=0;
+    $SqlStr = "SELECT gg.DocID FROM $this->Documents d,$this->DocLinks g, $this->DocLinks gg, $this->Groups b ".
+              'WHERE  d.ID = g.DocID and g.GrpID = gg.GrpID and g.GrpID=b.ID AND g.GrpID IS NOT NULL AND g.GrpID != \'\' AND d.visible '.
+              "AND d.Id = $DocID AND gg.DocId != $DocID and b.parentId = $RootGrpID group by gg.DocID";
+        if ($this->log) $this->log->put("SQL for getting all documents where group in document[$DocID] in id and group root[$RootGrpID] [$SqlStr]");
+        $result = $this->kernel->db->query($SqlStr);
+         if ($result&&$count=$result->numrows()) {
+            for ($i =0;$i<$count;$i++){
+                list($id) = $result->getrow();
+                if (!$this->kernel->api->checkDocSecurity($id, "R")) continue;
+                if ($this->log) $this->log->put("Read field [$id]");
+                $ret[$i] = $id;
+            }
+         } else $ret = array();
+         return $ret;
+        
+   }     
+
+   // return array of arrays resurs of documents with or witaut limits
+   function listF($GrpName,$direction,$pagesize,$start,$sort = "a.sortNr") {
+      //$direction+=0;
+//      print "[$direction]";
+      $pagesize+=0;$start+=0;//$sort+=0;
+      $direction = ($direction)?'desc':'';
+      $SqlStr = "SELECT d.ID, d.RecTime, d.LastUpdate FROM $this->DocLinks a,$this->Groups b,$this->Documents d where a.GrpID = b.ID and d.ID = a.DocId and b.name = '$GrpName' and d.Visible";
+      $SqlStr .= " order by $sort $direction ";
+      if ($pagesize) $SqlStr .= " LIMIT $start,$pagesize ";
+      if ($this->log) $this->log->put("SQL for list: [$SqlStr]");
+      $result = $this->kernel->db->query($SqlStr);
+      if ($result && $count = $result->numrows()) {
+         for ($Cn = 0; $Cn < $count; $Cn++) {
+             list ($ID,$Rec,$Last) = $result->getrow();
+             if ($this->kernel->secure->doc->get($ID, "R")){
+                $Rec = strtotime($Rec);
+                $Last = strtotime($Last);
+                $tmp                 = $this->SetFields($ID);
+                $tmp['RecTime']      = date("d-m-Y",$Rec);
+                $tmp['LastUpdate']   = date("d-m-Y",$Last);
+                $tmp['RecMonth']     = date("M",$Rec);
+                $tmp['RecDay']       = date("d",$Rec);
+                $res[$Cn] = $tmp;
+             }
+         }
+      }
+      return (is_array($res))?$res:array();
+   }
+
+   function genURL($need,$post=0,$form=0,$grp=0,$doc=0){
+        $post+=0;$form+=0;$grp+=0;$doc+=0;
+        global $HTTP_GET_VARS;
+        $tmp = &$this->parent->parent;
+        $url = '?'.($form?$form:$tmp->formNr).
+               '&'.($grp?$grp:$tmp->grpNr).
+               '&'.($doc?$doc:$tmp->docNr);
+        if ($this->log) $this->log->put("Gen URL: ".$HTTP_GET_VARS);
+        $t = $HTTP_GET_VARS; 
+        if ($post) {
+                global $HTTP_POST_VARS;
+                $t = array_unique(array_merge($t,$HTTP_POST_VARS));
+        }
+        while (list($k,$v)=each($t)){
+           if ($k!=$need) {
+                if (!preg_match('/&/',$v))
+                     if (!is_array($v))
+                      $url .= '&'.$k.'='.$v;
+                   else
+                      $url .= '&'.$k.'[]='.implode('&'.$k.'[]=',$v);
+//                      $url .= '&'.$k.'[]='.implode(',',$v);
+//                 $url .= '&'.$k.'='.$v;
+           }
+           if ($this->log) $this->log->put("Gen URL: $k[$url]");           
+        }       
+        if ($this->log) $this->log->put("Gen URL: [$url]");
+           if ($need) 
+              $url .= "&$need=";
+        if ($this->log) $this->log->put("Result URL: [$url]");
+        return $url;
+   }
+
+   function GetLastResourseNum($DocID=0,$ResName){
+//            $SqlStr = "SELECT last(name) FROM $this->DocLinks a,$this->Documents d";
+
+      $SqlStr = "SELECT c.name
+                FROM  $this->TxtDetails b,
+                      $this->TxtContents c 
+                where b.DocID = $DocID
+                   and c.ID = b.TxtId 
+                   and c.name like '$ResName%' ";
+      if ($this->log) $this->log->put("SQL for GetLastResourseNum: [$SqlStr]");
+      $result = $this->kernel->db->query($SqlStr);
+      if ($result && $count = $result->numrows()) {
+          for ($Cn = 0; $Cn < $count; $Cn++) {
+             list ($name) = $result->getrow();
+      if ($this->log) $this->log->put("Res [$name]");
+
+             $name = substr($name,strlen($ResName));
+
+      if ($this->log) $this->log->put("Res [$name][$max]");
+             if ($val = intval($name)) $max = ($max>$val&&!$val)?$max:$val;
+             
+         }
+      }
+      return $max;
+   }
+        
+   function GetResComment($DocID=0,$ResName){
+      $DocID+=0;
+      $SqlStr = "SELECT count(c.name) as c
+                FROM  $this->TxtDetails b,
+                      $this->TxtContents c 
+                where b.DocID = $DocID
+                   and c.ID = b.TxtId 
+                   and c.name like '$ResName%' ";
+      if ($this->log) $this->log->put("SQL for GetResComment: [$SqlStr]");
+      $result = $this->kernel->db->query($SqlStr);
+      if ($result && $count = $result->numrows()) {
+             list ($count) = $result->getrow();
+      }
+      return $count;
+   }
+
+   // Fucncion lookup  
+   // B0rland (rus@esoft.lv) 
+   function lookup($grp,$ind){
+     $grpNr = intval($this->GetGroupID($grp));
+     $ind = ($ind)?$ind:'*';
+     $q = $this->kernel->api->getAllDocumentsByName($grpNr,$ind);
+     $tmp = $this->SetFields($q[0]);
+     return $tmp['title'.$this->kernel->langID];
+   }
+
+}
+?>

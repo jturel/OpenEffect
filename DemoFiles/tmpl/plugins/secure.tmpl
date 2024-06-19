@@ -1,0 +1,264 @@
+<!-- BEGIN close_block -->
+<script language="JavaScript">
+<!--
+// parent.hello();
+// -->
+</script>
+<!-- END close_block -->
+
+<html>
+<head>
+<script language="JavaScript">
+var rolestmp = new Array([]<!-- BEGIN role_block -->,["{ID}","{NAME}"]<!-- END role_block -->);
+var users = new Array([]<!-- BEGIN user_block -->,["{ID}","{NAME}"]<!-- END user_block -->);
+var uXr = new Array([]<!-- BEGIN roleXuser_block -->,["{USER}","{ROLE}"]<!-- END roleXuser_block -->);
+
+var roles = new Array();
+var role  = new Array();
+for(var i = 1; i < rolestmp.length; i++){
+  role[i-1] = new Array();
+  role[i-1][0] = rolestmp[i][0];
+  role[i-1][1] = rolestmp[i][1];
+  roles[i-1]=new Array();
+  for(var j = 1; j < uXr.length; j++) if(uXr[j][1]==rolestmp[i][0]) roles[i-1][roles[i-1].length]=uXr[j][0];
+}
+var selectedNum = 0;
+
+function storeSelected(){
+  delete roles[selectedNum];
+  roles[selectedNum] = new Array();
+  for(var i = 0; i < document.all.selus.options.length; i++) roles[selectedNum][roles[selectedNum].length] = document.all.selus.options[i].value;
+  for(var i = document.all.selus.options.length-1; i >=0 ; i--) document.all.selus.options.remove(i);
+}
+
+function putNewRoles(){
+  for(var i = 0; i < roles[selectedNum].length; i++){
+    if(getOptionIndex(roles[selectedNum][i])!=-1){
+      var oOption = document.createElement("OPTION");
+      document.all.selus.options.add(oOption);
+      oOption.innerText = document.all.allus.options[getOptionIndex(roles[selectedNum][i])].innerText;
+      oOption.value = document.all.allus.options[getOptionIndex(roles[selectedNum][i])].value;
+    }
+  }
+}
+
+function rebuild(){
+  storeSelected();
+  selectedNum = document.all.roleId.selectedIndex;
+  putNewRoles();
+}
+
+function searchSimilar(val){
+//  for(var i = 0; i < document.all.selus.options.length; i++) if(val == document.all.selus.options[i].value) return false;
+  for(var i = 0; i < document.all.selus.options.length; i++) if(val == document.all.selus.options[i].value) return i;
+//    return true;
+    return -1;
+}
+
+function getOptionIndex(optionVal){
+  var sel = document.all.allus;
+  var outVal = -1;
+  for(var i = 0; i < sel.options.length; i++){
+    if(sel.options[i].value == optionVal) outVal = i;
+  }
+  return outVal;
+}
+
+function getSelectedOptions(selectName){
+  var sel = eval('document.all.'+selectName);
+  var outArr = new Array();
+//  for(var i = 0; i < sel.options.length; i++) if(sel.options[i].selected && searchSimilar(sel.options[i].value)) outArr[outArr.length] = i;
+  for(var i = 0; i < sel.options.length; i++) if(sel.options[i].selected) outArr[outArr.length] = i;
+  return outArr;
+}
+function remakeArr(){
+  roles[document.all.roleId.selectedIndex] = new Array();
+//alert('role: '+role+'\n roles: '+roles)
+  for(var i = 0; i < document.all.selus.options.length; i++){
+    roles[document.all.roleId.selectedIndex][roles[document.all.roleId.selectedIndex].length] = document.all.selus.options[i].value;
+  }
+//alert('role: '+role+'\n roles: '+roles)
+}
+function addSelected(){
+//alert('role: '+role+'\n roles: '+roles)
+  var sel = getSelectedOptions('allus');
+  if(typeof(sel)=='object'){
+    for(var i = 0; i < document.all.selus.options.length; i++) document.all.selus.options[i].selected=false;
+    for(var i = 0; i < sel.length; i++) {
+      if(searchSimilar(document.all.allus.options[sel[i]].value)==-1){
+        var oOption = document.createElement("OPTION");
+        document.all.selus.options.add(oOption);
+        oOption.innerText = document.all.allus.options[sel[i]].innerText;
+        oOption.value = document.all.allus.options[sel[i]].value;
+        oOption.selected=true;
+      } else document.all.selus.options[searchSimilar(document.all.allus.options[sel[i]].value)].selected=true;
+//      roles[document.all.roleId.selectedIndex][roles[document.all.roleId.selectedIndex].length] = ;
+    }
+  }
+  remakeArr();
+}
+function removeSelected(){
+//alert('role: '+role+'\n roles: '+roles)
+/**
+  var rem = -1;
+  for(var i = 0; i < document.all.selus.options.length; i++) if (document.all.selus.options[i].selected) {rem = i; break;}
+  if(rem != -1) document.all.selus.options.remove(rem);
+  remakeArr();
+*/
+  for(var i = document.all.selus.options.length-1; i >= 0; i--) if (document.all.selus.options[i].selected) document.all.selus.options.remove(i);
+}
+function submt(){
+  var strOut = '';
+  for(var i = 0; i < role.length; i++) for(var j = 0; j < roles[i].length; j++) strOut += ((i==0 && j==0)?'':',') + roles[i][j] + '-' + role[i][0];
+  users1.uXr1.value = strOut;
+  users1.submit();
+}
+function delUsers(){
+//  var strOut = '';
+//alert('smth')
+  arrUs = getSelectedOptions("allus");
+  for(var i = 0; i < arrUs.length; i++) arrUs[i] = document.all.allus.options[arrUs[i]].value;
+//alert(arrUs)
+  if(arrUs.length > 0){
+    users1.delUser.value = 'delUser';
+    users1.uXr1.value = arrUs;  
+    users1.submit();
+  }
+}
+
+function delRoles(){
+alert(document.all.roleId.selectedIndex)
+  if(document.all.roleId.selectedIndex!=-1){
+    users1.delRole.value = 'delRole';
+    users1.uXr1.value = document.all.roleId.options[document.all.roleId.selectedIndex].value;
+    users1.submit();
+  }
+
+}
+function addUser(){
+  var doW = OpenDialog(14,0,0,300, 372);
+  if(doW=="refresh") document.location.href=document.location.href;
+}
+
+function addRole(){
+  var doW = OpenDialog(16,0,0,220, 180);
+  if(doW=="refresh") document.location.href=document.location.href;
+}
+
+function OpenDialog(id,grupid,docid ,width, height){
+  var option = "dialogHeight: "+height+"px; dialogWidth: "+width+"px; dialogTop: px; dialogLeft: px; edge: Raised; center: Yes; help: No; resizable: No; status: No; dialogHide: Yes; unadorned: Yes; scroll: No;"
+  return window.showModalDialog("parse.php?28&"+grupid+"&"+docid+"&forms_Nr="+id,"", option);
+}
+</script>
+<link rel="stylesheet" href="files/norm_window.css" type="text/css">
+</head>
+<body leftmargin="0" topmargin="0" marginwidth="0" marginheight="0" onload="rebuild();">
+<form name="users1" method="post">
+  <input type="hidden" name="uXr1" value="">
+  <input type="hidden" name="save" value="">
+  <input type="hidden" name="delUser" value="">
+  <input type="hidden" name="delRole" value="">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" class="main">
+    <tr> 
+      <td> 
+        <table width="100%" border="0" cellspacing="0" cellpadding="0" class="caption">
+          <tr valign="middle" align="left"> 
+            <td width="20"><img src="img/gn_access.gif" width="18" height="18"></td>
+            <td class="captionText">##ROLE USERS##</td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr> 
+      <td align="right" valign="middle"> 
+        <table width="100%" border="0" cellspacing="10" cellpadding="0" class="bodyWithText">
+          <tr> 
+            <td> 
+              <table border="0" cellspacing="0" cellpadding="0">
+                <tr> 
+                  <td class="captionTextTable">##Role##</td>
+                  <!--td class="captionTextTable" align=right><input type="button" name="new_role" value="New Role" class="buttonz" onClick="addRole();"></td-->
+                  <td class="caption_td" width="20">&nbsp;</td>
+                  <td class="captionTextTable">##All users##</td>
+                  <!--td class="captionTextTable" align=right><input type="button" name="new_user" value="New User" class="buttonz" onClick="addUser();"></td-->
+                  <td class="caption_td" width="20" rowspan="4">&nbsp;</td>
+                  <td class="caption_td" width="20">&nbsp;</td>
+                </tr>
+                <tr> 
+                  <!td class="caption" valign="top" colspan=2> 
+                  <td class="caption" valign="top"> 
+                    <SELECT id="roleId" name="textfield" class="inputz" onchange="rebuild();" style="width : 200px;">
+                      <SCRIPT LANGUAGE="JavaScript">
+for(var i = 0; i < role.length; i++) document.writeln('<OPTION value="'+role[i][0]+'"'+((i==0)?' selected':'')+'>'+role[i][1]+'</OPTION>');
+</SCRIPT>
+                    </SELECT>
+                  </td>
+                  <td class="caption" valign="top">&nbsp;</td>
+                  <!td class="caption" valign="top" rowspan="3" colspan=2> 
+                  <td class="caption" valign="top" rowspan="3"> 
+                    <select id="allus" name="all_users" size="10" style="width : 200px;" class="inputzSelect" multiple>
+                      <script language="JavaScript">
+for(var i = 1; i < users.length; i++) document.writeln('<OPTION value="'+users[i][0]+'">'+users[i][1]+'</OPTION>');
+document.writeln('</select>');
+</script>
+                      <!/select>
+                    </select>
+                  </td>
+                  <td class="caption" valign="top" rowspan="3"> 
+                    <table border="0" cellspacing="0" cellpadding="0">
+                      <tr><td class="captionTextTable"><input type="button" name="new_role" value="##New Role##" class="buttonz" onclick="addRole();"></td></tr>
+                      <tr><td class="caption_td" width="20"><img src="img/!pix.gif" width="1" height="22"></td></tr>
+                      <tr><td class="captionTextTable"><input type="button" name="new_role" value="##Del Role##" class="buttonz" onclick="delRoles();"></td></tr>
+                      <tr><td class="caption_td" width="20"><img src="img/!pix.gif" width="1" height="22"></td></tr>
+                      <tr><td class="captionTextTable"><input type="button" name="new_user" value="##New User##" class="buttonz" onclick="addUser();"></td></tr>
+                      <tr><td class="caption_td" width="20"><img src="img/!pix.gif" width="1" height="22"></td></tr>
+                      <tr><td class="captionTextTable"><input type="button" name="new_user" value="##Del User##" class="buttonz" onclick="delUsers();"></td></tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr> 
+                  <!--td class="captionTextTable" colspan=2>Users in Role</td-->
+                  <td class="captionTextTable">##Users in Role##</td>
+                  <td class="caption_td">&nbsp;</td>
+                </tr>
+                <tr> 
+                  <!td colspan=2> 
+                  <td> 
+                    <select ID="selus" name="selected_users" size="7" class="inputzSelect" style="width : 200px;" multiple>
+                    </select>
+                    <script language="JavaScript">
+putNewRoles();
+</script>
+                  </td>
+                  <td align="center" valign="middle">&nbsp;</td>
+                <tr> 
+                  <!td align="right" valign="bottom" height="27" colspan=2> 
+                  <td align="right" valign="bottom" height="27"> 
+                    <input type="button" name="Button2" value="&gt;&gt;""&lt;&lt;" class="buttonz" onClick="removeSelected();">
+                  </td>
+                  <td align="center" valign="middle">&nbsp;</td>
+                  <!td class="caption" valign="bottom" align="left" colspan=2> 
+                  <td class="caption" valign="bottom" align="left"> 
+                    <input type="button" name="Button3" value="&lt;&lt;" class="buttonz" onClick="addSelected();">
+                  </td>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr> 
+      <td> 
+        <table width="100%" border="0" cellspacing="5" cellpadding="0">
+          <tr> 
+            <td align="right" valign="middle"> 
+              <input type="button" name="Submit322" value="##Save##" class="buttonz" onclick="submt();">
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</form>
+</body>
+</html>

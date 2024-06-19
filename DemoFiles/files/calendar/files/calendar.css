@@ -1,0 +1,83 @@
+.calendarFG {
+	font-family : Verdana, Geneva, Arial, Helvetica, sans-serif;
+	font-size : 10px;
+	font-weight : normal;
+	background-color : #B5CBFF;		
+}
+
+.calendarCell {
+	font-family : Verdana, Geneva, Arial, Helvetica, sans-serif;
+	font-size : 12px;
+	font-weight : normal;
+	background-color : #D6E3FF;	
+	border-bottom : 1px solid #B5CBFF;  
+	text-align : center;
+	cursor: hand
+}
+
+.calendarCellSelected {
+	font-family : Verdana, Geneva, Arial, Helvetica, sans-serif;
+	font-size : 12px;
+	font-weight : normal;
+	background-color : #B5CBFF;
+	border-bottom : 1px solid #B5CBFF;  
+	text-align : center;
+	cursor: hand
+}
+
+.calendarCellCurrent {
+	font-family : Verdana, Geneva, Arial, Helvetica, sans-serif;
+	font-size : 12px;
+	font-weight : bold;
+	background-color : #D6E3FF;
+	border-bottom : 1px solid #B5CBFF;  
+	text-align : center;
+	cursor: hand
+}
+.calendarPrevious {
+	font-family : Verdana, Geneva, Arial, Helvetica, sans-serif;
+	font-size : 12px;
+	font-weight : normal;
+	border-bottom : 1px solid #B5CBFF;  
+	text-align : center;
+	cursor: hand
+}
+.calendarNext {
+	font-family : Verdana, Geneva, Arial, Helvetica, sans-serif;
+	font-size : 12px;
+	font-weight : normal;
+	border-bottom : 1px solid #B5CBFF;  
+	text-align : center;
+	cursor: hand
+}
+.calendarTable {
+	background-color : #E7EBFF;
+}
+.calendarButton {
+	font-family: Verdana, Arial, Helvetica, sans-serif; 
+	font-size: 10px; 
+	border : 1px solid Black;
+	cursor: hand;
+}
+
+.calendarSelect {
+	font-family : Verdana, Geneva, Arial, Helvetica, sans-serif;
+	font-size : 10px;
+	font-weight : normal;
+	background-color : #D6E3FF;
+}
+
+.calendarButtonTable {
+	border-bottom : 1px solid Black;  
+	border-left : 1px solid Black;  
+	border-right : 1px solid Black;    
+}
+.calendarSelectTable {	
+	  
+	border-left : 1px solid Black;  
+	border-right : 1px solid Black;
+	border-top : 1px solid Black;
+}
+.caltab {
+	background-color : #E7EBFF;
+}	

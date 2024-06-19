@@ -1,0 +1,63 @@
+<?
+
+/*********************************************
+*
+*  USER to Role link plugin
+*
+*********************************************/
+
+
+class userRolePlugin extends listPlugin {
+
+   // Constructor
+   function userRolePlugin(&$parent, $cfg) {
+      $this->listPlugin(&$parent, $cfg);
+      $this->getCfgL();
+   }
+
+
+   // Get configuration info
+   function getCfgL() {
+      $this->roleTable  = $this->kernel->tab_cfg->get("roleTable");
+      $this->roleXTable = $this->kernel->tab_cfg->get("userXroleTable");
+   }
+
+   
+      
+   // Pre parse function
+   // Check LINK between Role and User tables
+   function preParse($row) {
+      global $UserID;
+
+      $SqlStr = "SELECT * FROM ".$this->roleXTable."
+		 WHERE RoleID=".$row["RoleID"]."
+		 AND UserID=".$UserID;
+      $result = $this->kernel->db->query($SqlStr);
+      if ($result && $result->numrows())
+            $this->tmpl->set_var(array("CHECKED" => "checked"));
+       else $this->tmpl->set_var(array("CHECKED" => ""));
+   }   
+
+
+   function save($sql = "1") {
+      $checkArray = $this->cfg->get("checkArray");
+      global $$checkArray, $UserID;
+      $checkArray = $$checkArray;
+
+      $SqlStr = "DELETE FROM ".$this->roleXTable." WHERE UserID = $UserID";
+      $this->kernel->db->query($SqlStr);
+
+      if (!is_array($checkArray) || !count($checkArray)) return;
+      
+      reset($checkArray);
+      while(list($key, $val) = each($checkArray)) {
+         $SqlStr = "INSERT INTO ".$this->roleXTable."
+	            (UserID, RoleID) VALUES ($UserID, $key)";
+         $this->kernel->db->query($SqlStr);
+      }
+   }
+
+   
+}
+
+?>

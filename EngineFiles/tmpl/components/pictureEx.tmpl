@@ -1,0 +1,20 @@
+<!--- PICTURE  ----->
+<table id={FIELD}_table border="0" cellspacing="0" cellpadding="0" width="100%">
+  <TR><TD></TD></TR>
+</table>
+<table border="0" cellspacing="0" cellpadding="0" width="100%">
+  <TR><TD><img src="files/img/!pix.gif" width="1" height="5"></TD></TR>
+</table>
+<SCRIPT LANGUAGE="JavaScript">
+<!--
+  var pictures = new Array(""<!-- BEGIN item_block -->,"{VALUE}"<!-- END item_block -->);
+//    if(pictures.length==1) addIt("{FIELD}_table", "{FIELD}", 1, "<FONT COLOR=#FF0000>*</FONT>&nbsp;{CAPTION}")
+    for(var i=1; i<pictures.length-1; i++){
+//    for(var i=1; i<pictures.length; i++){
+//      addIt("{FIELD}_table", "{FIELD}", pictures.length-1, "<FONT COLOR=#FF0000>*</FONT>&nbsp;{CAPTION}", pictures[i]);
+      drowRow("{FIELD}_table", "{FIELD}", pictures.length-1, "<FONT COLOR=#FF0000>*</FONT>&nbsp;{CAPTION}", pictures[i]);
+    }
+    addIt("{FIELD}_table", "{FIELD}", pictures.length-1, "<FONT COLOR=#FF0000>*</FONT>&nbsp;{CAPTION}", pictures[pictures.length-1]);
+//-->
+</SCRIPT>
+<!--- PICTURE  ----->

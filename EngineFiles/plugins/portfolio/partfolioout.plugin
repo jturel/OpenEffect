@@ -1,0 +1,82 @@
+<?
+/**
+* Copyright (C) 2002 SIA ESOFTS.
+*
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License 
+* version 2 as published by the Free Software Foundation.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the SIA ESOFTS, 38/40 Blaumana str., 
+* Riga, LV - 1011, LATVIA, e-mail office@esoft.lv 
+*
+* This General Public License does not permit incorporating your program into
+* proprietary programs. Should you require to License Open Effect under the
+* commercial License, please contact SIA ESOFTS for up-to-date information.
+*/
+
+
+class portfolioout extends pluginClass {
+
+   // Constructor
+   function portfolioout(&$parent, $cfg) {
+      global $conn_s, $img;
+      $this->root_dir = TMPL_DIR;
+      $this->pluginClass(&$parent, $cfg);
+      $this->log = $this->kernel->loger->reg("Out Portfolio CONSTRUCTOR");
+      $this->log->put("Start");
+      $this->api = new rus_api(&$this);
+
+      $part_s+=0;
+
+      if ($this->cfg->get('SpecialOutPut')){
+         $this->SOut = 1;
+         $fld = $this->cfg->get('Special_fields');
+         if ($fld) {
+            if (!is_array($fld)) $fld = array($fld);
+               for ($i=0;$i<count($fld);$i++)
+                   $exp[$fld[$i]] = $this->cfg->get("expresion$i");
+         }
+         $fld = $exp;
+      } else $exp = 0;
+
+        
+      $template = $this->cfg->get("template");  
+      if ($this->log) $this->log->put("Read template [$template]");
+      $this->kernel->classLoader->checkClass("templateClass");
+
+      $tmpl = new templateClass($this->root_dir, "remove");
+
+      if ($fld) 
+        $ex = new parse_ex(&$this, &$tmpl, &$fld,$log);
+
+      $tmpl->halt_on_error = "yes";
+      $tmpl->set_file(array("body_out_array" => $template));
+      if ($fld) 
+        $ex->init("body_out_array");
+
+      $tmp = $this->api->SetFields($this->parent->docNr);
+
+
+      $tmp['height_inc'] = round($tmp['height']/2.54,2);
+      $tmp['waist_inc']  = round($tmp['waist']/2.54,2);
+      $tmp['bust_inc']   = round($tmp['bust']/2.54,2);
+      $tmp['hips_inc']   = round($tmp['hips']/2.54,2);
+
+      while ($tmp["picture$i"]) $i++;
+
+      if ($img>1) $tmp["picture"] = $tmp['picture'.($img-1)];
+      $tmp["num"] = ($img>1)?$img:'1';
+      $navigator = new navigator($this,$cfg,$this->cfg->get("template_navigator"), $img,$i,"",$this->api->genURL('img'),$tmp);
+      $tmp["NAVIGATOR"] = $navigator->html;
+      if (!$fld) 
+         $tmpl->set_var($tmp);
+      else 
+         $ex->make($tmp);
+
+      $tmpl->parse("out", array("body_out_array"));
+      $this->html = $tmpl->get("out");
+   }
+
+}
+?>

@@ -1,0 +1,76 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+<TITLE>Calendar</TITLE>
+<link rel="stylesheet" href="files/calendar.css" type="text/css">
+<script LANGUAGE="JavaScript" SRC="files/calendar.js"></script>
+<SCRIPT LANGUAGE=JavaScript FOR=calendarButton EVENT=onclick>
+	CalendTab.onclick=ClickCalend;
+	var calendar = document.getElementById('calendar');
+	if(calendar.style.visibility!='visible'){
+		inputName='input23';
+		setDateInForm(CurDate.getMonth(), CurDate.getFullYear());
+		calendar.style.left=event.clientX-event.offsetX+document.body.scrollLeft;
+		calendar.style.top=event.clientY-event.offsetY+event.srcElement.offsetHeight+document.body.scrollTop;
+		calendar.style.visibility='visible';
+		calendar.focus();
+	}
+</SCRIPT>
+<SCRIPT LANGUAGE=JavaScript FOR=calendarOk EVENT=onclick>
+	tt();
+	document.getElementById(inputName).value=dd;
+	calendar.style.visibility='hidden';
+</SCRIPT>
+</HEAD>
+
+<BODY>
+<TABLE border=0 cellspacing=1 cellpadding=0 class=calendarTable width=140>
+  <TR>
+		<TD colspan=4>
+	        
+      <select size=1 id=sMonth onchange="setChange()" class="calendarSelect" style="width:80px;">
+        <option value=1>January</option>
+				<option value=2>February</option>
+				<option value=3>March</option>
+				<option value=4>April</option>
+				<option value=5>May</option>
+				<option value=6>June</option>
+				<option value=7>July</option>
+				<option value=8>August</option>
+				<option value=9>September</option>
+				<option value=10>October</option>
+				<option value=11>November</option>
+				<option value=12>December</option>
+			</select>
+		</td><td colspan=3>
+	        
+      <select size=1 id=sYear onchange="setChange()" class="calendarSelect">
+        <option id=oY2000>2000</option>
+				<option id=oY2001>2001</option>
+				<option id=oY2002>2002</option>
+				<option id=oY2003>2003</option>
+				<option id=oY2004>2004</option>
+			</select>
+		</TD>
+	</TR>
+	<TR class="calendarFG">
+	    <TD align="center">Mo</TD>
+	    <TD align="center">Tu</TD>
+		<TD align="center">We</TD>
+	    <TD align="center">Th</TD>
+	    <TD align="center">Fr</TD>
+	    <TD align="center">Se</TD>
+	    <TD align="center">Su</TD>
+	</TR>
+</TABLE>
+<TABLE border=0 cellspacing=1 cellpadding=0 id=CalendTab class=calendarTable width=140>
+</TABLE>
+<TABLE width="140" class=calendarTable>
+  <TR> 
+    <TD width="50%" class="calendarButton" align="center" ID=calendarOk>ok</TD>
+    <TD width="50%" class="calendarButton" align="center" ONCLICK="document.getElementById('calendar').style.visibility='hidden';">cancel</TD>
+  </TR>
+</TABLE>
+
+</BODY>
+</HTML>

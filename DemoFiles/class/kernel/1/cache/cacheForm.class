@@ -1,0 +1,97 @@
+<?
+
+/***************************************
+*  Cache class 
+*  
+***************************************/
+
+  $this->checkClass("linkerClass", "cacheFormClass");
+  
+
+  class cacheFormClass extends linkerClass {
+     var $className  = "cacheFormClass";         // Class name
+     var $cacheTable = "pageCache";              // Default cache table
+     var $timeExpire = false;
+  
+     // Constructor
+     // $parent - pointer on parent object
+     // $formNr - number of cached form
+     function cacheFormClass(&$parent, $formNr = 0) {
+        $this->linkerClass(&$parent);
+               $this->log = &$this->kernel->loger->reg("FORM CACHE");
+               $this->formNr = $formNr;
+               $this->log->put("start class with formNr : $formNr");
+               $this->readConfFile();
+     }
+
+     // Read config file
+     function readConfFile() {
+        if (!$this->kernel->cfg->check("formCacheConfFile")) return false;
+               $value = $this->kernel->cfg->get("formCacheConfFile");
+               $this->cfg = $this->kernel->cfger->reg("FORM_CACHE", CONF_DIR."/".$value);
+
+        // Read values from conf file
+        if ($this->cfg->check("table")) 
+                  $this->cacheTable = $this->cfg->get("table");
+     }
+
+     // Check cached this form and time cached expire
+     // RETURN: true|false - true if time expire (or if not exist)
+     function checkTimeExpireCache() {
+        if ($this->formNr <= 0) { $this->timeExpire = true; return true; }
+               $nowTime = time();
+               $SqlStr = "SELECT updatePeriod, updateLast
+                          FROM  ".$this->cacheTable."
+                                 WHERE ID = ".$this->formNr;
+               $result = $this->kernel->db->query($SqlStr);
+               if (!$result || !$result->numrows()) { 
+                  $this->timeExpire = true; return true; 
+               }
+               list($period, $last) = $result->getrow();
+//               Print "period = $period<BR>last = $last<BR>".($last + $period)."[<$nowTime]";
+               if (($last + $period) < $nowTime) { 
+                  $this->timeExpire = true; return true; 
+               }
+               $this->timeExpire = false;
+               return false;
+     }
+
+     // Read cache file from disk
+     function readCache() {
+        if ($this->formNr <= 0) return false;
+               $fName = FORM_CACHE_DIR."/".$this->formNr.".cache";
+               $this->log->put("read cache file : $fName");
+               $fp = @fopen($fName, "r");
+               if (!$fp) return false;
+               $out = fread($fp, filesize($fName));
+               fclose($fp);
+               return $out;
+     }
+
+     // Update page expire time
+     function updateTimeExpireCache() {
+        if ($this->formNr <= 0) return false;
+               $SqlStr = "UPDATE ".$this->cacheTable." 
+                          SET updateLast = UNIX_TIMESTAMP()
+                          WHERE ID = ".$this->formNr;
+               $this->kernel->db->query($SqlStr);
+               $this->log->put("update time expire in SQL base");
+        return true;
+     }
+
+     // Read cache file from disk
+     // $out - buffer with output data
+     function saveCache(&$out) {
+        if ($this->formNr <= 0) return false;
+               $fName = FORM_CACHE_DIR."/".$this->formNr.".cache";
+               $this->log->put("save cache in : $fName");
+               $fp = @fopen($fName, "w");
+               if (!$fp) return false;
+               fwrite($fp, $out);
+               fclose($fp);
+               return true;
+     }
+
+  } // finished cacheFormClass class
+ 
+?>

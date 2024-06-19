@@ -1,0 +1,168 @@
+<?
+
+/***************************************
+*  Access class [group]
+*  
+***************************************/
+
+  $this->checkClass("linkerClass", "accessGroupClass");
+
+  define("fullAccess", "WRP");
+  define("defaultAccess", "R");  
+
+  class accessGroupClass extends linkerClass {
+     var $className = "accessGroupClass";          // Class name
+     var $die = true;   // if true then script die after tamplate draw
+     var $CashG = array();
+     var $CashP = array();
+     var $CashI = array();
+  
+     // Constructor
+     // $parent - pointer on parent object
+     function accessGroupClass(&$parent) {
+        $this->linkerClass(&$parent);
+
+        if ($this->kernel->tab_cfg->check("groupXroleTable"))
+              $this->table = $this->kernel->tab_cfg->get("groupXroleTable");
+         else $this->table = "GrpSec";
+         
+        if ($this->parent->cfg->check("groupAccess"))
+              $value = strtoupper($this->parent->cfg->get("groupAccess"));
+         else $value = "TRUE";
+        if ($value == "TRUE" || $value == "ON" || $value == "YES") $this->access = true;
+           else $this->access = false;
+        
+     }
+
+
+     // Get access current user to group
+     // $groupNr - checked document
+     // $inAccess - check recursive in parent groups
+     // RETURN: access
+     function get($groupNr = 0) {
+        if (!$this->access) return fullAccess;
+        if (!$groupNr) return "";
+        if (isset($this->CashG[$groupNr])) return $this->CashG[$groupNr];      // By RB
+        $SqlStr = "SELECT Access FROM ".$this->table."
+                   WHERE GrpID = $groupNr";
+        $SqlStr2 = "";
+        for ($Cn = 0; $Cn < count($this->parent->groupsID); $Cn++)
+            $SqlStr2 .= ($Cn ? " OR" : "")." RoleID=".$this->parent->groupsID[$Cn];
+        if ($SqlStr2) $SqlStr .= " AND (".$SqlStr2.")";
+                   else return "";
+//        print $SqlStr;
+        $result = $this->kernel->db->query($SqlStr);
+
+        if ($result && $count = $result->numrows()) {
+           $stat = "";
+           for ($Cn = 0; $Cn <$count; $Cn++) {
+               list($st) = $result->getrow();
+               $stat .= $st;
+           }
+//           print  strtoupper($stat);
+           $this->CashG[$groupNr] = strtoupper($stat);                         // By RB
+           return strtoupper($stat);
+        }
+        return "";
+     }
+
+
+     // Check recursive access in parent groups
+     function checkParentGroups($groupNr, $char) {
+        $parentID = $this->GetParentGroups($groupNr);
+//        print "Pg[$parentID*[$char]*]<BR>";
+/*        $SqlStr = "SELECT parentID FROM ".$this->kernel->tab_cfg->get("groupTable")."
+                   WHERE ID = $groupNr";
+        $result = $this->kernel->db->query($SqlStr);
+        if (!$result || !$result->numrows()) return true;
+        list($parentID) = $result->getrow();
+        $this->CashP[$groupNr] = $parentID;
+        if (!$parentID) return true;
+*/
+        if (($parentID==1)&&($char=="R")) return true;
+        if ($parentID) return true;
+//        if (($parentID==1)&&($char=="R")) return true;
+//        if (!$parentID) return true;
+//        if (($parentID==1)&&($char=="R")) echo "ok";
+//        if (($groupNr==1)&&($char=="R")) return true;
+
+        $access = strtoupper($this->get($groupNr));
+        if (strpos(" ".$access, strtoupper($char)))
+           return $this->checkParentGroups($parentID, $char);
+        return false;
+     }
+
+     // get id of parent group (RB)
+     function GetParentGroups($groupNr) {
+        if (isset($this->CashP[$groupNr])) return $this->CashP[$groupNr];       // By RB
+        $SqlStr = 'SELECT parentID FROM '.$this->kernel->tab_cfg->get('groupTable').
+                  " WHERE ID = $groupNr";
+        $result = $this->kernel->db->query($SqlStr);
+        if (!$result || !$result->numrows()) return true;
+        list($parentID) = $result->getrow();
+        $this->CashP[$groupNr] = $parentID;                                     // By RB
+        return $parentID;
+     }
+
+     // get inheretic parent group Access
+     function getInheritAccess($groupNr) {
+        $parentID = $this->GetParentGroups($groupNr);
+/*        $SqlStr = "SELECT parentID FROM ".$this->kernel->tab_cfg->get("groupTable")."
+                   WHERE ID = $groupNr";
+        $result = $this->kernel->db->query($SqlStr);
+        if (!$result || !$result->numrows()) return false;
+        list($parentID) = $result->getrow();*/
+        if (!$parentID) return false;
+        
+        $SqlStr = "SELECT inheritAccess FROM ".$this->kernel->tab_cfg->get("groupTable")."
+                   WHERE ID = $parentID";
+        $result = $this->kernel->db->query($SqlStr);
+        if (!$result || !$result->numrows()) return false;
+        list($inAccess) = $result->getrow();
+        if (!$inAccess) return $this->getInheritAccess($parentID);
+        
+        $SqlStr = "SELECT RoleID, Access FROM ".$this->kernel->tab_cfg->get("groupXroleTable")."
+                   WHERE GrpID = $parentID
+                   GROUP BY RoleID";
+        $result = $this->kernel->db->query($SqlStr);
+        if (!$result || !$count = $result->numrows()) return $this->getInheritAccess($parentID);
+        $roleIDArray = array(); $accessArray = array();
+        for ($Cn = 0; $Cn < $count; $Cn++) {
+            list($roleID, $access) = $result->getrow();
+            $roleIDArray[] = $roleID;
+            $accessArray[] = $access;
+        }
+        return array($roleIDArray, $accessArray);
+     }
+                                              
+
+     // Check access
+     // RETURN: true if have access
+     function check($groupNr = 0, $access = defaultAccess) {
+//        print "[$groupNr*[$access]*]<BR>";
+        $groupNr = intval($groupNr);
+        if (($groupNr==1)&&($access=="R")) return 1;
+        $stat = strtoupper($this->get($groupNr));
+        for ($Cn = 0; $Cn < strlen($access); $Cn++) {
+            $char = strtoupper(substr($access, $Cn, 1));
+            if (!strpos(" ".$stat, $char) ||
+//               (!$this->checkParentGroups($groupNr, $char))) return false;
+               (!$this->checkParentGroups($groupNr, "R"))) return false;
+        }
+        return true;
+     }
+
+     
+     // Check access and if not then drow template and die
+     // RETURN: true if have access
+     function checkEnd($groupNr = 0, $access = defaultAccess) {
+        if (!$this->check($groupNr, $access)) {
+           $this->kernel->error->die = $this->die;
+           $this->kernel->error->parse("Access deny to group", array($groupNr));
+           return false;
+        }
+        return true;
+     }
+          
+  } // finished Access group class 
+?>

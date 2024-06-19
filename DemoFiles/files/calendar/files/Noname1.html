@@ -1,0 +1,274 @@
+<html>
+<head>
+<title>Untitled Document</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<link rel="stylesheet" href="files/main.css" type="text/css">
+<SCRIPT LANGUAGE=JavaScript FOR=Ok EVENT=onclick>
+  tt();
+  top.document.getElementById(inputName).value = dd;
+  top.document.getElementById("calendar").style.visibility="hidden";
+</SCRIPT>
+</head>
+
+<body bgcolor="#FFFFFF" text="#000000">
+  <table width="100%" border="0" cellspacing="0" cellpadding="2" class="main">
+    <tr> 
+      <td> 
+        <table width="100%" border="0" cellspacing="0" cellpadding="0" class="caption">
+          <tr valign="middle" align="left"> 
+            <td align="center"><nobr>
+			  <select name="select3" class="input">
+						<option value=1>January</option>
+						<option value=2>February</option>
+						<option value=3>March</option>
+						<option value=4>April</option>
+						<option value=5>May</option>
+						<option value=6>June</option>
+						<option value=7>July</option>
+						<option value=8>August</option>
+						<option value=9>September</option>
+						<option value=10>October</option>
+						<option value=11>November</option>
+						<option value=12>December</option>
+              </select>
+              <select name="select3" class="input">
+					<option id=oY2000>2000</option>
+					<option id=oY2001>2001</option>
+					<option id=oY2002>2002</option>
+					<option id=oY2003>2003</option>
+					<option id=oY2004>2004</option>
+              </select></nobr>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr> 
+      <td> 
+        <table width="100%" border="0" cellspacing="10" cellpadding="0" height="100%" class="bg_color_light">
+          <tr> 
+            <td height="21"> 
+              <table border="0" cellspacing="0" cellpadding="0" class="browse" width="100%" id=CalendTab>
+                <!--tr> 
+                  <td width="16%" valign="middle" align="center" class="browse">12</td>
+                  <td width="16%" valign="middle" align="center" class="browse">2</td>
+                  <td width="16%" valign="middle" align="center" class="browse">3</td>
+                  <td width="16%" valign="middle" align="center" class="list_light">4</td>
+                  <td width="18%" valign="middle" align="center" class="list_light">5</td>
+                  <td width="18%" valign="middle" align="center" class="list_light">6</td>
+                </tr>
+                <tr> 
+                  <td width="16%" valign="middle" align="center" class="list_light">78</td>
+                  <td width="16%" valign="middle" align="center" class="list_light">9</td>
+                  <td width="16%" valign="middle" align="center" class="list_light">10</td>
+                  <td width="16%" valign="middle" align="center" class="list_light">11</td>
+                  <td width="18%" valign="middle" align="center" class="list_light">12</td>
+                  <td width="18%" valign="middle" align="center" class="list_light">13</td>
+                </tr>
+                <tr> 
+                  <td width="16%" valign="middle" align="center" class="list_light">14</td>
+                  <td width="16%" valign="middle" align="center" class="list_light">15</td>
+                  <td width="16%" valign="middle" align="center" class="list_light">15</td>
+                  <td width="16%" valign="middle" align="center" class="list_light">16</td>
+                  <td width="18%" valign="middle" align="center" class="list_light">17</td>
+                  <td width="18%" valign="middle" align="center" class="list_light">18</td>
+                </tr>
+                <tr> 
+                  <td width="16%" valign="middle" align="center" class="list_light">19</td>
+                  <td width="16%" valign="middle" align="center" class="list_light">20</td>
+                  <td width="16%" valign="middle" align="center" class="list_light"><b>21</b></td>
+                  <td width="16%" valign="middle" align="center" class="list_light">22</td>
+                  <td width="18%" valign="middle" align="center" class="list_light">23</td>
+                  <td width="18%" valign="middle" align="center" class="list_light">24</td>
+                </tr>
+                <tr> 
+                  <td width="16%" valign="middle" align="center" class="list_light">25</td>
+                  <td width="16%" valign="middle" align="center" class="list_light">26</td>
+                  <td width="16%" valign="middle" align="center" class="list_light">26</td>
+                  <td width="16%" valign="middle" align="center" class="list_light">26</td>
+                  <td width="18%" valign="middle" align="center" class="list_light">30</td>
+                  <td width="18%" valign="middle" align="center" class="list_light">31</td>
+                </tr>
+                <tr> 
+                  <td width="16%" valign="middle" align="center" class="list_light">1</td>
+                  <td width="16%" valign="middle" align="center" class="list_light">2</td>
+                  <td width="16%" valign="middle" align="center" class="list_light">3</td>
+                  <td width="16%" valign="middle" align="center" class="list_light">4</td>
+                  <td width="18%" valign="middle" align="center" class="list_light">5</td>
+                  <td width="18%" valign="middle" align="center" class="list_light">6</td>
+                </tr>
+                <tr> 
+                  <td width="16%" valign="middle" align="center" class="list_light">5</td>
+                  <td width="16%" valign="middle" align="center" class="list_light">6</td>
+                  <td width="16%" valign="middle" align="center" class="list_light">7</td>
+                  <td width="16%" valign="middle" align="center">8</td>
+                  <td width="18%" valign="middle" align="center">0</td>
+                  <td width="18%" valign="middle" align="center">0</td>
+                </tr-->
+              </table>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+<script language=javascript>
+var 	doc = document.all;
+var 	objCalend = new Object();
+var dd = "";
+var inputName;
+
+function GetDaysInMonth(iMonth, iYear) {
+	var r;
+	obj = new Date(iYear, iMonth-1, 31);
+	r=(obj.getDate()<4)?(31-obj.getDate()):obj.getDate()
+	return r;
+}
+
+function GetDayOfWeek(iMonth, iYear, iDate) {
+	obj = new Date(iYear, iMonth-1, iDate);
+	day = obj.getDay();
+	if(day == 0){
+	return 7;
+	}else{
+	return day;
+	}
+}
+
+function ClearCalend(){
+	tab = doc["CalendTab"];
+	tab.style.cursor="wait";
+	Rlen = tab.rows.length;
+	for(i=0; i < Rlen; i++){
+		tab.deleteRow();
+		}
+	oRow = tab.insertRow();
+	oCell = oRow.insertCell();
+	oCell.colSpan=7;
+}
+
+function buildCalendar(iMonth, iYear, iDay){
+	oldButton = false;
+	if(!iDay){iDay = 0;}
+	tab = doc["CalendTab"];
+	tab.style.cursor="default";
+	tab.deleteRow();
+	realDays = " "+objCalend.realDays+" ";
+	fromDay = GetDayOfWeek(iMonth, iYear, 1);
+	cellCount = 7;
+	stopDay = GetDaysInMonth(iMonth, iYear);
+	if(fromDay==1) fromDay+=7;
+	firstDay = GetDaysInMonth(iMonth-1, iYear) - fromDay + 2;
+	d = 1;
+	for( c=1; c < 43; c++ ){
+		if(cellCount ==7){
+			oRow = tab.insertRow();
+			cellCount = 0;
+		}
+		oCell = oRow.insertCell();
+		oCell.innerHTML = "&nbsp;";
+		if( (c >= fromDay) && (d <= stopDay) ){
+				if(d==iDay && (iMonth-1) == CurDate.getMonth() && iYear == CurDate.getFullYear()) {
+					oCell.className = "calendarCellCurrent";
+				} else {
+					oCell.className = "list_light";
+				}
+				oCell.id = "c_"+d;
+			oCell.innerHTML=d;
+			d++;
+		}
+		else {
+			if (c < fromDay){
+				oCell.className = "browse";
+				oCell.id = "p_"+firstDay;
+				oCell.innerHTML=firstDay;
+				firstDay++;
+			}
+			if (d > stopDay){
+				oCell.className = "browse";
+				oCell.id = "n_"+(c-stopDay-fromDay+1);
+				oCell.innerHTML=(c-stopDay-fromDay+1);
+			}
+		}
+	cellCount ++;
+	}
+}
+
+function setDateInForm(iMonth, iYear){
+	ClearCalend();
+	doc["sMonth"].options[iMonth].selected=true;
+	doc["oY"+iYear].selected=true;
+	setChange();
+}
+
+function setChange(){
+	ClearCalend();
+	iMonth = doc["sMonth"].options[doc["sMonth"].selectedIndex].value
+	iYear = doc["sYear"].options[doc["sYear"].selectedIndex].text
+	buildCalendar(iMonth, iYear, CurDate.getDate())
+}
+var oldButton = false;
+
+function ClickCalend(){
+	iDay = event.srcElement.innerHTML;
+	cn = event.srcElement.className;
+	if (event.srcElement.id.substr(0,2)=='c_'){
+		for(i = 0; i < 6; i++ ) {
+			for(j = 0; j < 7; j++ ) {
+				if( doc["CalendTab"].rows[i].cells[j].id.substr(0,2)=='c_'){
+					if(doc["CalendTab"].rows[i].cells[j].innerHTML==CurDate.getDate() && (iMonth-1) == CurDate.getMonth() && iYear == CurDate.getFullYear()){
+						doc["CalendTab"].rows[i].cells[j].className = "calendarCellCurrent";
+					} else {
+						doc["CalendTab"].rows[i].cells[j].className = "list_light";
+					}
+				}
+			}
+		}
+		dd = format(event.srcElement.innerHTML) + '/' + format(doc["sMonth"].options[doc["sMonth"].selectedIndex].value) + '/' + doc["sYear"].options[doc["sYear"].selectedIndex].text
+		event.srcElement.className = 'calendarCellSelected'
+	}
+	if (event.srcElement.id.substr(0,2)=='p_'){
+		if(doc["sYear"].selectedIndex>0 || doc["sMonth"].selectedIndex>0){
+			dd = format(event.srcElement.innerHTML) + '/';
+			doc["sMonth"].selectedIndex = (doc["sMonth"].selectedIndex!=0)?(doc["sMonth"].selectedIndex-1):11;
+			dd+=format(doc["sMonth"].options[doc["sMonth"].selectedIndex].value) + '/';
+			doc["sYear"].selectedIndex = (doc["sMonth"].selectedIndex!=11)? (doc["sYear"].selectedIndex): (doc["sYear"].selectedIndex - 1);
+			dd+=doc["sYear"].options[doc["sYear"].selectedIndex].text;
+			tmp = 'c_'+event.srcElement.innerHTML;
+			setChange();
+			doc[tmp].className = 'calendarCellSelected';
+		}
+	}
+	if (event.srcElement.id.substr(0,2)=='n_'){
+		if(doc["sYear"].selectedIndex<doc["sYear"].options.length || doc["sMonth"].selectedIndex<doc["sMonth"].options.length){
+			dd = format(event.srcElement.innerHTML) + '/';
+			doc["sMonth"].selectedIndex = (doc["sMonth"].selectedIndex!=11)?(doc["sMonth"].selectedIndex+1):0;
+			dd+=format(doc["sMonth"].options[doc["sMonth"].selectedIndex].value) + '/';
+			doc["sYear"].selectedIndex = (doc["sMonth"].selectedIndex!=0)? (doc["sYear"].selectedIndex): (doc["sYear"].selectedIndex + 1);
+			dd+=doc["sYear"].options[doc["sYear"].selectedIndex].text;
+			tmp = 'c_'+event.srcElement.innerHTML;
+			setChange();
+			doc[tmp].className = 'calendarCellSelected';
+		}
+	}
+	iMonth = doc["sMonth"].options[doc["sMonth"].selectedIndex].value
+	iYear = doc["sYear"].options[doc["sYear"].selectedIndex].text
+}
+
+function format(x){
+	return (x>9)?x:'0'+x;
+}
+
+function tt(){
+	if(dd==""){
+		dd = format(CurDate.getDate()) + '/' + format(CurDate.getMonth()+1) + '/' + CurDate.getFullYear()
+	}
+}
+
+var CurDate = new Date();
+setDateInForm(CurDate.getMonth(), CurDate.getFullYear());
+
+CalendTab.onclick=ClickCalend;
+</script>
+</body>
+</html>

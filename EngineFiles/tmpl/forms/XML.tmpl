@@ -1,0 +1,28 @@
+<?xml version = "1.0" ?>
+        <!DOCTYPE components    [
+        <!ELEMENT components    (component+)? >
+        <!ELEMENT component     ((param|elms)+)? >
+                <!ATTLIST component 
+                            name CDATA   #REQUIRED
+                            title CDATA   #REQUIRED
+                            caption CDATA   #IMPLIED
+                            def_val CDATA   #IMPLIED 
+                            def_val_type (logical|string|number|group|file|document) "string"
+                            icon CDATA   #REQUIRED
+                            >
+        <!ELEMENT param         (#PCDATA) >
+                <!ATTLIST param 
+                            name CDATA   #REQUIRED
+                            type (logical|string|number|group|file|document) "string"
+                            required (yes|no) "no">
+        <!ELEMENT elms           (elm+) >
+                <!ATTLIST elms 
+                            name     CDATA  #REQUIRED
+                            default  CDATA  #IMPLIED
+                            mincount CDATA "2"
+                            maxcount CDATA "100">
+        <!ELEMENT elm           (#PCDATA)>
+                <!ATTLIST elm
+                            caption CDATA  #IMPLIED>
+        ]>
+{COMPONENTS}

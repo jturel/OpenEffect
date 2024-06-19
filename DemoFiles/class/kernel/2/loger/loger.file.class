@@ -1,0 +1,37 @@
+<?
+
+/***************************************
+*  Loger class
+*  
+***************************************/
+
+
+######################################################################
+#
+#  loger item Class (FILE log output)
+# 
+ 
+
+ class logerItemClass_file extends linkerClass {
+    var $className = "logerItemClass_file"; // Class name
+    
+    // Constructor
+    // $parent - pointer on parent object
+    function logerItemClass_file(&$parent) {
+       $this->linkerClass(&$parent);
+    }
+
+
+    // Send message to stream
+    // &$str - pointer on string which will be send in output
+    function put(&$str) {
+       $fp =  @fopen($this->parent->fileName, "a");
+       if (!$fp) return false;
+       fwrite($fp, "[".$this->parent->streamName."] $str\n");
+       fclose($fp);
+       return true;
+    }
+ }
+
+
+?>

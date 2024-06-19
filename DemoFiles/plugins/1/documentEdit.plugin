@@ -1,0 +1,826 @@
+<?
+
+/*********************************************
+*
+*  EDIT the document
+*
+*********************************************/
+
+
+define ("Component_seporator", "%%");
+define ("secComponent_seporator", ":");
+
+class documentEditPlugin extends pluginClass {
+
+   var $action = "index.php";
+
+   // Constructor
+   function documentEditPlugin(&$parent, $cfg) {
+      $this->root_dir = TMPL_DIR;
+      $this->pluginClass(&$parent, $cfg);
+      $this->main();
+   }
+
+
+   // Main function
+   function main() {
+      $this->log = $this->kernel->loger->reg("FORM CONSTRUCTOR");
+      $this->tmpl = $this->readTemplate($this->cfg->get("template"));
+
+      $docID = $this->parent->docNr;
+     
+      if (!$this->getCfg($docID)) return;
+//      print "[$this->XML]";
+      if ($this->XML)
+         $this->cntTmpl = $this->readCntTemplateXML($this->cntTemplateFile);
+      else
+         $this->cntTmpl = $this->readCntTemplate($this->cntTemplateFile);
+//      print_r($tmpl);
+   }
+   
+   // Read template
+   // $fName - file name of template
+   function readTemplate($fName) {
+      $this->log->put("Read template [$fName]");
+      $this->kernel->classLoader->checkClass("templateClass");
+      $tmpl = new templateClass($this->root_dir, "remove");
+      $tmpl->halt_on_error = "yes";
+      $tmpl->set_file(array("body" => $fName));
+
+      // Define current form,group and doc ID's...
+      global $REQUEST_URI;
+      $tmpl->set_var(array("_FORM_ID"   => $this->parent->formNr,
+                           "_GROUP_ID"  => $this->parent->groupNr,
+                           "_DOC_ID"    => $this->parent->docNr,
+                           "_LINK_SELF" => $REQUEST_URI));
+
+      return $tmpl;
+   }
+   
+   
+   // Read fields file
+   // $fName - file name of fields
+   function readFields($fName) {
+      $this->log->put("Read fields [$fName]");
+      $rName = $this->root_dir."/".$fName;
+      if (is_file($rName)) {
+         include $rName;
+         $this->log->put("Read fields : DONE");
+         return array($fields, $lists);
+      }
+      $this->log->put("Read fields : FALSE");
+      return array(array(), array());
+   }
+   
+   
+   // Parse fields in templates
+   function parseFields() {
+
+      $count = count($this->fields);
+      for ($Cn = 0; $Cn < $count; $Cn++) {
+
+          $value = "";
+//        if ($this->fields[$Cn]["type"] == 0) continue;
+
+//          print $this->fields[$Cn]["name"];
+          global $$this->fields[$Cn]["name"];
+          eval("\$rValue = \$".$this->fields[$Cn]["name"].";");
+//          print $rValue."<br>";
+
+          if ($this->fields[$Cn]["type"] == 0) 
+             $value = $rValue;
+          if ($this->fields[$Cn]["type"] == 1) 
+             $value = $rValue;
+          if ($this->fields[$Cn]["type"] == 2)
+             $value = $this->selectBox($this->fields[$Cn]["select"], $rValue);
+          if ($this->fields[$Cn]["type"] == 3)
+             $value = $this->checkBox($rValue);
+          if ($this->fields[$Cn]["type"] == 4) 
+             $value = $this->listStr($this->fields[$Cn]["list"], $rValue);
+
+          $this->tmpl->set_var(array($this->fields[$Cn]["name"] => $value));
+          if ($this->fields[$Cn]["rName"]) $rName = $this->fields[$Cn]["rName"];
+                                      else $rName = $this->fields[$Cn]["name"];
+          $this->tmpl->set_var(array("real_".$this->fields[$Cn]["name"] => $rName));
+      }
+      $this->tmpl->set_var(array("ACTION" => $this->action));
+   }
+
+   // Read Item from base
+   function readItem($sql = "1") {
+      $SqlStr = "";
+      $count = count($this->fields);
+      for ($Cn = 0; $Cn < $count; $Cn++) {
+          if ($this->fields[$Cn]["type"] == 0) continue;
+          if ($this->fields[$Cn]["type"] == 4) continue;
+          if ($this->fields[$Cn]["nodb"] == true) continue;
+          if ($SqlStr) $SqlStr .= ",";
+          $SqlStr .= $this->fields[$Cn]["name"];
+      }
+      $SqlStr = "SELECT $SqlStr FROM ".$this->cfg->get("table")."
+                 WHERE $sql LIMIT 1";
+      $result = $this->kernel->db->query($SqlStr);
+      if (!$result || !$result->numrows()) return false;
+      $row = $result->getrow();
+
+      reset($row);
+      while (list($key, $val) = each($row))
+            $GLOBALS[$key] = $val;
+   }
+
+   // Set default values
+   function setDefault() {
+      $count = count($this->fields);
+      for ($Cn = 0; $Cn < $count; $Cn++) {
+          if ($this->fields[$Cn]["type"] == 0) continue;
+          if ($this->fields[$Cn]["type"] == 4) continue;
+          if (isSet($this->fields[$Cn]["default"]) && 
+              !$GLOBALS[$this->fields[$Cn]["name"]]) 
+                $GLOBALS[$this->fields[$Cn]["name"]] = 
+                         $this->fields[$Cn]["default"];
+//         else $GLOBALS[$this->fields[$Cn]["name"]] = "";
+      }
+   }
+   
+   // Parse template into HTML vars
+   function parse() {
+      $this->setDefault();
+      $this->parseFields();
+      
+      $this->tmpl->parse("out", array("body"));
+      $this->html = $this->tmpl->get("out");
+      return $this->html;
+   }
+
+   
+
+   // IF have ID return ID
+   // in false, create new ID
+   function getID($id) {
+      if ($id) return $id;
+      return $this->kernel->db->nextid();
+   }
+
+   // DELETE data from database
+   function delete() {
+      global $_id;
+      if (!$_id) return false;
+      $this->kernel->api->removeDoc(0, $_id);
+      return true;
+   }
+      
+   
+   // Save data
+   function save($sql = "1") {
+      if (!$this->checkNeedFields()) return false;
+      
+      $SqlStr = 'SELECT * FROM '.$this->cfg->get('table').
+                ' WHERE $sql LIMIT 1';
+      $result = $this->kernel->db->query($SqlStr);
+      if ($result && $result->numrows())
+              return $this->save_update($sql);
+         else return $this->save_insert();
+   }
+   
+   
+   // Save Data (update)
+   function save_update($sql = "1") {
+      $SqlStr = "UPDATE ".$this->cfg->get("table")." SET ";
+      if ($count = count($this->fields)) {
+         $SqlStr2 = "";
+         for ($Cn = 0; $Cn < $count; $Cn++) {
+             if ($this->fields[$Cn]["type"] == 0) continue;
+             if ($this->fields[$Cn]["type"] == 4) continue;
+             if ($this->fields[$Cn]["nodb"] == true) continue;
+
+             global $$this->fields[$Cn]["name"];             
+             eval("\$rValue = \$".$this->fields[$Cn]["name"].";");
+             if ($SqlStr2) $SqlStr2 .= ",";
+             $SqlStr2 .= $this->fields[$Cn]["name"]."=";
+             
+             // Text type
+             if ($this->fields[$Cn]["type"] == 1)
+                $SqlStr2 .= "\"".$rValue."\"";
+             // SelectBox
+
+             if ($this->fields[$Cn]["type"] == 2)
+                $SqlStr2 .= "\"".$rValue."\""; 
+
+             // CheckBox
+             if ($this->fields[$Cn]["type"] == 3)
+                $SqlStr2 .= ($rValue ? 1 : 0);
+             // List
+             if ($this->fields[$Cn]["type"] == 4)
+                $SqlStr2 .= "\"".$rValue."\"";
+         }
+         $SqlStr .= $SqlStr2;
+         $SqlStr .= " WHERE $sql";
+    //     return $this->kernel->db->query($SqlStr);
+      }
+      return false;
+   }
+   
+   // Save Data (insert)
+   function save_insert() {
+      $SqlStr = "INSERT INTO ".$this->cfg->get("table")."(";
+      if ($count = count($this->fields)) {
+         $SqlStr2 = "";
+         for ($Cn = 0; $Cn < $count; $Cn++) {
+             if ($this->fields[$Cn]["type"] == 0) continue;
+             if ($this->fields[$Cn]["type"] == 4) continue;
+             if ($this->fields[$Cn]["nodb"] == true) continue;
+             
+             if ($SqlStr2) $SqlStr2 .= ",";
+             $SqlStr2 .= $this->fields[$Cn]["name"];
+         }
+         $SqlStr .= $SqlStr2;
+         $SqlStr .= ") VALUES (";
+         $SqlStr2 = "";
+         for ($Cn = 0; $Cn < $count; $Cn++) {
+             if ($this->fields[$Cn]["type"] == 0) continue;
+             if ($this->fields[$Cn]["type"] == 4) continue;
+             if ($this->fields[$Cn]["nodb"] == true) continue;
+
+             global $$this->fields[$Cn]["name"];
+             eval("\$rValue = \$".$this->fields[$Cn]["name"].";");
+             if ($SqlStr2) $SqlStr2 .= ",";
+
+             // Text type
+             if ($this->fields[$Cn]["type"] == 1)
+                $SqlStr2 .= "\"".$rValue."\"";
+             // SelectBox
+             if ($this->fields[$Cn]["type"] == 2)
+                $SqlStr2 .= "\"".$rValue."\"";
+             // CheckBox
+             if ($this->fields[$Cn]["type"] == 3)
+                $SqlStr2 .= ($rValue ? 1 : 0);
+             // SelectBox
+             if ($this->fields[$Cn]["type"] == 4)
+                $SqlStr2 .= "\"".$rValue."\"";
+         }
+         $SqlStr .= $SqlStr2;
+         $SqlStr .= ")";
+         return $this->kernel->db->query($SqlStr);
+      }
+      return false;
+   }
+
+
+   // Check need fields
+   function checkNeedFields() {
+      $count = count($this->fields);
+      for ($Cn = 0; $Cn < $count; $Cn++) {
+          global $$this->fields[$Cn]["name"];
+          if ($this->fields[$Cn]["need"] &&
+             !$$this->fields[$Cn]["name"]) return false;
+      }
+      return true;
+   }
+   
+
+   /***   Create 'select' output   ***/
+   function selectBox($field, $default) {
+      $output = "<option value=''></option>\n";
+      $select = $this->lists[$field];
+      
+      for ($Cn = 0; $Cn < count($select); $Cn++) {
+          $output .= "<option value='".$select[$Cn]["value"]."'";
+          if ($select[$Cn]["value"] == $default) $output .= " selected";
+          $output .= ">";
+          $output .= $select[$Cn]["name"];
+          $outptu .= "</option>\n";
+      }
+      
+      return $output;
+   }
+
+   /***   Create 'list' output   ***/
+   function listStr($field, $default) {
+      $list = $this->lists[$field];
+      
+      $output = "";
+      for ($Cn = 0; $Cn < count($list); $Cn++) {
+          if ($Cn) $output .= ", ";
+          $output .= $list[$Cn];
+      }
+      
+      return $output;
+   }
+
+   /***   Create 'checkBox' output   ***/
+   function checkBox($value) {
+      if ($value) return "checked";
+      return "";
+   }
+
+   // read configuration from conf files
+   // $docID - document ID
+   function getCfg($docID) {
+      $tmplTable  = $this->kernel->tab_cfg->get("templateTable");
+      $docTable   = $this->kernel->tab_cfg->get("docTable");
+      $groupTable = $this->kernel->tab_cfg->get("groupTable");
+      $cfgFile   = "";
+      
+      if ($docID) {
+         $SqlStr = "SELECT t.cfgFile FROM $docTable d, $tmplTable t 
+                    WHERE d.ID = $docID AND d.templateID = t.ID";
+         $result = $this->kernel->db->query($SqlStr);
+         if ($result && $result->numrows())
+            list($cfgFile) = $result->getrow();
+      }
+      global $templateID;
+      if ($templateID) {
+         $SqlStr = "SELECT cfgFile FROM $tmplTable 
+                    WHERE ID = $templateID";
+         $result = $this->kernel->db->query($SqlStr);
+         if ($result && $result->numrows())
+                   list($cfgFile) = $result->getrow();
+      }
+
+      if ((!docID && $this->parent->groupNr) || !$cfgFile) {
+         $SqlStr = "SELECT cfgFile, g.templateID FROM $tmplTable t, $groupTable g 
+                    WHERE g.templateID = t.ID AND g.ID = ".$this->parent->groupNr;
+         $result = $this->kernel->db->query($SqlStr);
+         if (!$result || !$result->numrows()) {
+            $SqlStr = "SELECT cfgFile FROM $tmplTable t
+                       WHERE t.ID = ".$this->kernel->cfg->get("defaultContentTemplate");
+            $result = $this->kernel->db->query($SqlStr);
+            if (!$result || !$result->numrows()) die("Can't find content template (not use in group and document)");
+            $templateID = $this->kernel->cfg->get("defaultContentTemplate");
+         } 
+         list($cfgFile,$templateID) = $result->getrow();
+      }
+
+//      print $cfgFile;
+      if (preg_match('/.*\\.(xml)|(dtd)/i',$cfgFile)){
+         $this->XML             = 1;
+         $this->cntTemplateFile = $cfgFile;
+      } else  {                 
+         $cfg = $this->cfgTmpl  = $this->kernel->cfger->reg('TEMPLATE DOCUMENT ADMIN', DB_CONF_DIR.'/'.$cfgFile);
+         $this->cntTemplateFile = $cfg->get("template");
+      }
+
+      return true;
+   }
+
+   // read template for content
+   // $fName - file name of template
+   function readCntTemplateXML($fName) {
+      if (!class_exists("xmlcompPlugin")) return '';
+
+//      print SAIT_TMPL_DIR.$fName;
+      $fp = fopen(SAIT_TMPL_DIR.$fName, 'r');
+      $A = fread($fp, filesize(SAIT_TMPL_DIR.$fName));
+      $t = new xml_components($A);
+      fclose($fp);
+//      print "$fName";
+//      print_r($t->components);
+      $component = new xmlcompPlugin($this);
+      $str  =  $component->jsFile();
+      $str  .= $component->Name();
+
+      foreach ($t->components as $comp) {
+         $m = $comp->name;
+         $str .=  $component->$m(&$comp);
+      }
+
+//      print $str;
+      return $str;
+   }
+
+   // read template for content
+   // $fName - file name of template
+   function readCntTemplate($fName) {
+      $this->kernel->classLoader->checkClass('templateClass');
+      $tmpl = new templateClass(SAIT_TMPL_DIR, 'remove');
+      $tmpl->halt_on_error = 'yes';
+
+      $tmpl->set_file(array('bodyContent' => $fName));
+      $tmpl->set_var('bodyContent', $out);
+      $this->fillComponents(&$tmpl);
+      $this->fillUserComponents(&$tmpl);
+
+      return $tmpl;
+   }
+
+   // Full component in content edit form
+   function fillComponents($tmpl) {
+      if (!class_exists("compPlugin")) return;
+      $tmpl->loadfile("bodyContent");
+      $inStr = $tmpl->get_var("bodyContent");
+      $expStr = explode(Component_seporator, $inStr);
+      if (count($expStr) < 3) return;
+      
+      $component = new compPlugin($this);
+      
+      $out = "";
+      for ($Cn = 0; $Cn < count($expStr); $Cn++) {
+          if (!($Cn % 2)) { $out .= $expStr[$Cn]; continue; }
+          $str = trim($expStr[$Cn]);
+          if (!$str) continue;
+          $expStr2 = explode(secComponent_seporator, $expStr[$Cn]);
+          $evalStr  = '$out .= $component->'.$expStr2[0].'(';
+          for ($Cn2 = 1; $Cn2 < count($expStr2); $Cn2++) {
+              if ($Cn2 > 1) $evalStr .= ',';
+              $evalStr .= "'".$expStr2[$Cn2]."'";
+          }
+          $evalStr .= ");";
+          eval($evalStr);
+      }
+      $tmpl->set_var("bodyContent", $out);
+   }
+ 
+
+   // Full USER component in content edit form
+   function fillUserComponents($tmpl) {
+      if (!class_exists("userCompPlugin")) return;
+      
+      $component = new userCompPlugin();
+      $compArray = get_class_methods("componentPlugin");
+      for ($Cn = 0; $Cn < count($compArray); $Cn++) {
+          if ($compArray[$Cn] == 'componentPlugin') continue;
+          eval("\$tmpl->set_var(\$compArray[\$Cn], \$component->".$compArray[$Cn]."());");
+      }
+   }
+ 
+
+   // Parse fields 
+   function parseCntFields($docID) {
+//print $this->cntTmpl;
+     if ($this->XML)
+      for ($Cn = 0; $Cn < count($this->cntTemplateField); $Cn++) {
+          $name = $this->cntTemplateField[$Cn];
+          global $$name;
+//          print "str_replace(\{$name}, ".$$name." <BR>";
+          $this->cntTmpl = str_replace("\{$name}", $$name, $this->cntTmpl);
+//$this->cntTmpl = str_replace("<FBR>","{",$this->cntTmpl);
+//$this->cntTmpl = str_replace("<BFBR>","}",$this->cntTmpl);
+
+      }
+     else
+      for ($Cn = 0; $Cn < count($this->cntTemplateField); $Cn++) {
+          $name = $this->cntTemplateField[$Cn];
+          global $$name;
+          $this->cntTmpl->set_var($this->cntTemplateField[$Cn], $$name);
+      }
+//print $this->cntTmpl;
+   }
+
+
+   // Parse content fields into main FORM
+   function parseContent() {
+      $this->parseCntFields($this->parent->docNr);
+   
+      if (!$this->XML) {
+         $this->cntTmpl->parse("out", array("bodyContent"));
+         $out = $this->cntTmpl->get("out");
+      } else  
+         $out = $this->cntTmpl; 
+
+//      echo $out;
+      
+      $this->tmpl->set_var("CONTENT", $out);
+   }
+
+   // Read content field in global variables
+   function readContent($docID) {
+//      echo $this->cntTmpl;
+      $tmpArray = array();
+      $SqlStr = 'SELECT t.ID, t.name, t.content FROM '.$this->kernel->tab_cfg->get('txtTable').
+                ' t, '.$this->kernel->tab_cfg->get('txtLinkTable')." l
+                 WHERE t.ID = l.TxtID
+                 AND l.DocID = $docID
+                 AND (t.lang = ".$this->kernel->langID.' OR t.lang = 0)';
+      $result = $this->kernel->db->query($SqlStr);
+      if ($result && $count = $result->numrows()) {
+         $this->cntTemplateField = array();
+         for ($Cn = 0; $Cn < $count; $Cn++) {
+             list($id, $name, $content) = $result->getrow();
+             $this->cntTemplateField[] = $name;
+             $tmpArray[$name] = $id;
+             global $$name;
+             if ($this->XML) {  
+                $content = preg_replace (array("'<'","'>'",'/"/'), array("&lt;","&gt;",'&quot;'), $content);
+                $$name = $content;
+                $this->cntTmpl = str_replace ('{'.$name .'}',$content , $this->cntTmpl);
+             }
+         }
+      }
+   }
+
+   // Save GroupIn Info [Ruslan B (c)]
+   function saveGrpIn($docID) {
+      
+        $log = $this->kernel->loger->reg('documentEditPlugin saveGrpIn');
+        global $Group_document_IN_hide,$Group_document_IN,$Group_document_IN1,$Group_document_IN2,$Group_document_IN3;
+        $Group_document_IN_hide = explode(',',implode(',',$Group_document_IN_hide));
+               $Group_document_IN = array_merge($Group_document_IN3,
+                                                $Group_document_IN2,
+                                                $Group_document_IN1,
+                                                explode(',',implode(',',$Group_document_IN)));
+
+        $in = $this->kernel->api->getLinkedGroup($docID);
+
+        for ($Cn = 0; $Cn < count($Group_document_IN_hide); $Cn++) {
+            $t = $Group_document_IN_hide[$Cn];
+                   if (!$t) continue;
+                   $t = intval($t);
+            $is = in_array($t,$in);
+            $must = in_array($t,$Group_document_IN);
+            $log->put($t."[$is] [$must]");
+            if ($is&&!$must){
+               $this->kernel->api->removeLinkGroupToDoc($t,$docID);
+//               $this->kernel->api->removeDoc($docID,$t);
+               $log->put("Del $t,$docID<br>");
+            } else 
+             if (!$is&&$must){
+               $this->kernel->api->CreateLinkGroupToDoc($t,$docID);            
+               $log->put("Add $t,$docID<br>");
+           }
+        }
+   }
+   
+   
+   
+//*************************************************************************************   
+//*************************************************************************************
+//*************************************************************************************   
+//*************************************************************************************
+// NEW GENERATION   
+//*************************************************************************************   
+//*************************************************************************************
+//*************************************************************************************   
+//*************************************************************************************
+   
+   
+    // Main function for send template on Screen
+    function parseNew() {
+       global $save, $apply, $_id;
+
+       $_id = ($this->parent->docNr ? $this->parent->docNr : $_id);
+       if (!$_id) $_id = 0;
+
+       list($this->fields, $this->lists) =
+            $this->readFields($this->cfg->get("fields"));
+
+       if (!$save && !$apply) {
+          $this->readItem("ID=$_id");
+          $this->readContent($_id);
+       }
+       $this->parseContent();
+       $this->parse();    
+    }   
+   
+  
+    // Main function for save document variables into database
+    function saveNew() {
+               global $_id;
+               global $ID;
+               global $_name;
+               
+               $ID = $_id;
+               if (!$this->checkNewValidation()) {
+                   return false;
+               }
+               if (!$_id) $_id = $this->createNewDocument();
+               if (!$_id) return false;
+               $ID = $this->parent->docNr = $_id;
+               $this->setAccess($_id);
+               $this->saveNewVariables($_id);
+               $this->setLastUpdate($_id);
+               return true;
+    }
+    
+    // Set lastUpdate field in document in current time
+    function setLastUpdate($ID) {
+               $LastUpdate = date("Y-m-d H:i:s", time());
+               $this->kernel->api->setDocumentField($ID, array("LastUpdate" => $LastUpdate));
+    }
+    
+    
+    // Set default access on document
+    function setAccess($ID) {
+       if ($ID && $this->parent->groupNr) {
+          $defRole   = $this->cfg->get("defaultRoleID");
+          $defAccess = $this->cfg->get("defaultRoleAccess");
+          if (!is_array($defRole))
+             $this->kernel->api->magicSecurityDoc($ID, $defRole, $defAccess);
+           else for ($Cn = 0; $Cn < count($defRole); $Cn++)
+//echo $defAccess[$Cn].":";
+             $this->kernel->api->magicSecurityDoc($ID, $defRole[$Cn], $defAccess[$Cn]);
+       }       
+    }
+    
+    
+    // Create new document in database
+    function createNewDocument() {
+               global $_groupid;
+               global $_template;
+               
+               $expStr = explode(',', $_groupid);
+//      print '!11!'.$_groupid.'!!<br>';
+               if (!trim($_groupid)) return false;
+//      print '!12!'.$expStr.'!!<br>';
+        if (!$_template) $_template = 0;
+//      print '!13!'.$_template.'!!<br>';
+               return $this->kernel->api->createDocument($expStr[0], $_template);
+//      print '!14!!!<br>';
+    }
+   
+   
+    // Read all varable from POST and redirect on type functions 
+    function saveNewVariables($docID = 0) {
+               global $HTTP_POST_VARS;
+               if (is_array(!$HTTP_POST_VARS)) return false;
+               reset($HTTP_POST_VARS);
+               while(list($key, $val) = each($HTTP_POST_VARS)) {
+                   if ($key == "save") continue;
+
+                   if (substr($key, 0, 2) == "__") {
+                              $this->saveNewAdditionalVariable($docID, $key, $val);
+                              continue;
+                   }
+                   if (substr($key, 0, 1) == "_") {
+                              $this->saveNewSystemVariable($docID, $key, $val);
+                              continue;
+                   }
+//                   print "$docID, $key, $val<br>";
+                   $this->saveNewResourceVariable($docID, $key, $val);
+               }
+               $this->saveSearch($docID,$HTTP_POST_VARS['_search']);
+    }
+   
+   
+   // Read group variable and create links on define catagorys
+   function saveGroups($docID, $groups) {
+      $expStr = explode(",", $groups);
+      $this->kernel->api->updateLinkGroupToDoc(trim($expStr[0]), $docID);
+
+/*               $this->kernel->api->removeLinkGroupToDoc(0, $docID);
+               $expStr = explode(",", $groups);
+               for ($Cn = 0; $Cn < count($expStr); $Cn++) {
+                   $this->kernel->api->createLinkGroupToDoc(trim($expStr[$Cn]), $docID);
+               }*/
+   }
+
+   // Create /unikal/ name for document and set field in database 
+   function saveName($docID, $val) {
+      global $HTTP_POST_VARS;         
+      $val = $HTTP_POST_VARS['_name'];
+      if (!$val)  $val = $HTTP_POST_VARS['name'];
+      if (!$val)  $val = $HTTP_POST_VARS['title'];
+      if (!$val)  $val = $HTTP_POST_VARS['sname'];
+      if (!$val)  $val = $HTTP_POST_VARS['main'];
+      if (!$val)  $val = $HTTP_POST_VARS[$this->cntTemplateField[0]];
+      if (!$val)  return;
+//      print "name $val"; 
+//      print "name $val<BR>"; 
+      $this->kernel->api->setDocumentField($docID, array("name" => $val));
+   }
+
+   // Create /unikal/ Search for document and set field in database
+   function saveSearch($docID, $val) {
+      if ($val) return;
+      if ($val) 
+        $this->kernel->api->setDocumentField($docID, array('keyWords' => $val));
+      else {
+            $t = array_unique(explode(' ',$this->search_add));
+            foreach ($t as $k=>$v)
+               if (strlen($v)<4)  unset($t[$k]);
+            $this->kernel->api->setDocumentField($docID, array('keyWords' => implode(' ',$t)));
+      }
+   }
+   
+   
+   // Save varaible with "__" chars in  document fields
+   function saveNewAdditionalVariable($docID, $key, $val) {
+               $key = substr($key, 2);
+//               print "$key => $val <BR>";
+               $this->kernel->api->setDocumentField($docID, array($key => $val));
+   }
+   
+   
+   // Redirection for system varaibles
+   function saveNewSystemVariable($docID, $key, $val) {
+//         print "[$key] $val"; 
+               if ($key == "_groupid") $this->saveGroups($docID, $val);
+               if ($key == "_name")    $this->saveName($docID, $val);
+               if ($key == "_search")  $this->saveSearch($docID, $val);
+   }
+   
+   
+   // Save Resource content in database
+   function saveNewResourceVariable($docID, $key, $val) {
+       $fld = "!".$key;
+//  print "$fld <br>";
+          if ($this->XML)
+          {
+           $ch = 0;
+          } else {
+            $ch = $this->cfgTmpl->check($fld);
+          }
+          if ($ch) {
+             $arr = $this->cfgTmpl->get($fld);
+//             print "arr[0] = $arr[0] <br>";
+             if ($arr[0]) $lang = 0;
+             else {
+               global $_language;
+               if ($_language) $lang = $_language;
+               else $lang = $this->kernel->langID;
+             }
+          } else {
+             global $_language;
+             if ($_language) $lang = $_language;
+             else $lang = $this->kernel->langID;
+          }
+
+       $this->search_add .= ' '.$val;
+       if (is_array($val)) $val = implode(',',$val);
+//       echo "$docID, $key, $val, $lang<BR>";
+       $this->kernel->api->magicTxt($docID, $key, $val, $lang);
+   }
+   
+   
+   // Check validation of fields
+   function checkNewValidation() {
+      if (!class_exists('validFunctionPlugin')) return false;
+      $validFun = new validFunctionPlugin();
+
+      global $HTTP_POST_VARS;
+
+      
+      if ($this->XML){
+
+         ///****
+         $fp = fopen(SAIT_TMPL_DIR.$this->cntTemplateFile, 'r');
+         $A = fread($fp, filesize(SAIT_TMPL_DIR.$this->cntTemplateFile));
+         $t = new xml_components($A);
+         fclose($fp);
+
+/*      print "!!!!!!!!!!!!!!!!!!!";
+         print_r($this->XML);
+      print "!!!!!!!!!!!!!!!!!!!";
+         print_r($t->components);
+      print "!!!!!!!!!!!!!!!!!!!";
+*/
+         foreach ($t->components as $comp) {
+/*
+//            $p = $comp['param'];
+            foreach ($comp as $k=>$p) 
+               if ($k=='param') break; 
+            $p = &$comp->param_n
+//               print "$k = $v<BR>";
+            $name  =  $p['validation']['_'];
+            $field =  $p['name']['_'];
+
+*/
+            $name  =  $comp->param_n['validation']['_'];
+            $field =  $comp->param_n['name']['_'];
+//            print_r($p['validation']);
+//            print "-$p> [$name] [$field]<BR>";
+            if ((!$name)||(!$field)) continue;
+             global $$field;
+             $fieldValue = $$field;
+             $fun = str_replace("{1}", '$'.$field, $arr[1]);
+             $evalStr = "\$stat = \$validFun->$fun;";
+             eval($evalStr);
+             if (!$stat) $inValid[] = $field;
+         }
+      } else {
+            while(list($field, $val) = each($HTTP_POST_VARS)) {
+                         if ($field == 'save') continue;
+                         $fld = '!'.$field;
+                         if (!$this->cfgTmpl->check($fld)) continue;
+                         $arr = $this->cfgTmpl->get($fld);
+                         if (!$arr[1]) continue;
+      
+                  global $$field;
+                  $fieldValue = $$field;
+                  $fun = str_replace("{1}", '$'.$field, $arr[1]);
+                  $evalStr = "\$stat = \$validFun->$fun;";
+                  eval($evalStr);
+                  if (!$stat) $inValid[] = $field;
+            }
+      }
+
+      if (!count($inValid)) return true;
+      
+      // Show Error
+      $outStr = '';
+      for ($Cn = 0; $Cn < count($inValid); $Cn++)
+          $outStr .= '<Font class="list">&nbsp;&nbsp;&nbsp;'.$inValid[$Cn].'</font><br>';
+
+      print $this->kernel->error->getMsg('Validation error', array($outStr)).'<br>';
+      global $save;
+      $save = 0;
+
+      foreach ($GLOBALS as $k=>$v)
+             $this->cntTemplateField[] = $k;
+
+      return false;
+   }
+
+
+}
+
+?>

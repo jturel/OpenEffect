@@ -1,0 +1,285 @@
+<?
+
+/***************************************
+*  Access class
+*  
+***************************************/
+
+  $this->checkClass("linkerClass", "accessClass");
+
+  class accessClass extends linkerClass {
+     var $className = "accessClass";          // Class name
+     var $user = "";     // user name
+     var $pass = "";     // pass word
+     var $userID = 0;    // ID of user
+     var $groupsID = array(); // ID of groups
+  
+     // Constructor
+     // $parent - pointer on parent object
+     function accessClass(&$parent, $user = "", $pass = "") {
+        $this->linkerClass(&$parent);
+
+        // Create CFG object
+        $this->getCfg();
+
+        //print phpinfo();
+        
+        $stat = true;
+        if ($this->cfg->check("serverAccess")) {
+           $val = strtoupper($this->cfg->get("serverAccess"));
+           if ($val == "YES" || $val == "TRUE") {
+              global $PHP_AUTH_USER, $PHP_AUTH_PW;
+              $this->user = $PHP_AUTH_USER;
+              $this->pass = $PHP_AUTH_PW;
+              $stat = false;
+//            print '!*0*!';
+           }
+//            print '!00!';
+        }
+        if ($stat) {
+           list($user, $pass) = $this->getAccessFormVariables();
+        
+           if ($pass) $this->pass = $pass;
+           if ($user) $this->user = $user;
+           else {
+              $this->user = $this->cfg->get("defaultUser");
+              $this->pass = "";
+//              print '!1!';
+           }
+//              print '!*1*!'."[$pass  $user]";
+        }
+
+        if (!$user) {
+           $this->user = $this->cfg->get("defaultUser");
+           $this->pass = "";
+//              print '!2!';
+        }
+
+        if ($this->access) {
+//           print $this->userID;
+           if ($this->cookiessss)    
+              $this->userID   = $this->getUserIDFromCook($this->user, $this->pass);
+           else
+              $this->userID   = $this->getUserID($this->user, $this->pass);
+           $this->groupsID = $this->getGroupsID($this->userID);
+//            print '!3!';
+        }
+        
+        $this->createObj();
+        
+        // AutoCheck document and group access
+        $this->autoCheckAccess();
+
+        if ($this->userID == 0) {
+           $this->user = "";
+           $this->pass = "";
+//           print $this->userID;
+        }
+
+     }
+     
+     // Get user ID from SQL base
+     // RETURN : ID of user or ZERO if not find
+     function getUserIDFromCook($user, $rpass) {
+//     print "cooc [$rpass]";
+        if ($this->cfg->check("userTable"))
+              $table = $this->cfg->get("userTable");
+         else $table = "Users";
+        $SqlStr = "SELECT UserID,Password FROM $table
+                   WHERE Nick='$user'";
+
+//        print "$SqlStr";
+        $result = $this->kernel->db->query($SqlStr);
+        if ($result && $result->numrows()) {
+           list($ID,$pass) = $result->getrow();
+//                    print "cooc [$rpass] [$pass] [".md5($pass).']';
+
+           if (md5($pass)==$rpass) return $ID;
+        }
+        return 0;
+     }
+
+     // Get user ID from SQL base
+     // RETURN : ID of user or ZERO if not find
+     function getUserID($user, $pass) {
+//     print "ID [$pass]";
+        if ($this->cfg->check("userTable"))
+              $table = $this->cfg->get("userTable");
+         else $table = "Users";
+        $SqlStr = "SELECT UserID FROM $table
+                   WHERE Nick='$user'
+                   AND Password='$pass'";
+//        print "$SqlStr";
+        $result = $this->kernel->db->query($SqlStr);
+        if ($result && $result->numrows()) {
+           list($ID) = $result->getrow();
+           return $ID;
+        }
+        return 0;
+     }
+
+     // Get groups ID on current user
+     // RETURN : array of ID of group
+     function getGroupsID($id) {
+        if (!$id) return array();
+        if ($this->cfg->check("userXgroupTable"))
+              $table = $this->cfg->get("userXgroupTable");
+         else $table = "User_Role";
+        $SqlStr = "SELECT RoleID FROM $table
+                   WHERE UserID = $id";
+        $result = $this->kernel->db->query($SqlStr);
+        $gArray = array();
+        if ($result && $count = $result->numrows()) {
+           for ($Cn = 0; $Cn < $count; $Cn++)
+               list($gArray[]) = $result->getrow();
+           return $gArray;
+        }
+        return array();
+     }
+
+     // Create Configuration object
+     function getCfg() {
+        if ($this->kernel->cfg->check("accessCfgFile"))
+              $cfgFile = $this->kernel->cfg->get("accessCfgFile");
+         else $cfgFile = "access.conf";
+         
+         $cfgFile = CONF_DIR."/$cfgFile";
+        
+        $this->cfg = $this->kernel->cfger->reg("ACCESS", $cfgFile);
+
+        if (!$this->cfg->check("globalAccess")) $this->access = true;
+        else {
+           $value = strtoupper($this->cfg->get("globalAccess"));    
+           if ($value == "ON" || $value == "TRUE" || $value == "YES") $this->access = true;
+              else $this->access = false;
+         }
+        
+        // Get server (apache) access variable
+        if (!$this->cfg->check("serverAccess")) $this->serverAccess = false;
+        else {
+           $value = strtoupper($this->cfg->get("serverAccess"));    
+           if ($value == "ON" || $value == "TRUE" || $value == "YES") $this->serverAccess = true;
+              else $this->serverAccess = false;
+         }
+     }
+
+     // Create Some child objects
+     function createObj() {
+        $this->kernel->classLoader->checkClass("accessFormClass");
+        $this->form  = new accessFormClass($this);
+        $this->kernel->classLoader->checkClass("accessGroupClass");
+        $this->group = new accessGroupClass($this);
+        $this->kernel->classLoader->checkClass("accessDocClass");
+        $this->doc   = new accessDocClass($this);
+     }
+
+     // Access form (check if login & pass not enter, and draw access form)
+     function accessForm() {
+        global $REQUEST_URI;
+
+
+//            print "[$this->serverAccess] [$this->pass] [$this->access]";
+
+
+        if ($this->serverAccess || $this->pass /*|| $this->access*/) return false;
+
+
+        $tmplName  = $this->cfg->get("accessFormTemplate");
+        $lngName   = $this->cfg->get("accessFormLngFile");
+        $loginName = $this->cfg->get("accessFormLoginName");
+        $passName  = $this->cfg->get("accessFormPassName");
+        $lngObj    = $this->kernel->lnger->reg("ACCESS_FORM", $lngName);
+ 
+        $this->kernel->classLoader->checkClass("templateClass");
+        $tmpl = new templateClass(TMPL_DIR, "remove");
+        $tmpl->halt_on_error = "yes";
+        $tmpl->set_file(array("body" => $tmplName));
+        $tmpl->set_var(array("FORM_ACTION" => $REQUEST_URI,
+                             "LOGIN_NAME"  => $loginName,
+                             "PASS_NAME"   => $passName));
+        $tmpl->parse("out", array("body"));
+        $tmpl->parseLng("out", $lngObj, &$this);
+        $out = $tmpl->get("out");
+
+        print $out;
+        die();
+     }
+     
+     // Get variables from access FORM
+     function getAccessFormVariables() {
+        $loginName  = $this->cfg->get("accessFormLoginName");
+        $passName   = $this->cfg->get("accessFormPassName");
+        $expireTime = $this->cfg->get("accessFormCookieExpire");
+        
+        global $$loginName;
+        global $$passName;
+        global $HTTP_POST_VARS,$HTTP_COOKIE_VARS;
+
+        // Set cookie
+        global $accessFormSubmitButton;
+        if ($accessFormSubmitButton) {
+           $l = $HTTP_POST_VARS[$loginName];
+           $p = $HTTP_POST_VARS[$passName];
+          
+            setCookie($loginName);//, "/");
+            setCookie($passName);//, "/");
+            setCookie($loginName, $l, time() + $expireTime, "/");
+//            setCookie($passName , md5($p), time() + $expireTime);//, "/");
+            setCookie($passName,  $p, time() + $expireTime, "/");
+//            echo "set cookie[".md5($p)."]";
+//              print $l.'=='.$p.'<br>';
+           
+           return array($l, $p);
+        } else {
+           $l = $HTTP_COOKIE_VARS[$loginName];
+           $p = $HTTP_COOKIE_VARS[$passName];
+
+            setCookie($loginName);//, "/");
+            setCookie($passName);//, "/");
+            setCookie($loginName, $l, time() + $expireTime, "/");
+            setCookie($passName,  $p, time() + $expireTime, "/");
+//            echo "set cookie[".$p."]";
+//            $this->cookiessss = 1;
+           return array($l, $p);
+
+        }        
+     }
+     
+     
+     // AutoCheck access to documents and groups
+     // Write flag is true in variable $save or $delete or $apply or $publish
+     function autoCheckAccess() { 
+        // Check Class exists and create manager objects or die if not exists
+        $this->kernel->classLoader->checkClass("urlDecodeClass");
+        $manager = new urlDecodeClass($this);
+
+        // READ Access  
+//        print "([$manager->docNr] [$manager->groupNr])";
+        if ($manager->docNr)
+           $this->doc->checkEnd($manager->docNr, "R");
+        if ($manager->groupNr)
+           $this->group->checkEnd($manager->groupNr, "R");
+
+        // WRITE Access
+        global $save, $delete, $apply;
+        if ($save || $delete || $apply) {
+           if ($manager->docNr)
+              $this->doc->checkEnd($manager->docNr, "W");
+           if ($manager->groupNr)
+              $this->group->checkEnd($manager->groupNr, "W");
+        }
+
+        // PUBLISH Access
+        global $public;
+        if ($public) {
+           if ($manager->docNr)
+              $this->doc->checkEnd($manager->docNr, "P");
+           if ($manager->groupNr)
+              $this->group->checkEnd($manager->groupNr, "P");
+        }
+
+     }
+     
+
+  } // finished Access class 
+?>

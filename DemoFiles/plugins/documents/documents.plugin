@@ -1,0 +1,102 @@
+<?
+
+class documents extends pluginClass {
+
+   // Constructor
+   function documents(&$parent, $cfg) {
+      $this->root_dir = TMPL_DIR;
+      $this->pluginClass(&$parent, $cfg);
+      $this->log = $this->kernel->loger->reg('Documents view CONSTRUCTOR');
+      $this->log->put('Read document ['.$this->parent->docNr.']');
+
+//      $this->cfg->dieIfNotExists = 0;
+   if ($this->cfg->check('SpecialOutPut')){
+      if ($this->cfg->get('SpecialOutPut')){
+         $this->SOut = 1;
+         $fld = $this->cfg->get('Special_fields');
+         if ($fld) {
+            if (!is_array($fld)) $fld = array($fld);
+               for ($i=0;$i<count($fld);$i++)
+                   $exp[$fld[$i]] = $this->cfg->get("expresion$i");
+         }
+         $fld = $exp;
+      } else $exp = 0;
+   } else $exp = 0;
+
+
+//   function document_(&$parent, $cfg, $template, $DocID,$log=0,$fld=0) {
+      $a = new document_(&$this,$cfg,$this->cfg->get('template'),$this->parent->docNr,0,$exp,0);
+      $this->html = $this->unezcape($a->html);
+   }
+
+
+   function unezcape($sss) {
+     $sss = str_replace ("%3D", "=", $sss);
+     $sss = str_replace ("%20", " ", $sss);
+     $sss = str_replace ("%3E", ">", $sss);
+     $sss = str_replace ("%3C", "<", $sss);
+     $sss = str_replace ("%3A", ":", $sss);
+     $sss = str_replace ("%22", '"', $sss);
+     $sss = str_replace ("%0D%0A", "\n", $sss);
+     $sss = str_replace ("%7B", "{", $sss);
+     $sss = str_replace ("%7D", "}", $sss);
+     $sss = str_replace ("%60", "`", $sss);
+     $sss = str_replace ("%7E", "~", $sss);
+     $sss = str_replace ("%21", "!", $sss);
+     $sss = str_replace ("%23", "#", $sss);
+     $sss = str_replace ("%24", "$", $sss);
+     $sss = str_replace ("%5E", "^", $sss);
+     $sss = str_replace ("%26", "&", $sss);
+     $sss = str_replace ("%28", "(", $sss);
+     $sss = str_replace ("%29", ")", $sss);
+     $sss = str_replace ("%7C", "|", $sss);
+     $sss = str_replace ("%5C", "\\", $sss);
+     $sss = str_replace ("%5B", "[", $sss);
+     $sss = str_replace ("%5D", "]", $sss);
+     $sss = str_replace ("%3B", ";", $sss);
+     $sss = str_replace ("%27", "'", $sss);
+     $sss = str_replace ("%3F", "?", $sss);
+     $sss = str_replace ("%2C", ",", $sss);
+     $sss = str_replace ("%25", "%", $sss);
+
+//  here was diamond
+
+     $sss = str_replace ("%u0101", "â", $sss);
+     $sss = str_replace ("%u0100", "Â", $sss);
+     $sss = str_replace ("%u0113", "ç", $sss);
+     $sss = str_replace ("%u0112", "Ç", $sss);
+     $sss = str_replace ("%u0157", "º", $sss);
+     $sss = str_replace ("%u0156", "ª", $sss);
+     $sss = str_replace ("%u016B", "û", $sss);
+     $sss = str_replace ("%u016A", "Û", $sss);
+     $sss = str_replace ("%u012B", "î", $sss);
+     $sss = str_replace ("%u012A", "Î", $sss);
+     $sss = str_replace ("%F5", "õ", $sss);
+     $sss = str_replace ("%D5", "Õ", $sss);
+     $sss = str_replace ("%u0161", "ğ", $sss);
+     $sss = str_replace ("%u0160", "Ğ", $sss);
+     $sss = str_replace ("%u0123", "ì", $sss);
+     $sss = str_replace ("%u0122", "Ì", $sss);
+     $sss = str_replace ("%u0137", "í", $sss);
+     $sss = str_replace ("%u0136", "Í", $sss);
+     $sss = str_replace ("%u013C", "ï", $sss);
+     $sss = str_replace ("%u013B", "Ï", $sss);
+     $sss = str_replace ("%u017E", "ş", $sss);
+     $sss = str_replace ("%u017D", "Ş", $sss);
+     $sss = str_replace ("%u010D", "è", $sss);
+     $sss = str_replace ("%u010C", "È", $sss);
+     $sss = str_replace ("%u0146", "ò", $sss);
+     $sss = str_replace ("%u0145", "Ò", $sss);
+
+     $sss = str_replace ("%u201C", "\"", $sss);
+     $sss = str_replace ("%u201D", "\"", $sss);
+     $sss = str_replace ("%u2013", "-", $sss);
+
+//  end - This thing knows Latvian ;)
+
+
+     return $sss;
+   }
+}
+
+?>

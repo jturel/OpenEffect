@@ -1,0 +1,22 @@
+.body {
+        background-color: #FFE1E1
+}
+
+.captionText {
+        color: #000000;
+        font-family: Verdana, Arial, Helvetica, sans-serif;
+        font-size: 11px;
+        font-weight: bold
+}
+
+.bodyText {
+        font-family: Verdana, Arial, Helvetica, sans-serif;
+        font-size: 12px;
+        color: #660000;
+}
+
+TABLE.main {
+        border: 1px #BF7373 solid;
+        background-color : #FFB7B7;
+}
+

@@ -1,0 +1,53 @@
+<?
+/**
+* Copyright (C) 2002 SIA ESOFTS.
+*
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License 
+* version 2 as published by the Free Software Foundation.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the SIA ESOFTS, 38/40 Blaumana str., 
+* Riga, LV - 1011, LATVIA, e-mail office@esoft.lv 
+*
+* This General Public License does not permit incorporating your program into
+* proprietary programs. Should you require to License Open Effect under the
+* commercial License, please contact SIA ESOFTS for up-to-date information.
+*/
+
+
+
+/***************************************
+*  System Log class (hronologic log)
+*  
+***************************************/
+
+  // Check extends classes
+  $this->checkClass("linkerClass", "sysLogClass");
+
+
+  class sysLogClass extends linkerClass {
+     var $className = "sysLogClass";         // Class name
+   
+
+     // Constructor
+     // $parent - pointer on parent object
+     function sysLogClass(&$parent) {
+    $this->linkerClass(&$parent);
+     }
+     
+     // Push Log string in base
+     // $str - string push in log
+     function put($str) {
+        $str = str_replace("'", '"', $str);
+        $SqlStr = "INSERT INTO ".$this->kernel->tab_cfg->get("logTable")."
+               (DateTime, UserID, Operation)
+           VALUES
+           (NOW(), ".$this->kernel->secure->userID.", '$str')";
+    $this->kernel->db->query($SqlStr);
+    return true;
+     }
+  }
+ 
+
+?>

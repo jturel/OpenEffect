@@ -1,0 +1,391 @@
+<?
+/**
+* Copyright (C) 2002 SIA ESOFTS.
+*
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License 
+* version 2 as published by the Free Software Foundation.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the SIA ESOFTS, 38/40 Blaumana str., 
+* Riga, LV - 1011, LATVIA, e-mail office@esoft.lv 
+*
+* This General Public License does not permit incorporating your program into
+* proprietary programs. Should you require to License Open Effect under the
+* commercial License, please contact SIA ESOFTS for up-to-date information.
+*/
+
+
+/*********************************************
+*
+*  COMPONENT plugin
+*
+*********************************************/
+
+class compPlugin extends pluginClass {
+
+   // Constructor
+   function compPlugin(&$parent) {
+      $this->pluginClass(&$parent, 'components.conf');
+      $this->root_dir = COMPONENT_TMPL_DIR;
+      $this->log  = $this->kernel->loger->reg('COMPONENS');
+   }
+
+   // Read template
+   // $fName - file name of template
+   function readTmpl($fName) {
+      $this->log->put("Read component template [$fName]");
+      $this->kernel->classLoader->checkClass('templateClass');
+      $tmpl = new templateClass(COMPONENT_TMPL_DIR, 'keep');
+      $tmpl->halt_on_error = 'yes';
+
+      $tmpl->set_file(array('body' => $fName));
+      return $tmpl;
+   }
+   
+   // Get string from template
+   // $tmpl - template object
+   // $parse - parse body or not [true|false]
+   function getTmpl(&$tmpl, $parse = true) {
+      if ($parse) $tmpl->parse("out", array("body"));
+             else return $tmpl->get_var("body");
+      return($tmpl->get("out"));
+   }
+
+   
+   // Return resource Content By document ID and resource name
+   // $IDdoc - document ID
+   // $RName - name of resource
+   // Return resource ID
+   function getDocumentByID($IDdoc = 0, $RName = "") {
+        $SqlStr = 'SELECT t.content FROM '.$this->kernel->tab_cfg->get('txtTable').' t, '
+                   .$this->kernel->tab_cfg->get('txtLinkTable').' l, '
+                   .$this->kernel->tab_cfg->get('docTable')." d
+                   WHERE l.DocID = $IDdoc
+                   and t.ID = l.TxtID 
+                   and d.ID = l.DocID
+                   AND d.ID IS NOT NULL
+                   AND t.name = '$RName'".
+                   (!$this->langID ? "" : " AND (t.Lang = 0 || t.LangID = ".$this->langID).
+                   " LIMIT 1";
+        $result = $this->kernel->db->query($SqlStr);
+        if (!$result || !$result->numrows()) return false;
+        list($content) = $result->getrow();
+        return $content;
+   }
+   
+###############################################
+
+   // JavaScript for File field component
+   function jsFile() {
+      $tmplName = $this->cfg->get("jsFileTemplate");
+      $tmpl = $this->readTmpl($tmplName);
+      $tmpl->loadfile("body");
+      $out  = $tmpl->get_var("body");
+      $out = str_replace("{URL_ROOT}", $this->kernel->cfg->get("rootURL"), $out);
+      return $out;
+   }
+   
+   // File component
+   function File($field, $dir = "") {
+      $tmplName = $this->cfg->get("fileTemplate");
+      $tmpl = $this->readTmpl($tmplName);
+      $tmpl->loadfile("body");
+      $inStr  = $tmpl->get_var("body");
+      $outStr = str_replace("{FIELD}", $field, $inStr);
+      if ($dir) $outStr = str_replace("{DIR_FILE}", $dir, $outStr);
+      return $outStr;
+   }
+   
+   // Text component
+   function Text($field) {
+      $tmplName = $this->cfg->get("textTemplate");
+      $tmpl = $this->readTmpl($tmplName);
+      $tmpl->loadfile("body");
+      $inStr  = $tmpl->get_var("body");
+      $outStr = str_replace("{FIELD}", $field, $inStr);
+      return $outStr;
+   }
+
+   // TextArea component
+   function TextArea($field) {
+      $tmplName = $this->cfg->get("textAreaTemplate");
+      $tmpl = $this->readTmpl($tmplName);
+      $tmpl->loadfile("body");
+      $inStr  = $tmpl->get_var("body");
+      $outStr = str_replace("{FIELD}", $field, $inStr);
+      return $outStr;
+   }
+   
+   // Select component
+   function Select($field) {
+      $this->log->put("!!! Field [$field]");
+      $tmplName = $this->cfg->get("SelectTemplate");
+      $tmpl = $this->readTmpl($tmplName);
+      $tmpl->loadfile("body");
+
+      $tmpl->set_block("body", "option_block", "output1");
+      $tmpl->set_block("body", "Select_option_block", "output2");
+
+      $n = func_num_args();
+      $v = func_get_args();
+      $start = 1;
+      if ($n=2&&is_array($v[1])){
+         $start = 0;
+         $v = $v[1];
+         $n = count($v);
+      }
+
+      $val = $this->getDocumentByID($this->parent->parent->docNr,$field);
+
+      for ($i = $start; $i < $n; $i++) {
+        if (preg_match('/\d-\d/',$v[$i])) {
+           $s = split('-',$v[$i]);
+           for ($z = $s[0];$z < $s[1];$z++){
+                $tmpl->set_var(array('value'=>$z));
+                $tmpl->parse("output1", (($v[$i] == $val)?"Select_":'')."option_block", true);
+           }
+        } else {
+         $this->log->put("!!! [$v[$i]] = [$val]");
+                $tmpl->set_var(array('value'=>$v[$i]));
+                $tmpl->parse("output1", (($v[$i] == $val)?"Select_":'')."option_block", true);
+        }
+      }
+      $tmpl->set_var(array('FIELD'=>$field));
+      return $this->getTmpl(&$tmpl);
+   }
+
+   // Group Connector component
+   function GroupeIn($Group,$list='none') {
+      $tmplName = $this->cfg->get('GroupsTemplate');
+      $tmpl = $this->readTmpl($tmplName);
+      $tmpl->loadfile('body');
+ 
+      $tmpl->set_block('body', 'option_block', 'output1');
+      $tmpl->set_block('body', 'Select_option_block', 'output2');
+        
+      $in = $this->kernel->api->getLinkedGroup($this->parent->parent->docNr);
+      
+      if ($list!='none') $Grp = array ($Group);
+         else            $Grp = $this->kernel->api->getAllGroups($Group);
+
+      for ($i = 0; $i < count($Grp); $i++) {
+        $name = $this->kernel->api->getGroupName($Grp[$i]);
+        $tmpl->set_var(array('name'=>$name,'value'=>$Grp[$i]));
+        $tmpl->parse('output1', ((in_array($Grp[$i],$in))?'Select_':'').'option_block', true);
+        $qqq .= $Grp[$i].(($i==count($Grp)-1)?'':',');
+      }
+
+      $tmpl->set_var(array('HIDDEN'=>$qqq));
+      
+      return $this->getTmpl(&$tmpl);
+   }   
+ 
+   // Group Connector component
+   function GroupeInRadio($Group) {
+      $tmplName = $this->cfg->get('GroupsRadioTemplate');
+      $tmpl = $this->readTmpl($tmplName);
+      $tmpl->loadfile('body');
+ 
+      $tmpl->set_block('body','option_block', 'output1');
+      $tmpl->set_block('body','Select_option_block','output2');
+        
+      $in = $this->kernel->api->getLinkedGroup($this->parent->parent->docNr);
+      $Grp = $this->kernel->api->getAllGroups($Group);
+
+      $this->log->put("GRP Start $n [$Group] [$Grp[0]]");
+      if (count(array_intersect($Grp,$in))<1) 
+         $in[] = $Grp[0];
+
+      for ($i = 0; $i < count($Grp); $i++) {
+        $name = $this->kernel->api->getGroupName($Grp[$i]);
+//        $this->log->put("GRP next $i [$name]");
+        $tmpl->set_var(array('name'=>$name,'value'=>$Grp[$i]));
+        $tmpl->parse('output1', ((in_array($Grp[$i],$in))?'Select_':'').'option_block', true);
+//        if (in_array($Grp[$i],$in)) $tmpl->parse('output1', 'Select_option_block', true);
+//                else                $tmpl->parse('output1', 'option_block', true);
+        $qqq .= $Grp[$i].(($i==count($Grp)-1)?'':',');
+      }
+
+//      $this->log->put('GRP End ');
+      $tmpl->set_var(array('HIDDEN'=>$qqq));
+      
+      return $this->getTmpl(&$tmpl);
+   }         
+
+   function Radio($name, $value, $checked) {
+               $tmplName = $this->cfg->get('Radio');
+               $tmpl = $this->readTmpl($tmplName);
+               $tmpl->loadfile('body');
+               $inStr  = $tmpl->get_var('body');
+               $outStr = str_replace('{NAME}', $name, $inStr);
+               $outStr = str_replace('{Value}', $value, $outStr);
+               $outStr = str_replace('{CHECKED}', ($checked != "checked")?"":$checked, $outStr);
+               return $outStr;
+   }     
+
+   function D_Select($field,$group) {
+      $q =  new d_select(&$this,'',$this->cfg->get('D_Select'),$group,$this->getDocumentByID($this->parent->parent->docNr,$field));
+      return str_replace("{FIELD}", $field, $q->html);
+   }   
+
+   function MD_Select($field,$group) {
+      $q =  new d_select(&$this,'',$this->cfg->get('MD_Select'),$group,
+               explode(',',$this->getDocumentByID($this->parent->parent->docNr,$field)));
+      return str_replace("{FIELD}", $field, $q->html);
+   }   
+
+   function documentInfo() {
+               $tmpl     = $this->readTmpl($this->cfg->get('DocumentInfo'));
+               $tmpl->loadfile('body');
+               $inStr  = $tmpl->get_var('body');
+               $ID = $this->parent->parent->docNr+0;
+               $SqlStr = 'Select u.Nick, d.LastUpdate, d.RecTime from Users u, Documents d where u.UserID = d.UserID and d.ID = '.$ID;
+
+               if (!$result = $this->kernel->db->query($SqlStr)) return;
+               list($Nick,$LUpdate,$RecTime) = $result->getrow();
+               $outStr = str_replace('{USER}', $Nick, $inStr);
+               $outStr = str_replace('{LAST_DATE}', $LUpdate, $outStr);
+               $outStr = str_replace('{CREATE_DATE}', $RecTime, $outStr);
+               return $outStr;
+   }
+
+   function CheckBoxXML(&$comp) {
+      $param = &$comp->param_n;
+      return $comp->caption.$this->CheckBox($param['name']['_'],$param['value']['_']);
+   }
+
+   function CheckBox($field, $value) {
+
+               $ID = $this->parent->parent->docNr;
+               $Value = $this->getDocumentByID($ID,$field);
+
+               $tmplName = $this->cfg->get("CheckBox");
+               $tmpl = $this->readTmpl($tmplName);
+               $tmpl->loadfile("body");
+               $inStr  = $tmpl->get_var("body");
+               $outStr = str_replace("{NAME}", $field, $inStr);
+               $outStr = str_replace("{VALUE}", $value, $outStr);
+               $outStr = str_replace("{CHECKED}", ($Value)?'checked':'', $outStr);
+//               print $outStr;
+               return $outStr;
+   }
+        
+//   function calendarXML(&$comp) {  return $this->standardXML('Calendar',$comp); }
+   function Calendar($field) {
+               $tmplName = $this->cfg->get("Calendar");
+               $tmpl = $this->readTmpl($tmplName);
+               $tmpl->loadfile("body");
+               $inStr  = $tmpl->get_var("body");
+               $outStr = str_replace("{FIELD}", $field, $inStr);
+               return $outStr;
+   }
+
+//   function editliteXML(&$comp) {  return $this->standardXML('EditLite',$comp); }
+   function EditLite($field){
+               $tmplName = $this->cfg->get("EditLite");
+               $tmpl = $this->readTmpl($tmplName);
+               $tmpl->loadfile("body");
+               $inStr  = $tmpl->get_var("body");
+               $outStr = str_replace("{FIELD}", $field, $inStr);
+               return $outStr;
+
+   }
+
+/*   function EditLite($field){
+               $tmplName = $this->cfg->get("EditLite");
+               $tmpl = $this->readTmpl($tmplName);
+               $tmpl->loadfile("body");
+               $inStr  = $tmpl->get_var("body");
+               $outStr = str_replace("{FIELD}", $field, $inStr);
+               return $outStr;
+
+   } */
+
+   function Picture($field) {
+               $tmplName = $this->cfg->get('Picture');
+               $tmpl = $this->readTmpl($tmplName);
+               $tmpl->loadfile('body');
+               $inStr  = $tmpl->get_var('body');
+               $outStr = str_replace("{FIELD}", $field, $inStr);
+               return $outStr;
+   }
+
+//   function pictureexXML(&$comp) {  return $this->standardXML('PictureEx',$comp); }
+   function PictureEx($field) {
+               $tmpl = $this->readTmpl($this->cfg->get('PictureEx'));
+               $tmpl->loadfile('body');
+
+               $tmpl->set_block('body', 'item_block', 'nxt');
+
+               $ID = $this->parent->parent->docNr;
+
+//               print "$field $ID";
+
+               for ($i=0;$i<100;$i++){
+                   $Value = $this->getDocumentByID($ID,$field.$i);
+//                   print "[".$field.$i." $Value]";
+                   if (!$Value) break;
+                   $tmpl->set_var(array('VALUE'  =>   $Value));
+
+                   $tmpl->parse('nxt', 'item_block', true);
+               }
+
+               $tmpl->set_var('FIELD',$field);
+
+
+               $inStr  = $this->getTmpl(&$tmpl);
+               return $inStr;
+   }
+
+   function Name() {
+               $field = '_name';
+               $tmpl = $this->readTmpl($this->cfg->get('Name'));
+               $tmpl->loadfile('body');
+
+               $ID = $this->parent->parent->docNr;
+
+               $Value = $this->kernel->api->getDocumentField($ID,'name');
+
+               $tmpl->set_var(array('FIELD'  =>   $field,
+                                    'CAPTION'=>   'System Name',
+                                    'VALUE'  =>   $Value));
+
+               $inStr  = $this->getTmpl(&$tmpl);
+               return $inStr;
+   }
+
+   function Search() {
+               $field = '_search';
+               $tmpl = $this->readTmpl($this->cfg->get('Search'));
+               $tmpl->loadfile('body');
+
+               $ID = $this->parent->parent->docNr;
+
+               $Value = $this->kernel->api->getDocumentField($ID,'keyWords');
+
+               $tmpl->set_var(array('FIELD'  =>   $field,
+                                    'VALUE'  =>   $Value));
+
+               $inStr  = $this->getTmpl(&$tmpl);
+               return $inStr;
+   }
+
+   // Fucncion tobr  
+   // B0rland (rus@esoft.lv) 
+   function tobr($TEXT){
+      $TEXT = preg_replace('/<#ignore#>(.|\n)*?<\/#ignore#>/ime', '$q[]=$0;return "@".count($q)."@"', $TEXT);
+      $TEXT = preg_replace('/\n/', '<br>', $TEXT);
+      return preg_replace('/@(\d*?)@/e', 'return $q[$1]', $TEXT);
+   }
+
+   // Fucncion frombr  
+   // B0rland (rus@esoft.lv) 
+   function Frombr($TEXT){
+      $TEXT = preg_replace('/<#ignore#>(.|\n)*?<\/#ignore#>/ime', '$q[]=$0;return "@".count($q)."@"', $TEXT);
+      $TEXT = preg_replace('/<br>/', '\n', $TEXT);
+      return preg_replace('/@(\d*?)@/e', 'return $q[$1]', $TEXT);
+   }
+
+}
+?>

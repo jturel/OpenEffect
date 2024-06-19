@@ -1,0 +1,28 @@
+<?
+
+/*********************************************
+*
+*  FORM VALIDATION plugin
+*
+*********************************************/
+
+class validFunctionPlugin {
+
+    function test($field) {
+       return false;
+    }
+
+    function date($field) {
+       return ereg ("([0-9]{1,2})-([0-9]{1,2})-([0-9]{4})", $field);
+    }
+
+    function exist($field) {
+       return ($field);
+    }
+
+    function existEx($field) {
+       return ($field<>'*'&&$field&&$field<>'Picture');
+    }
+}
+
+?>

@@ -1,0 +1,239 @@
+<!-- BEGIN close_block -->
+<script language="JavaScript">
+<!--
+   self.location.href = 'parse.php?4&{_GROUP_ID}&';
+   parent.close();
+// -->
+</script>
+<!-- END close_block -->
+
+<html>
+<head>
+<script language="JavaScript">
+var fr;
+var iXu = new Array();
+var uXr = new Array()
+
+function cp(perm, l){
+ if (perm.indexOf(l) != -1) return 1; else return 0;
+}
+
+function translate(ids ,perm){
+ var rez = new Array(ids, cp(perm, "P"), cp(perm, "W"), cp(perm, "R"));
+ return rez;
+}
+
+<!-- BEGIN role_block --> 
+iXu[iXu.length] = new Array("{ID}","{NAME}");
+<!-- END role_block --> 
+
+<!-- BEGIN access_block --> 
+uXr[uXr.length] = translate("{ID}","{ACCESS}");
+<!-- END access_block --> 
+
+
+function changeper(el){
+  seld = getSelected('sel');
+  if(seld!=-1) if(seld.length!=0) eval('fr.sel.options['+seld[0]+'].r'+el.name.substr(1)+'=el.checked');
+}
+function getTitle(ids){
+  for(var j = 0; j < iXu.length; j++) if(ids == iXu[j][0]) return iXu[j][1];
+}
+function Init(){
+  fr = document.formz;
+  setFirstSelected();
+}
+function setperm(el){
+  opt = el.options[el.selectedIndex];
+  fr.cpublish.checked = (opt.rpublish==1)?true:false;
+  fr.cwrite.checked   = (opt.rwrite==1)?true:false;
+  fr.cread.checked    = (opt.rread==1)?true:false;
+}
+function chRole(isremove){
+  if(isremove){
+    seld = getSelected('sel');
+    if(seld!=-1){
+      fr.sel.options.remove(seld);
+      fr.cpublish.checked = false;
+      fr.cwrite.checked   = false;
+      fr.cread.checked    = false;
+      setFirstSelected();
+    }
+  } else {
+    seld = getSelected('selall');
+    if(seld!=-1){
+      for(var i = 0; i < seld.length; i++){
+        if(!searchf(fr.selall.options[seld[i]].value)){ 
+          oOption = document.createElement("OPTION");
+          fr.sel.options.add(oOption);
+          oOption.innerText = fr.selall.options[seld[i]].innerText;
+          oOption.value     = 'h'+fr.selall.options[seld[i]].value;
+          oOption.rpublish  = 0;
+          oOption.rread     = 0;
+          oOption.rwrite    = 0;
+        }
+      }
+    } 
+  }
+}
+function getSelected(idd){
+  seld = eval('fr.'+idd);
+  if(seld.tagName!='SELECT') return -1;
+  outArr = new Array();
+  for(var i = 0; i < seld.options.length; i++) if(seld.options[i].selected) outArr[outArr.length]=i;
+  return outArr;
+}
+function searchf(nn){
+  outv = 0;
+  for(var j = 0; j < fr.sel.options.length; j++) {
+    if (nn==fr.sel.options[j].value.substr(1)) outv = 1;
+  }
+  return outv;
+}
+function prepare(){
+  fr.rights.value='';
+  for(var i = 0; i < fr.sel.options.length; i++) {
+    fr.rights.value+=','+fr.sel.options[i].value.substr(1)+'-'+((fr.sel.options[i].rpublish==1)?'P':'')+((fr.sel.options[i].rwrite==1)?'W':'')+((fr.sel.options[i].rread==1)?'R':'');
+  }
+  for(var i = 0; i < fr.selall.options.length; i++) {
+    fr.rights.value+=(!searchf(fr.selall.options[i].value))?','+fr.selall.options[i].value+'-':'';
+  }
+}
+function setFirstSelected(){
+  if(fr.sel.options.length>0) {
+    fr.sel.options[0].selected='true';
+    setperm(fr.sel);
+  }
+  var gs = getSelected('selall');
+  if(gs !=-1 && gs.length == 0) fr.selall.options[0].selected='true';
+}
+</script>
+<link rel="stylesheet" href="files/norm_window.css" type="text/css">
+</head>
+<body leftmargin="0" topmargin="0" marginwidth="0" marginheight="0" onload = "Init();">
+<form method="post" action="{_LINK_SELF}" name="formz">
+  <input type="Hidden" name="ID" value="{ID}">
+  <input type="Hidden" name="name" value="{name}">
+  <input type="Hidden" name="rights">
+  <input type="Hidden" name="grps" value="{groups}">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" class="main">
+    <tr> 
+      <td colspan=2> 
+        <table width="100%" border="0" cellspacing="0" cellpadding="0" class="caption">
+          <tr valign="middle" align="left"> 
+            <td width="20"><img src="img/gn_access.gif" width="18" height="18"></td>
+            <td class="captionText">##DOCUMENT ACCESS RIGHTS## [{ID}]</td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr> 
+      <td align="right" valign="middle"> 
+        <table width="100%" border="0" cellspacing="10" cellpadding="0" class="body" height="100%">
+          <tr> 
+            <td align="left" valign="middle"> 
+              <table width="100%" border="0" cellspacing="0" cellpadding="0" class="bodyText">
+                 <tr><td><b>##All Users##<b>
+                 </td></tr>
+                 <tr><td>
+              <select name="selall" size="12" class="inputzSelect" style="width : 150px;" multiple>
+                <script language="JavaScript">
+for(var i = 0; i < iXu.length; i++) document.writeln('<option value="'+iXu[i][0]+'">'+iXu[i][1]+'</option>')
+</script>
+              </select>
+                 </td></tr>
+              </table>
+            </td>
+          </tr>
+          <tr> 
+            <td align="right" valign="middle"> 
+              <input type="button" value="&gt;&gt;" onClick="chRole(0)" class="buttonz" name="button">
+            </td>
+          </tr>
+        </table>
+      </td>
+      <td align="right" valign="middle" width="250"> 
+        <table width="100%" border="0" cellspacing="0" cellpadding="0" class="body" height="100%">
+          <tr> 
+            <td> 
+              <table width="100%" border="0" cellspacing="10" cellpadding="0" class="bg_color_light">
+                <tr> 
+                  <td align="left" valign="middle"> 
+              <table width="100%" border="0" cellspacing="0" cellpadding="0" class="bodyText">
+                 <tr><td><b>##Users##<b>
+                 </td></tr>
+                 <tr><td>
+                    <select name="sel" size="5" class="inputzSelect" style="width : 228px;" onChange="setperm(this)">
+                      <script language="JavaScript">
+for(var i = 0; i < uXr.length; i++) document.writeln('<option value="h'+uXr[i][0]+'" rpublish="'+uXr[i][1]+'" rwrite="'+uXr[i][2]+'" rread="'+uXr[i][3]+'">'+getTitle(uXr[i][0])+'</option>');
+</script>
+                    </select>
+                 </td></tr>
+              </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr> 
+            <td> 
+              <table width="100%" border="0" cellspacing="10" cellpadding="0" class="bodyText">
+                <tr> 
+                  <td> 
+                    <table width="100%" border="0" cellspacing="0" cellpadding="0" class="browse" >
+                      <tr> 
+                        <td width="88%"><b>Permisions</b></td>
+                        <td width="7%" valign="middle" align="center">&nbsp; </td>
+                      </tr>
+                      <td width="88%">Publish</td>
+                      <td width="7%" valign="middle" align="center"> 
+                        <input type="checkbox" name="cpublish" value="checkbox" onClick="changeper(this)" auid='0'>
+                      </td>
+                      </tr>
+                      <tr > 
+                        <td width="88%">Write</td>
+                        <td width="7%" valign="middle" align="center"> 
+                          <input type="checkbox" name="cwrite" value="checkbox" auid='1' onClick="changeper(this)">
+                        </td>
+                      </tr>
+                      <tr > 
+                        <td width="88%">Read</td>
+                        <td width="7%" valign="middle" align="center"> 
+                          <input type="checkbox" name="cread" value="checkbox" typez="doc" auid='2' onClick="changeper(this)">
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr> 
+                  <td align="left"> 
+                    <input type="button" name="remove" value="&lt;&lt;" onClick="chRole(1)" class="buttonz">
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr> 
+      <td colspan=2> 
+        <table width="100%" border="0" cellspacing="5" cellpadding="0">
+          <tr> 
+            <td align="right" valign="middle"> 
+              <table width="100%" border="0" cellspacing="0" cellpadding="0" class="browse">
+                <tr> 
+                  <td align="right"> 
+                    <input type="submit" name="save" value="##Save##" class="buttonz" onclick="prepare();">
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</form>
+</body>
+</html>

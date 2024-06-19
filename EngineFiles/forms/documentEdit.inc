@@ -1,0 +1,50 @@
+<?
+
+
+   $page = &$this->start($this->kernel->cfg->get("mainTemplate"));
+#####################################################
+
+   $form = new documentEditPlugin($this, "documentEdit.conf");
+   $lngsel = new lngSelectPlugin($this, "lngSelect.conf");
+   $form->tmpl->set_block("body", "close_block", "closeBlock");
+   $form->tmpl->set_var("PREVIEW_URL", $form->cfg->get("preview_url"));
+   $form->tmpl->set_block("body", "tree_block", "TreeBlock");
+   $form->action = $form->cfg->get("Action");
+
+   $form->tmpl->set_var("LANGUAGE", $lngsel->html);
+
+   global $save, $apply, $delete, $as_new;   
+   global $_id;
+   if ($save || $apply) {
+       if ($as_new) 
+          $_id = 0;       
+       $save = $form->saveNew();
+       $this->kernel->log->put("Document [$this->docNr] Edit By user [".$this->kernel->secure->user."]<BR>");
+       if ($save) 
+          $form->tmpl->parse("closeBlock", "close_block");
+   }
+   if ($delete) {
+       $this->kernel->log->put("Document [$this->docNr] Delete By user [".$this->kernel->secure->user."]<BR>");
+      $form->delete();
+      $form->tmpl->parse("closeBlock", "close_block");
+   }
+
+   if ($this->groupNr)
+      $GRP = $this->groupNr;
+   else {
+      $a = $this->kernel->api->getLinkedGroup($this->docNr);
+      $GRP = $a[0];
+   }
+   $tree = $this->kernel->api->getGroupTree($GRP);
+   for ($i=1;$i<count($tree) ;$i++){
+      $form->tmpl->set_var("ID", $tree[$i]);
+      $form->tmpl->parse("TreeBlock", "tree_block",true);
+   }
+   
+   $form->parseNew();   
+   $this->parseStr("BODY", $form->html, true);
+
+#####################################################   
+   $out = $this->end($this->kernel->cfg->get("mainTemplateLng"));
+   
+?>

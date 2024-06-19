@@ -1,0 +1,85 @@
+<?
+/**
+* Copyright (C) 2002 SIA ESOFTS.
+*
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License 
+* version 2 as published by the Free Software Foundation.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the SIA ESOFTS, 38/40 Blaumana str., 
+* Riga, LV - 1011, LATVIA, e-mail office@esoft.lv 
+*
+* This General Public License does not permit incorporating your program into
+* proprietary programs. Should you require to License Open Effect under the
+* commercial License, please contact SIA ESOFTS for up-to-date information.
+*/
+
+
+class guestbook extends pluginClass {
+
+   // Constructor
+   function guestbook(&$parent, $cfg) {
+      $this->root_dir = TMPL_DIR;
+      $this->pluginClass(&$parent, $cfg);
+      $this->cfgname =  $cfg;
+      $this->group_id = $this->cfg->get("group_id");
+
+      $this->log = $this->kernel->loger->reg("Guestbook");
+
+      global $title, $email, $link, $comments, $images;
+      $this->tmpl = $this->readTemplate($this->cfg->get("template"));
+        
+        if (isset($title) && isset($comments)){
+           $group_id = $this->group_id;
+
+           $doc_id = $this->kernel->api->createDocument($group_id,4);
+           $this->kernel->api->magicSecurityDoc($doc_id, 1, "RW");              
+
+           $this->log->put("guestbook doc id [$doc_id]");
+
+///           $comments = preg_replace("/([^ ]{5})([^ ]5)/g", " \\1 \\2 ", $comments);
+
+           $this->kernel->api->createTxt($doc_id, "title",   strip_tags(substr($title,0,50)));
+           $this->kernel->api->createTxt($doc_id, "email",   strip_tags(substr($email,0,50)));
+           $this->kernel->api->createTxt($doc_id, "link",    strip_tags(substr($link, 0,50)));
+           $this->kernel->api->createTxt($doc_id, "comments",strip_tags(substr($comments,0,500)));
+           $this->kernel->api->createTxt($doc_id, "images",  strip_tags(substr($images,0,50)));
+           $this->publish($doc_id);
+        }
+   }
+   
+   // Read template
+   // $fName - file name of template
+   function readTemplate($fName) {
+      $this->log->put("Read template [$fName]");
+      $this->kernel->classLoader->checkClass("templateClass");
+      $tmpl = new templateClass($this->root_dir, "remove");
+      $tmpl->halt_on_error = "yes";
+      $tmpl->set_file(array("body" => $fName));
+
+      $action = "";  
+      $link = "?101&0&0&List_Start=";
+      $count = round(($this->kernel->api->getDocumentsNum($this->group_id)/5)+0.5);
+      $num = $GLOBALS['List_Start']+0;
+      $this->log->put("Navigator [$link] [$count] [$num]");
+      $navig = new navigator(&$this,$this->cfgname,$this->cfg->get("template_navigator"), $num, $count,$action,$link);
+
+      $tmpl->set_var(array("NAVIGATOR" => $navig->html));
+
+      $tmpl->parse("out", array("body")); 
+      
+      $out = $tmpl->get("out");
+      $this->html = $out;
+      return $tmpl;
+   }
+
+   // make publish of documents
+   function publish($DocID=0) {
+      $SqlStr = "update ".$this->kernel->tab_cfg->get(docTable)." set visible = 1 where ID = $DocID";
+      $this->kernel->db->query($SqlStr);
+   }
+
+    
+}
+?>

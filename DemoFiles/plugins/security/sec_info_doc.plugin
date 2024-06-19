@@ -1,0 +1,95 @@
+<?
+
+class sec_info_doc extends pluginClass {
+
+  
+   // Constructor
+   function sec_info_doc(&$parent, $cfg) {
+      global $UserId;
+      if (!$UserId) return;
+      
+      $this->root_dir = TMPL_DIR;
+      $this->pluginClass(&$parent, $cfg);
+      $this->log = $this->kernel->loger->reg('Security info  view CONSTRUCTOR');
+
+      if ($this->cfg->check('SpecialOutPut'))
+      if ($this->cfg->get('SpecialOutPut')){
+         $this->SOut = 1;
+         $fld = $this->cfg->get('Special_fields');
+         if ($fld) {
+            if (!is_array($fld)) $fld = array($fld);
+               for ($i=0;$i<count($fld);$i++)
+                   $exp[$fld[$i]] = $this->cfg->get("expresion$i");
+         }
+         $fld = $exp;
+      } else $exp = 0;
+
+      $template = $this->cfg->get('template');
+      $tmpl = new templateClass($this->root_dir, 'remove');
+
+
+//   function parse_ex(&$parent, &$tmpl, &$array, $log=0) {
+      if ($fld) 
+        $ex = new parse_ex(&$this, &$tmpl, &$fld,$log);
+
+      $tmpl->halt_on_error = "yes";
+      $tmpl->set_file(array("body_out_array" => $template));
+      if ($fld) 
+        $ex->init("body_out_array");
+
+      $tmp = $this->getUserInfo($UserId);
+//      $tmp = array_merge( $tmp, $addictionl);
+
+//      $this->kernel->debug_text .= "" . $UserId;
+
+      
+//      foreach ($tmp as $f => $v)
+//      $this->kernel->debug_text .=  "$f [$v]<br>";
+
+//      foreach ($addictionl as $f => $v)
+//      $this->kernel->debug_text .=  "$f[$v]<br>";
+     
+
+
+      if (!$fld) 
+         $tmpl->set_var($tmp);
+      else 
+         $ex->make($tmp);
+
+      $tmpl->parse("out", array("body_out_array"));
+
+      $this->html = $tmpl->get("out");
+  
+   }
+
+
+     // Get user from base
+     // $ID - user id
+     // RETURN : array of user resource
+   function getUserInfo($ID = 0){
+//         $this->kernel->debug_text .=  $ID.'<br>';
+         $ID = intVal($ID);      
+//         $this->kernel->debug_text .=  $ID.'<br>';
+         if (!$ID) return array();
+//         $this->kernel->debug_text .=  $ID.'<br>';
+         $SqlStr = 'select * from '.$this->kernel->tab_cfg->get('userTable')." where UserID = $ID";
+//         $this->kernel->debug_text .=  $SqlStr.'<br>';
+
+//         $this->kernel->debug_text .=  $result->mysql_num_fields().'<br>';
+
+         $result = $this->kernel->db->query($SqlStr);
+         if (!$result || !$count = $result->numrows()) return array();
+
+         for ($Cn = 0; $Cn < $result->numcols(); $Cn++) {
+            $name = $result->colname($Cn);
+//            $returnArray[$name] = $result[$name];
+            $returnArray[$name] = $result->field($name,0);
+//            $this->kernel->debug_text .=  $name.'['.$returnArray[$name].']<br>';
+         }
+         return $returnArray;
+
+   }
+
+}
+
+?>

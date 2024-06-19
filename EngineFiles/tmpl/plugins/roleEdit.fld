@@ -1,0 +1,7 @@
+<?
+
+  $fields  = array(array("name" => "RoleID",     "type" => 1),
+                   array("name" => "Name",       "type" => 1),
+                   array("name" => "UserID",     "type" => 0));
+
+?>

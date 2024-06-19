@@ -1,0 +1,51 @@
+<head>
+<link rel="stylesheet" href="files/norm_window.css" type="text/css">
+</head>
+<body leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" class="main">
+    <tr> 
+      <td> 
+        <table width="100%" border="0" id="winhead" cellspacing="0" cellpadding="0" class="captionText">
+          <tr valign="middle" align="left"> 
+            <td width="20"><img src="img/gn_search.gif" width="18" height="18"></td>
+            <td>##SEARCH RESULT##</td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr> 
+      <td> 
+        <table width="100%" border="0" cellspacing="10" cellpadding="0" height="100%" class="bodyWithText">
+          <tr> 
+            <td> 
+              <table border="0" cellspacing="0" cellpadding="0" class="browse" width="100%" >
+                <tr> 
+                  <td class="captionTextTable" width="19">&nbsp;</td>
+                  <td class="captionTextTable" >##Resource name##</td>
+                </tr>
+<!-- BEGIN group_block -->
+<!-- BEGIN items_block -->
+                <tr> 
+                  <td><img src="img/tr_alone.gif" width="19" height="18"></td>
+                  <td><a href="parse.php?4&{ID}" target="rightFrame">{name}</a>
+                  <!--td><a href="parse.php?4&{ID}" target="rightFrame" onclick="alert(top.top === parent)">{name}</a-->
+                    </td>
+                </tr>
+<!-- END items_block -->
+<!-- END group_block -->
+<!-- BEGIN documents_block -->
+<!-- BEGIN doc_items_block -->
+                <tr> 
+                  <td><img src="img/gn_document.gif" width="18" height="18"></td>
+                  <td><a href="parse.php?5&{GRPID}&{ID}" target="rightFrame">{_Name}</a></td>
+                </tr>
+<!-- END doc_items_block -->
+<!-- END documents_block -->
+              </table>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</html>

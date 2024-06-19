@@ -1,0 +1,59 @@
+<script language="JavaScript">
+<!--
+  function openWin(id) {
+    var target = "_blank";
+    var option = "status=no,top=10,left=10,height=400,width=320,resizable=yes";
+    window.open("{LINK}?14&&&UserID=" + id, target, option);
+  }
+//-->
+</script>
+
+<form action="{_LINK_SELF}" method="POST">
+    <table width="100%" border="0" cellspacing="0" cellpadding="0" class="main">
+      <tr> 
+      <td> 
+        <table width="100%" border="0" cellspacing="0" cellpadding="0" class="caption">
+          <tr valign="middle" align="left"> 
+            <td width="20"><img src="files/img/gn_folder.gif" width="18" height="18"></td>
+            <td width="588"><b>##Users##</b></td>
+            <td width="17"><!img src="files/img/gn_minimise.gif"></td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr> 
+      <td> 
+        <table width="100%" border="0" cellspacing="10" cellpadding="0" height="100%" class="bg_color_light">
+          <tr> 
+            <td> 
+              <table width="100%" border="0" cellspacing="0" cellpadding="0" class="browse" >
+{output}
+              </table>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr> 
+      <td> 
+        <table width="100%" border="0" cellspacing="5" cellpadding="0">
+          <tr> 
+            <td> 
+        <input type="Button" value="##Add new user##" onClick="openWin(0)" class="input">
+        <input type="Submit" value="##Delete##" name="delete" onClick="return confirm('##Are you sure want delete## ?')" class="input">
+              <!input type="submit" name="public" value="Publish" class="input" onfocus="if(this.blur)this.blur()">
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</form>
+</center>
+
+<!-- BEGIN item_block -->
+              <tr> 
+                <td width="5%"><input type="checkBox" name="check[{UserID}]"></td>
+                <td width="88%"><a href="{LINK}?15&&&UserID={UserID}" target="rightFrame">{Nick}</a></td>
+              </tr>
+<!-- END item_block -->

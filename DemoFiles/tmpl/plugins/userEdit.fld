@@ -1,0 +1,14 @@
+<?
+
+  $fields  = array(array("name" => "UserID",     "type" => 1),
+                   array("name" => "Nick",       "type" => 1),
+                   array("name" => "Name",       "type" => 1),
+                   array("name" => "SName",       "type" => 1),
+                   array("name" => "Email",       "type" => 1),
+                   array("name" => "Position",       "type" => 1),
+                   array("name" => "Telefon",       "type" => 1),
+                   array("name" => "Fax",       "type" => 1),
+                   array("name" => "Aviable",       "type" => 1),
+                   array("name" => "Password",   "type" => 1));
+
+?>

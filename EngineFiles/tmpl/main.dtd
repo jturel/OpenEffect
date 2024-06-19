@@ -1,0 +1,57 @@
+<components>
+      <component name="pictureex" title="Picture +" caption="Pictures" icon="pictureex.gif">
+                <param name="name">picture</param>
+                <param name="multilanguage" type="logical">yes</param>                
+                <param name="validation"></param>
+      </component>
+      <component name="picture" title="Picture" caption="Picture" icon="pictures.gif">
+                <param name="name">pictures</param>
+                <param name="multilanguage" type="logical">yes</param>                
+                <param name="validation"></param>
+      </component>
+      <component name="editlite" title="Rich Edit" caption="Title" icon="richedit.gif">
+                <param name="name">richedit</param>
+                <param name="multilanguage" type="logical">no</param>                
+                <param name="validation"></param>
+      </component>
+      <component name="calendar" title="Calendar" caption="Date of Birth" def_val="today" icon="calendar.gif">                
+                <param name="name">calendar</param>
+                <param name="multilanguage" type="logical">yes</param>                
+                <param name="validation"></param>
+      </component>
+      <component name="radio" title="Radio Button" caption="Sex" def_val="none" icon="radio.gif">
+                <elms name="values" default="*" mincount="2" maxcount="100">
+                    <elm caption="Any">*</elm>
+                    <elm caption="Male">male</elm>
+                    <elm caption="Female">female</elm>
+                </elms>
+                <param name="name">radio</param>
+                <param name="multilanguage" type="logical">no</param>                
+                <param name="validation"></param>
+      </component>
+      <component name="select" title="Select" caption="Title" def_val="today" icon="combo.gif">
+                <param name="name">select</param>
+                <elms name="values" default="*" mincount="2" maxcount="100">
+                    <elm caption="First">first</elm>
+                    <elm caption="Second">second</elm>
+                </elms>
+                <param name="multilanguage" type="logical">no</param>                
+                <param name="validation"></param>
+      </component>
+      <component name="textarea" title="Text Area" caption="Title" def_val="today" icon="textarea.gif">
+                <param name="name">textarea</param>
+                <param name="multilanguage" type="logical">no</param>                
+                <param name="validation"></param>
+      </component>
+      <component name="text" title="Text" caption="Title" def_val="today" icon="input.gif">
+                <param name="name">text</param>
+                <param name="multilanguage" type="logical">no</param>                
+                <param name="validation"></param>
+      </component>
+      <component name="checkbox" title="Checkbox" caption="Checkbox" def_val="No" icon="checkbox.gif">
+                <param name="name">checkbox</param>
+                <param name="value">checked</param>
+                <param name="multilanguage" type="logical">no</param>                
+                <param name="validation"></param>
+      </component>
+</components>

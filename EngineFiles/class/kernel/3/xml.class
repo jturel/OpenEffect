@@ -1,0 +1,123 @@
+<?
+/**
+* Copyright (C) 2002 SIA ESOFTS.
+*
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License 
+* version 2 as published by the Free Software Foundation.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the SIA ESOFTS, 38/40 Blaumana str., 
+* Riga, LV - 1011, LATVIA, e-mail office@esoft.lv 
+*
+* This General Public License does not permit incorporating your program into
+* proprietary programs. Should you require to License Open Effect under the
+* commercial License, please contact SIA ESOFTS for up-to-date information.
+*/
+
+
+
+class xml_components {
+var $components;
+
+   function xml_components($data) {
+      $this->parser = xml_parser_create();
+      xml_set_object($this->parser,&$this);
+      xml_set_element_handler($this->parser,"tag_open","tag_close");
+      xml_set_character_data_handler($this->parser,"cdata");
+      xml_parse($this->parser,$data);
+//      print_r($this->components);
+//      print_r($data);
+   }
+
+   function tag_open($parser,$tag,$attributes) { 
+//   print $tag;
+//          print_r($attributes);
+        $this->cdata = '';
+    switch ($tag) {
+    case 'COMPONENT':
+//          $this->component     = array();
+          unset($this->component);
+          foreach ($attributes as $k=>$v) {
+                  $k = strtolower($k);
+                  $this->component->$k = $v;
+          }
+//          $this->param         = $attributes;
+//          Print "ADD C<BR>";
+        break;
+    case 'ELMS':
+          unset($this->elms);
+          $this->elms          = $attributes;
+//          Print "ADD ES<BR>";
+        break;
+    case 'ELM':
+          $this->elm           = $attributes;
+//          Print "ADD E<BR>";
+        break;
+    case 'PARAM':
+          $this->param         = $attributes;
+//          Print "ADD P<BR>";
+        break;         
+//    default: 
+  //      $this->component->$tag = $attributes;
+//    case 'elm':
+//        print "i equals 1";
+//        break;
+//    case 'param':
+//        print "i equals 2";
+//        break;
+    }
+//       if ($tag=='component') 
+//       var_dump($parser,$tag,$attributes); 
+   }
+   
+   function cdata($parser,$cdata) { 
+       $this->cdata = $cdata;
+//       var_dump($parser,$cdata);
+   }
+   
+   function tag_close($parser,$tag) { 
+
+    switch ($tag) {
+    case 'COMPONENT':
+        $this->components[]                = $this->component;
+//**       print_r($this->component);
+//        print_r($this->components);
+//        print "END C!!<BR>";
+        break;
+    case 'ELMS':
+        $this->component->elms[]           = $this->elms;
+/*          if ($t = $this->elms['NAME'])
+             $this->component->elms[$t] = &end($this->component->elms);*/
+          if ($t = $this->elms['NAME'])
+             $this->component->elms_n[$t]  = &end($this->component->elms);
+//        print "END ELMS<BR>";
+        break;
+    case 'PARAM':
+          $this->param['_']                = $this->cdata;
+          $this->component->param[]        = $this->param;
+          if ($t = $this->param['NAME'])
+             $this->component->param_n[$t] = &end($this->component->param);
+//          Print "END P<BR>";
+        break;         
+    case 'ELM':
+        $this->elm['_']                    = $this->cdata;
+        $this->elms[]                      = $this->elm;
+//        print "END ELM<BR>";
+        break;
+//    default:
+//        $q = &$this->component->$tag;
+//        $q['_'] = $this->cdata;
+//    case 'elm':
+//        print "i equals 1";
+//        break;
+//    case 'param':
+//        print "i equals 2";
+//        break;
+    }
+//        print_r($this->component);
+//       var_dump($parser,$tag); 
+   }
+   
+} // end of class xml
+?>

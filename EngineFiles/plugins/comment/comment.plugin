@@ -1,0 +1,252 @@
+<?
+/**
+* Copyright (C) 2002 SIA ESOFTS.
+*
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License 
+* version 2 as published by the Free Software Foundation.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the SIA ESOFTS, 38/40 Blaumana str., 
+* Riga, LV - 1011, LATVIA, e-mail office@esoft.lv 
+*
+* This General Public License does not permit incorporating your program into
+* proprietary programs. Should you require to License Open Effect under the
+* commercial License, please contact SIA ESOFTS for up-to-date information.
+*/
+
+
+/*************************************
+ Autor: Ruslan Bondar 
+ Date: 8/08/01
+ Plugin: Comment
+ Create commentaries for document
+*************************************/
+
+class comment extends TlistClass {
+
+      var $log = 0;
+      var $url_name = 'cmnt';
+      var $razd = '*:&';
+
+   function comment(&$parent, $cfg) {
+      $this->DocID = $parent->docNr;
+      $this->TlistClass(&$parent, $cfg);
+//       $this->log->put("sadfsad sad sadf sad dsafdsafss!!!!!!!!"); 
+//      $this->main();
+   }
+
+   function List_($start,$end){
+        $this->Grp = $this->api->GetGroupID($this->Grp); 
+        if ($this->log) $this->log->put("Comment document $this->DocID");
+        $this->globalVar = $this->api->SetFields($this->DocID);
+        if ($this->log) $this->log->put("Comment start [$start] end [$end]!!!!!!!!"); 
+        $this->Post();  
+  
+        if ($this->commentID) {
+           $res = $this->api->SetFields($this->commentID);
+           $COUNT = 0;
+           while (list($key,$value) = each($res)) {
+                 if (preg_match('/^comment.*$/',$key)){
+                     $COUNT++;
+                     if ($COUNT<$start || $COUNT>$end) continue;
+//        if ($this->log) $this->log->put("Res [$key]$value");
+
+                     $tmp = explode($this->razd,$value);
+                     $tmp = array('email' => $tmp[0],
+                                  'name'  => $tmp[1],
+                                  'text'  => $tmp[2],
+                                  'date'  => $tmp[3]);
+                     $this->nextElement($tmp);
+                 }
+           }
+        }
+        if (!$COUNT) $COUNT = 0;
+        $this->globalVar['COUNT'] = $COUNT;
+        $this->globalVar['TOTAL'] = $COUNT;
+        $this->globalVar['START'] = $start+1;
+        $this->globalVar['END']   = (($COUNT>$end)?$end:$COUNT);
+        $this->count = $COUNT;
+   }
+
+   function Post() {
+     global $post_comment,$name,$email,$text;
+
+        $this->kernel->api->setSearchRoot($this->Grp);
+        $this->kernel->api->setSearchConditions(array(array('title'),array("= '$this->DocID'")),'AND');
+        $res = $this->kernel->api->getAdvancedsearch();
+
+        if (count($res)) $this->commentID = $res[0];
+
+        if ($this->log) $this->log->put("ID [$this->commentID]");
+
+     if ($post_comment=='ok'){
+        $name = strip_tags($name);
+        if (strlen($name)>30)  $name  = substr($name,0,25);
+        $email = strip_tags($email);
+        if (strlen($name)>30)  $email = substr($email,0,25);
+//        if (!preg_match('/^.+@.+\.[a-z]{2,3}$/',$email)
+//                $error = 'is';
+        $text = strip_tags($text);
+        if (strlen($name)>300) $text  = substr($text,0,300);
+
+        if (!$this->commentID) {
+                $this->commentID = $this->kernel->api->createDocument($this->Grp,4);
+                $this->kernel->api->magicSecurityDoc($this->commentID, 1, 'RW');              
+                $this->kernel->api->createTxt($this->commentID, 'title', "$this->DocID");
+                $this->publish($this->commentID);
+                $num = 0;
+        } else {
+                $num = $this->api->GetLastResourseNum($this->commentID,'comment')+1;
+        }
+        $this->_makefields($this->commentID,$num,$email,$name,$text);
+
+
+        header ('Location: '.$GLOBALS['REQUEST_URI']); 
+        halt;
+
+     }
+   }
+
+   function publish($DocID=0) {
+      $SqlStr = 'update '.$this->kernel->tab_cfg->get(docTable)." set visible = 1 where ID = $DocID";
+      $this->kernel->db->query($SqlStr);
+   }
+
+   function _makefields($docID,$num,$email,$name,$text){
+        $this->kernel->api->createTxt($docID, 'comment'.$num, $email.$this->razd.$name.$this->razd.$text.$this->razd.date("[H:i] j F Y"));
+   }
+
+}
+
+/*class comment extends pluginClass {
+
+
+   // Constructor
+   function comment(&$parent, $cfg) {
+      $this->root_dir = TMPL_DIR;
+      $this->pluginClass(&$parent, $cfg);
+      $this->api = new rus_api(&$this,$cfg,1);
+      $this->log = $this->kernel->loger->reg('Comment');
+      $this->ReadCfg();
+      $this->Post();
+      if ($this->DocID)
+        $this->MakeList($this->template);
+   }
+
+   // Read Configuration
+   function ReadCfg() {
+       $this->template    = $this->cfg->get('template');
+       $this->DocID       = $this->parent->docNr;
+       $this->Grp         = $this->api->GetGroupID($this->cfg->get('groups')).''; 
+
+      if ($this->cfg->check('SpecialOutPut'))
+        if ($this->cfg->get('SpecialOutPut')){
+         $this->SOut = 1;
+         $fld = $this->cfg->get('Special_fields');
+         if ($fld) {
+            if (!is_array($fld)) $fld = array($fld);
+               for ($i=0;$i<count($fld);$i++)
+                   $exp[$fld[$i]] = $this->cfg->get("expresion$i");
+         }
+         $this->SOutf = $exp;
+        } 
+//        $this->log->put("Group [$this->Grp]");
+//        $this->log->put("Group [".$this->cfg->get('groups')."]");
+   }
+   
+   // Read template
+   // $fName - file name of template
+   function Post() {
+     global $post_comment,$name,$email,$text;
+
+        $this->kernel->api->setSearchRoot($this->Grp);
+        $this->kernel->api->setSearchConditions(array(array('title'),array("= '$this->DocID'")),'AND');
+        $res = $this->kernel->api->getAdvancedsearch();
+
+        if (count($res)) $this->commentID = $res[0];
+
+        $this->log->put("ID [$this->commentID]");
+
+     if ($post_comment=='ok'){
+        $name = strip_tags($name);
+        if (strlen($name)>30) 
+            $name = substr($name,0,25);
+        $email = strip_tags($email);
+        if (strlen($name)>30) 
+            $email = substr($email,0,25);
+//        if (!preg_match('/^.+@.+\.[a-z]{2,3}$/',$email)
+//                $error = 'is';
+        $text = strip_tags($text);
+        if (strlen($name)>300) 
+            $text = substr($text,0,300);
+
+        if (!$this->commentID) {
+                $this->commentID = $this->kernel->api->createDocument($this->Grp,4);
+                $this->kernel->api->magicSecurityDoc($this->commentID, 1, 'RW');              
+                $this->kernel->api->createTxt($this->commentID, 'title', "$this->DocID");
+                $this->publish($this->commentID);
+                $num = 0;
+        } else {
+                $num = $this->api->GetLastResourseNum($this->commentID,'comment')+1;
+        }
+        $this->_makefields($this->commentID,$num,$email,$name,$text);
+     }
+   }
+
+   function _makefields($docID,$num,$email,$name,$text){
+        $this->kernel->api->createTxt($docID, 'comment'.$num, $email.$this->razd.$name.$this->razd.$text.$this->razd.date("[H:i] j F Y"));
+   }
+
+   function MakeList($fName) {
+        $this->StartTemplate();
+
+      if ($this->SOut) 
+        $ex = new parse_ex(&$this, &$this->tmpl, &$this->SOutf,$log);
+
+
+        if ($this->commentID) {
+                $res = $this->api->SetFields($this->commentID);
+                $COUNT = 0;
+                while (list($key,$value) = each($res)) {
+                        if (preg_match('/^comment.*$/',$key)){
+                        $COUNT++;
+//        $this->log->put("Res [$key]$value");
+
+                        $tmp = explode($this->razd,$value);
+                        $tmp = array('email' => $tmp[0],
+                                     'name' => $tmp[1],
+                                     'text' => $tmp[2],
+                                     'date' => $tmp[3]);
+                        if (!$this->SOut) 
+                           $this->tmpl->set_var($tmp);
+                        else 
+                           $ex->make($tmp);
+
+                        $this->tmpl->parse('output', 'item_block', true);       
+                        $t = $this->tmpl->get('output');
+//        $this->log->put("Res []$t");
+                        }
+                }
+
+        }
+        $this->EndTemplate();
+   }
+
+   function StartTemplate() {      
+      $this->log->put("Read template [$this->template]");
+      $this->kernel->classLoader->checkClass('templateClass');
+      $this->tmpl = new templateClass($this->root_dir, 'remove');
+      $this->tmpl->halt_on_error = 'yes';
+      $this->tmpl->set_file(array('body_qscv_asdf' => $this->template));
+      $this->tmpl->set_block('body_qscv_asdf', 'item_block', 'output');
+   }
+
+   function EndTemplate() {
+      $this->tmpl->parse('out', array('body_qscv_asdf'));
+      $out = $this->tmpl->get('out');
+      $this->html = $out;
+   }   
+
+}*/
+?>

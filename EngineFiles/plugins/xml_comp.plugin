@@ -1,0 +1,194 @@
+<?
+/**
+* Copyright (C) 2002 SIA ESOFTS.
+*
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License 
+* version 2 as published by the Free Software Foundation.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the SIA ESOFTS, 38/40 Blaumana str., 
+* Riga, LV - 1011, LATVIA, e-mail office@esoft.lv 
+*
+* This General Public License does not permit incorporating your program into
+* proprietary programs. Should you require to License Open Effect under the
+* commercial License, please contact SIA ESOFTS for up-to-date information.
+*/
+
+
+/*********************************************
+*
+*  COMPONENT plugin
+*
+*********************************************/
+
+class xmlcompPlugin extends compPlugin {
+
+   // Constructor
+   function xmlcompPlugin(&$parent) {
+      $this->compPlugin(&$parent, 'components.conf');
+//      $this->root_dir = COMPONENT_TMPL_DIR;
+      $this->log  = $this->kernel->loger->reg('XML COMPONENS');
+   }
+
+   // Read template
+   // $fName - file name of template
+//   function readTmpl($fName) {
+   
+   // Get string from template
+   // $tmpl - template object
+   // $parse - parse body or not [true|false]
+//   function getTmpl(&$tmpl, $parse = true) {
+   
+   // Return resource Content By document ID and resource name
+   // $IDdoc - document ID
+   // $RName - name of resource
+   // Return resource ID
+//   function getDocumentByID($IDdoc = 0, $RName = "") {
+
+   function addcaption($capt,$comp) {  
+     return str_replace('{CAPTION}', $capt, $comp);
+   }
+
+###############################################
+
+   // JavaScript for File field component
+//   function jsFile() {
+   
+   // File component
+//   function File($field, $dir = "") {
+   
+   function text(&$comp) {  
+     return $this->addcaption($comp->caption,compPlugin::Text($comp->param_n['name']['_'])); 
+   }
+
+
+   // Text component
+//   function Text($field) {
+   
+   function textarea(&$comp) {  
+     return $this->addcaption($comp->caption,compPlugin::TextArea($comp->param_n['name']['_']));
+   }
+
+   // TextArea component
+//   function TextArea($field) {
+   
+   function select(&$comp) {  
+      $param = &$comp->param_n;
+      $nam  = $comp->caption;
+      $elms = &$comp->elms_n;
+      for ($i=0;$elms['values'][$i];$i++)
+          $q[$i] = $elms['values'][$i]['_'];
+      return $this->addcaption($name, compPlugin::Select($param['name']['_'],$q));
+   }
+
+   // Select component
+//   function Select($field) {
+
+   // Group Connector component
+//   function GroupeIn($Group,$list='none') {
+
+   // Group Connector component
+//   function GroupeInRadio($Group) {
+
+//   function D_Select($field,$group) {
+
+//   function MD_Select($field,$group) {
+
+//   function documentInfo() {
+
+   function radio(&$comp) {
+            $tmplName = $this->cfg->get('Radio');
+            $tmpl = $this->readTmpl($tmplName);
+            $tmpl->loadfile('body');
+            $tmpl->set_block('body','option_block', 'output1');
+            $inStr  = $tmpl->get_var('body');
+            $inStr = str_replace('{NAME}', $comp->param_n['name']['_'], $inStr);
+            $nm = $comp->param_n['name']['_'];
+//            $cp = $comp->param_n['caption']['_'];
+
+            $val = $this->getDocumentByID($this->parent->parent->docNr,$comp->param_n['name']['_']);
+            if (!$val) $val=$comp->elms_n['values']['DEFAULT'];
+ 
+//            print_r($comp->elms_n['values'][0]);
+            for ($i=0;$comp->elms_n['values'][$i];$i++) {
+                $v = $comp->elms_n['values'][$i]['_'];
+                $capa = $comp->elms_n['values'][$i]['CAPTION']; 
+                $chkd = ($val != $v)?'':'checked';
+
+                $n = str_replace('{VALUE}', $v , $inStr);
+                $n = str_replace('{CAPTION}', $comp->elms_n['values'][$i]['CAPTION'], $n);
+
+            $tmpl->set_var(array('NAME'=>$nm, 'VALUE'=>$v, 'CAPTION'=>$capa, 'CHECKED'=>$chkd ));
+            $tmpl->parse('output1', 'option_block', true);
+//        $tmpl->parse('output1', ((in_array($Grp[$i],$in))?'Select_':'').'option_block', true);
+
+//                $out .= str_replace('{CHECKED}', ($val != $v)?'':'checked', $n);
+            }
+//         return $out;
+         return $this->getTmpl(&$tmpl);
+   }     
+
+/*   function GroupeInRadio___________($Group) {
+      $tmplName = $this->cfg->get('GroupsRadioTemplate');
+      $tmpl = $this->readTmpl($tmplName);
+      $tmpl->loadfile('body');
+ 
+      $tmpl->set_block('body','option_block', 'output1');
+      $tmpl->set_block('body','Select_option_block','output2');
+        
+      $in = $this->kernel->api->getLinkedGroup($this->parent->parent->docNr);
+      $Grp = $this->kernel->api->getAllGroups($Group);
+
+      $this->log->put("GRP Start $n [$Group] [$Grp[0]]");
+      if (count(array_intersect($Grp,$in))<1) 
+         $in[] = $Grp[0];
+
+      for ($i = 0; $i < count($Grp); $i++) {
+        $name = $this->kernel->api->getGroupName($Grp[$i]);
+        $tmpl->set_var(array('name'=>$name,'value'=>$Grp[$i]));
+        $tmpl->parse('output1', ((in_array($Grp[$i],$in))?'Select_':'').'option_block', true);
+        $qqq .= $Grp[$i].(($i==count($Grp)-1)?'':',');
+      }
+      $tmpl->set_var(array('HIDDEN'=>$qqq));
+      return $this->getTmpl(&$tmpl);
+   }         
+*/
+
+
+
+
+//   function Radio($name, $value, $checked) {
+
+   function CheckBox(&$comp) {
+      $p= &$comp->param_n;
+      return $this->addcaption($comp->caption, compPlugin::CheckBox($p['name']['_'], $p['value']['_']));
+   }
+//   function CheckBox($field, $value) {
+        
+   function calendar(&$comp) {  
+     return $this->addcaption($comp->caption, compPlugin::Calendar ($comp->param_n['name']['_']));
+   }
+//   function Calendar($field) {
+
+   function editlite(&$comp) {  
+     return $this->addcaption($comp->caption, compPlugin::EditLite ($comp->param_n['name']['_']));
+   }
+//   function EditLite($field){
+
+   function picture(&$comp) {  
+     return $this->addcaption($comp->caption, compPlugin::Picture  ($comp->param_n['name']['_']));
+   }
+//   function Picture() {
+
+   function pictureex(&$comp) {  
+     return $this->addcaption($comp->caption, compPlugin::PictureEx($comp->param_n['name']['_']));
+   }
+//   function PictureEx($field) {
+
+//   function Name() {
+
+//   function Search() {
+
+}
+?>

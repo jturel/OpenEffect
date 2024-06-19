@@ -1,0 +1,33 @@
+<?
+
+  $fields  = array(array("name" => "ID",         "type" => 1),
+                   array("name" => "sortNr",     "type" => 1),
+                   array("name" => "parentID",   "type" => 2, "select" => "list"),
+                   array("name" => "templateID", "type" => 2, "select" => "template"),
+                   array("name" => "name",       "type" => 1),
+                   array("name" => "visible",    "type" => 3, "default" => 1));
+                                                               
+  function groupEditTree($pID, &$kernel, $deep = 0) {
+     $list = array();
+     $SqlStr = "SELECT ID, name FROM ".$kernel->tab_cfg->get("groupTable").
+               " WHERE parentID = $pID ORDER BY sortNr";
+     $result = $kernel->db->query($SqlStr);
+     if ($result && $count = $result->numrows()) for ($Cn = 0; $Cn < $count; $Cn++) {
+        list($id, $name) = $result->getrow();
+        for ($i = 0; $i < $deep; $i++) $name = "-&nbsp;&nbsp;".$name;
+            $list[] = array("name" => $name, "value" => $id);
+            $list = array_merge($list, groupEditTree($id, $kernel, $deep + 1));
+     }
+     return $list;
+  }
+  $lists["list"]  = groupEditTree($this->cfg->get("groupRootID"), $this->kernel);
+
+  $lists["template"] = array();
+  $SqlStr = "SELECT ID, name FROM ".$this->kernel->tab_cfg->get("templateTable");
+  $result = $this->kernel->db->query($SqlStr);
+  if ($result && $count = $result->numrows()) for ($Cn = 0; $Cn < $count; $Cn++) {
+     list($id, $name) = $result->getrow();
+     $lists["template"][] = array("name" => $name, "value" => $id);
+  }
+
+?>

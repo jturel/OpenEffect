@@ -1,0 +1,103 @@
+<?
+/**
+* Copyright (C) 2002 SIA ESOFTS.
+*
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License 
+* version 2 as published by the Free Software Foundation.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the SIA ESOFTS, 38/40 Blaumana str., 
+* Riga, LV - 1011, LATVIA, e-mail office@esoft.lv 
+*
+* This General Public License does not permit incorporating your program into
+* proprietary programs. Should you require to License Open Effect under the
+* commercial License, please contact SIA ESOFTS for up-to-date information.
+*/
+
+
+/*********************************************
+*
+*  formsearch constructor plugin
+*
+*********************************************/
+
+
+class formsearch extends pluginClass {
+
+   // Constructor
+   function formsearch(&$parent, $cfg) {
+      $this->root_dir = TMPL_DIR;
+      $this->pluginClass(&$parent, $cfg);
+      $this->api = new rus_api(&$this,$cfg);
+      $this->main();
+   }
+
+   // Main function
+   function main() {
+      global $radiobutton,$searchstr,$searchfull;
+      $this->log      = $this->kernel->loger->reg("formsearch CONSTRUCTOR");
+      
+      $this->template = (!$searchstr)?$this->cfg->get('template'):$this->cfg->get('templateresult');
+      if ($searchfull)
+         $this->field = 'keyWords';
+      else 
+         $this->field = 'name';
+      
+      $this->kernel->classLoader->checkClass("templateClass");
+      $this->tmpl = new templateClass($this->root_dir, "remove");
+      $this->tmpl->halt_on_error = "yes";
+      $this->tmpl->set_file(array("base_qwe43" => $this->template));
+      if ($searchstr) {
+         $this->tmpl->set_block("base_qwe43", "doc_items_block", "i2");
+         $this->tmpl->set_block("base_qwe43", "items_block", "result");
+//         $this->tmpl->set_block("base_qwe43", "group_block", "itemsBlock");
+         $this->tmpl->set_block("base_qwe43", "documents_block", "i3");
+//         if ($radiobutton != 'group')          
+         $this->log->put("Search : [$searchstr]");
+//            $this->findgrp($searchstr);
+            $this->finddocs($searchstr);      
+//         else         
+         $this->tmpl->parse("documents", "documents_block",true);
+      }
+      $this->tmpl->parse("out", array("base_qwe43"));
+      $this->html = $this->tmpl->get("out");
+   }
+
+  // Fucncion finddocs  
+  // B0rland (rus@esoft.lv) 
+  function finddocs($str){
+      $SqlStr = "select ID, name from $this->Documents where $this->field like '%$str%'";
+      $result = $this->kernel->db->query($SqlStr);
+      if (!$result || !$count = $result->numrows()) return;
+      for ($Cn = 0; $Cn < $count; $Cn++) {
+         list($ID,$name) = $result->getrow();
+         if (!$ID) continue;
+         if (!$this->kernel->api->checkDocSecurity($ID,'R')) continue;
+//         $t = $this->api->SetFieldsEx($ID);
+         $this->tmpl->set_var(array('ID' => $ID, 'name' => $name));
+         $arr = $this->kernel->api->getLinkedGroup($ID);
+         $this->tmpl->set_var('GRPID', $arr[0]);                  
+         $this->tmpl->parse("result", "doc_items_block", true);
+      }
+//      $this->tmpl->parse("result", "documents_block",true);
+  }
+
+  // Fucncion findgrp  
+  // B0rland (rus@esoft.lv) 
+  function findgrp($str){
+      $SqlStr = "select ID from $this->Groups where name like '%$str%'";
+      $result = $this->kernel->db->query($SqlStr);
+      if (!$result || !$count = $result->numrows()) return;
+      for ($Cn = 0; $Cn < $count; $Cn++) {
+        list($ID) = $result->getrow();
+        if (!$this->kernel->api->checkGroupSecurity($ID,'R')) continue;
+
+        $this->tmpl->set_var(array('ID' => $ID, 'name' => $this->kernel->api->getGroupName($ID)));
+        $this->tmpl->parse("result", "items_block", true);
+      }
+//      $this->tmpl->parse("result", "group_block",true);      
+  }
+}
+
+?>

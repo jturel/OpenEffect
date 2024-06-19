@@ -1,0 +1,51 @@
+.captionText {
+        color: #000000;
+        font-family: Verdana, Arial, Helvetica, sans-serif;
+        font-size: 11px;
+        font-weight: bold
+}
+
+.list {
+        font-family: Verdana, Arial, Helvetica, sans-serif;
+        color: #003366
+}
+
+A:HOVER {
+        color : #003366;
+        text-decoration : underline;
+        font-family : Verdana, Geneva, Arial, Helvetica, sans-serif;
+}
+
+A{
+        color: #003366;
+        text-decoration : none;
+        font-family : Verdana, Geneva, Arial, Helvetica, sans-serif;
+}
+
+A:VISITED {
+        color: #004F9D;
+        font-family : Verdana, Geneva, Arial, Helvetica, sans-serif;
+}
+
+P{
+	FONT-FAMILY: Verdana,Geneva,Arial,Helvetica,sans-serif;
+	FONT-SIZE: 10pt;
+}
+
+UL{
+	FONT-FAMILY: Verdana,Geneva,Arial,Helvetica,sans-serif;
+	FONT-SIZE: 10pt;
+}
+
+.buttonz1 { font-family: Verdana, Arial, Helvetica, sans-serif;
+           height : 20px;
+           font-size : 11px;
+           background-color: #CEDCFF;
+           border-color: #FFFFFF #7375BF #7375BF #FFFFFF;
+           border-style: solid;
+           border-top-width: 1px;
+           border-right-width: 1px;
+           border-bottom-width: 1px;
+           border-left-width: 1px;
+           cursor: hand;
+}

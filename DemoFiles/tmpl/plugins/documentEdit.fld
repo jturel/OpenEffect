@@ -1,0 +1,60 @@
+<?
+
+  $fields  = array(array("name" => "ID",         "type" => 1),
+                   array("name" => "templateID", "type" => 1),
+                   array("name" => "name",       "type" => 1),
+                   array("name" => "CATEGORYS",  "type" => 4, "list" => "categorys"),
+                   array("name" => "_groupid",   "type" => 4, "list" => "categorysID", "nodb" => true),
+                   array("name" => "_language",  "type" => 4, "list" => "language", "nodb" => true),
+                   array("name" => "TEMPLATES",  "type" => 4, "list" => "templates"));
+
+  $lists["language"] = array($this->kernel->langID);
+
+  $lists["categorys"] = array();
+  $lists["categorysID"] = array();
+  if ($this->parent->docNr ) {
+     $SqlStr = "SELECT g.name, g.ID FROM ".$this->kernel->tab_cfg->get("docXgroupTable")." x, "
+                .$this->kernel->tab_cfg->get("groupTable")." g WHERE g.ID = "
+                .$this->parent->groupNr." AND x.GrpID = g.ID GROUP BY g.ID";
+                 $result = $this->kernel->db->query($SqlStr);
+                 if ($result && $count = $result->numrows()) {
+                    for ($Cn = 0; $Cn < $count; $Cn++) {
+                        list($name, $cID) = $result->getrow();
+                        $lists['categorys'][] = $name;
+                        $lists['categorysID'][] = $cID;
+                 }
+               }
+  }
+   else {
+         $SqlStr = 'SELECT name, ID FROM '.$this->kernel->tab_cfg->get('groupTable').' WHERE ID = '.$this->parent->groupNr;
+           $result = $this->kernel->db->query($SqlStr);
+           if ($result && $count = $result->numrows()) {
+              for ($Cn = 0; $Cn < $count; $Cn++) {
+                  list($name, $cID) = $result->getrow();
+                  $lists['categorys'][] = $name;
+                  $lists['categorysID'][] = $cID;
+           }
+         }
+  }
+
+  $lists["templates"] = array();
+  if ($this->parent->docNr ) {
+     $SqlStr = "SELECT t.name FROM ".$this->kernel->tab_cfg->get("docTable")." d,".
+               $this->kernel->tab_cfg->get("templateTable")." t WHERE d.ID = "
+               .$this->parent->docNr." AND t.ID = d.templateID AND t.name IS NOT NULL LIMIT 1";
+     $result = $this->kernel->db->query($SqlStr);
+     if ($result && $count = $result->numrows()) {
+        list($name) = $result->getrow();
+        $lists['templates'][] = $name;
+     } else $lists['templates'][] = 'none';
+  } else {
+     $SqlStr = "SELECT t.name FROM ".$this->kernel->tab_cfg->get('groupTable')." g,".
+               $this->kernel->tab_cfg->get("templateTable")." t WHERE g.ID = "
+               .$this->parent->groupNr." AND t.ID = g.templateID AND t.name IS NOT NULL LIMIT 1";
+     $result = $this->kernel->db->query($SqlStr);
+     if ($result && $count = $result->numrows()) {
+        list($name) = $result->getrow();
+        $lists['templates'][] = $name;
+     } else $lists['templates'][] = 'none';
+  }
+?>

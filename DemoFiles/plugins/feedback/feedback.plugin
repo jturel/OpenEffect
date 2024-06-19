@@ -1,0 +1,163 @@
+<?
+
+class feedback extends pluginClass {
+
+   // Constructor
+   function feedback(&$parent, $cfg) {
+      $this->root_dir = TMPL_DIR;
+      $this->pluginClass(&$parent, $cfg);
+      $this->main();
+   }
+   
+   // Main function
+   function main() {
+      $this->log = $this->kernel->loger->reg("Feedback CONSTRUCTOR");
+//      $this->tmpl = $this->readTemplate($this->cfg->get("template"));
+//      $this->array_values();
+      $this->tmpl = $this->parse();
+   }
+   
+   function parse() {
+      $this->log->put("Resault ".$this->cfg->get('results'));
+      if ($this->cfg->get('results')){
+         $this->sendmessage();
+      }
+      if (!$this->error)  
+        $out = $this->readTemplate($this->cfg->get("template"));
+      return $out;
+   }
+
+
+   function &readfields() {
+      $arr =  $this->cfg->get("fields");
+      if (!is_array($arr)){
+          $this->log->put("Values ([$arr]=$GLOBALS[$arr]");
+          return array($arr => $GLOBALS[$arr]);
+      }
+      while (list($k, $v) = each ($arr)) {
+          $this->log->put("Values ([$k]=$v)=$GLOBALS[$v]");
+          $results[$v] = trim($GLOBALS[$v]); 
+      }
+      return $results;
+
+   }
+
+   // Read template
+   // $fName - file name of template
+   function readTemplate($fName) {
+      $this->log->put("Read template [$fName]");
+      $this->kernel->classLoader->checkClass('templateClass');
+      $tmpl = new templateClass($this->root_dir, 'remove');
+      $tmpl->halt_on_error = 'yes';
+      $tmpl->set_file(array('body' => $fName));
+
+      $link = $this->cfg->get('link');  
+      $this->log->put("Link [$link]");
+
+      $tmpl->set_var($GLOBALS['HTTP_GET_VARS']);
+      $tmpl->set_var(array('LINK'   => $link));
+
+      $tmpl->parse('out', array('body'));
+
+      $out = $tmpl->get('out');
+      $this->html = $out;
+      return $tmpl;
+   }
+
+   // Fucncion readconf  
+   // B0rland (rus@esoft.lv) 
+   function readconf(&$subject,&$fromname,&$fromemail,&$returnp,&$fields){
+        $subject = $this->cfg->get("subject");
+        $fromname = $this->cfg->get("fromname");
+        $fromemail = $this->cfg->get("fromemail");
+        $returnp = $this->cfg->get("return_path");
+        $fields = $this->readfields();
+   }
+
+   function sendmessage() {
+
+        $this->log->put("Start!");
+
+        if (trim($GLOBALS['send']) != 'Send!') {
+           $redirect = $this->cfg->get("redirect");
+           header("Location: $redirect"); 
+           $this->log->put("Make Redirection [$redirect]");
+           $this->kernel->error->die = 1;
+           $this->kernel->error->parse("No data found");
+        }
+
+        $this->readconf($subject,$fromname,$fromemail,$returnp,$fields);
+
+        $this->log->put("configuration [$subject],[$fromname],[$fromemail],[$returnp],[$fields]");
+
+        $headers .= "From: $fromname <$fromemail>\n";
+        $headers .= "Return-Path: <$returnp>\n";
+
+        list($k, $v) = each ($fields);
+        if (!$v) {
+           $this->PutError('no data', 'no data text');
+           $this->error = 1;
+        }
+          else 
+        {
+
+              if ($this->cfg->get("senduser")){
+                    $fName = $this->cfg->get("mailtemplate_users");
+        
+                    $email = preg_replace ("/\s*(.*?)\s*/", "\\1", $GLOBALS[$this->cfg->get("emailfield")]);
+                    
+                    if (!preg_match("/^.+@.+\..{2,3}$/", $email)) {
+                        $this->kernel->error->die = 1;
+                        $this->kernel->error->parse("Wrong email", array($email) );
+                    } 
+//                   mail('max@esoft.lv', 'testituser2','you got it', $headers);
+                    $this->Send($email,$subject,$headers,$fName,&$fields);
+              }
+
+                 $ggh=$this->cfg->get("sendadmin");
+//                 mail('max@esoft.lv', 'testitadmin',$ggh, $headers);
+
+              if ($this->cfg->get("sendadmin")){
+                 $fName = $this->cfg->get("mailtemplate_admin");
+       
+                 $email = preg_replace ("/(\n| |\t)/", "", $this->cfg->get("sendto"));
+                 echo "mail = $email<br>";
+        
+//                 mail('max@esoft.lv', 'testitadmin2','you got it', $headers);
+                 $this->Send($email,$subject,$headers,$fName,&$fields);
+              }
+              $this->PutThanx('feedback', 'feedback_text');
+     }
+
+   }
+
+   // Fucncion Send
+   // B0rland (rus@esoft.lv)
+   function Send($email,$subject,$headers,$template,&$fields){
+            $this->log->put("Read mail template [$template]");
+            $this->kernel->classLoader->checkClass("templateClass");
+            $tmpl = new templateClass($this->root_dir, "remove");
+            $tmpl->halt_on_error = "yes";
+            $tmpl->set_file(array("body" => $template));
+
+            $tmpl->set_var($fields);
+            $tmpl->parse("out", array("body"));
+            $message = $tmpl->get("out");
+
+//            print "$email, $subject,$message, $headers<br>";
+            mail($email, $subject,$message, $headers);
+   } 
+
+   function PutError($error, $error_text){
+      $error = new error($this, "error/error.conf", $this->kernel->error->lngStream->get($error), $this->kernel->error->lngStream->get($error_text));
+      $this->html = $error->html;
+   }
+
+   function PutThanx($thanx, $thanx_text){
+      $error = new error($this, "error/thanx.conf", $this->kernel->error->lngStream->get($thanx), $this->kernel->error->lngStream->get($thanx_text));
+      $this->html = $error->html;
+   }
+   
+}
+
+?>

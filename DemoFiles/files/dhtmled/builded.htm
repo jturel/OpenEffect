@@ -1,0 +1,70 @@
+<html>
+<head>
+<title>DHTML Editor </title>
+<link REL="stylesheet" TYPE="text/css" HREF="files/toolbars.css">
+<script LANGUAGE="JavaScript" SRC="files/dhtmled.js"></script>
+<script LANGUAGE="JavaScript" SRC="files/dhtmledjs.js"></script>
+
+<script LANGUAGE="javascript" FOR="tbContentElement" EVENT="DisplayChanged">
+<!--
+return tbContentElement_DisplayChanged()
+//-->
+</script>
+
+<script LANGUAGE="javascript" FOR="tbContentElement" EVENT="ShowContextMenu">
+<!--
+return tbContentElement_ShowContextMenu()
+//-->
+</script>
+
+<script LANGUAGE="javascript" FOR="tbContentElement" EVENT="ContextMenuAction(itemIndex)">
+<!--
+return tbContentElement_ContextMenuAction(itemIndex)
+//-->
+</script>
+
+</head>
+<body LANGUAGE="javascript" onload="return window_onload()">
+<!-- files -->
+<div class="tbToolbar" ID="FormatToolbar">
+  <div class="tbButton" ID="DECMD_BOLD" TITLE="Bold" TBTYPE="toggle" LANGUAGE="javascript" onclick="return SMTH_onclick('DECMD_BOLD','OLECMDEXECOPT_DODEFAULT')"><img class="tbIcon" src="images/bold.gif" WIDTH="23" HEIGHT="22"></div>
+  <div class="tbButton" ID="DECMD_ITALIC" TITLE="Italic" TBTYPE="toggle" LANGUAGE="javascript" onclick="return SMTH_onclick('DECMD_ITALIC','OLECMDEXECOPT_DODEFAULT')"><img class="tbIcon" src="images/italic.gif" WIDTH="23" HEIGHT="22"></div>
+  <div class="tbButton" ID="DECMD_UNDERLINE" TITLE="Underline" TBTYPE="toggle" LANGUAGE="javascript" onclick="return SMTH_onclick('DECMD_UNDERLINE','OLECMDEXECOPT_DODEFAULT')"><img class="tbIcon" src="images/under.gif" WIDTH="23" HEIGHT="22"></div>
+  
+  <div class="tbSeparator"></div>
+
+  <div class="tbButton" ID="DECMD_JUSTIFYLEFT" TITLE="Align Left" TBTYPE="radio" NAME="Justify" LANGUAGE="javascript" onclick="return SMTH_onclick('DECMD_JUSTIFYLEFT','OLECMDEXECOPT_DODEFAULT')"><img class="tbIcon" src="images/left.gif" WIDTH="23" HEIGHT="22"></div>
+  <div class="tbButton" ID="DECMD_JUSTIFYCENTER" TITLE="Center" TBTYPE="radio" NAME="Justify" LANGUAGE="javascript" onclick="return SMTH_onclick('DECMD_JUSTIFYCENTER','OLECMDEXECOPT_DODEFAULT')"><img class="tbIcon" src="images/center.gif" WIDTH="23" HEIGHT="22"></div>
+  <div class="tbButton" ID="DECMD_JUSTIFYRIGHT" TITLE="Align Right" TBTYPE="radio" NAME="Justify" LANGUAGE="javascript" onclick="return SMTH_onclick('DECMD_JUSTIFYRIGHT','OLECMDEXECOPT_DODEFAULT')"><img class="tbIcon" src="images/right.gif" WIDTH="23" HEIGHT="22"></div>
+
+  <div class="tbSeparator"></div>
+
+  <div class="tbButton" ID="DECMD_ORDERLIST" TITLE="Bulletted List" TBTYPE="toggle" LANGUAGE="javascript" onclick="return SMTH_onclick('DECMD_ORDERLIST','OLECMDEXECOPT_DODEFAULT')"><img class="tbIcon" src="images/numlist.gif" WIDTH="23" HEIGHT="22"></div>
+  <div class="tbButton" ID="DECMD_UNORDERLIST" TITLE="Numbered List" TBTYPE="toggle" LANGUAGE="javascript" onclick="return SMTH_onclick('DECMD_UNORDERLIST','OLECMDEXECOPT_DODEFAULT')"><img class="tbIcon" src="images/bullist.gif" WIDTH="23" HEIGHT="22"></div>
+  
+  <!--div class="tbSeparator"></div-->
+
+  <div class="tbButton" ID="DECMD_OUTDENT" TITLE="Decrease Indent" LANGUAGE="javascript" onclick="return SMTH_onclick('DECMD_OUTDENT','OLECMDEXECOPT_DODEFAULT')"><img class="tbIcon" src="images/deindent.gif" WIDTH="23" HEIGHT="22"></div>
+  <div class="tbButton" ID="DECMD_INDENT" TITLE="filesrease Indent" LANGUAGE="javascript" onclick="return SMTH_onclick('DECMD_INDENT','OLECMDEXECOPT_DODEFAULT')"><img class="tbIcon" src="images/inindent.GIF" WIDTH="23" HEIGHT="22"></div>
+  
+  <div class="tbSeparator"></div>
+
+  <div class="tbButton" ID="DECMD_HYPERLINK" TITLE="Link" LANGUAGE="javascript" onclick="return insLink()"><img class="tbIcon" src="images/link.gif" WIDTH="23" HEIGHT="22"></div>
+  <div class="tbButton" ID="DECMD_HYPERLINK1" TITLE="Link1" LANGUAGE="javascript" onclick="return insLink1()"><img class="tbIcon" src="images/link.gif" WIDTH="23" HEIGHT="22"></div>
+  <div class="tbButton" ID="DECMD_IMAGE" TITLE="Insert Image" LANGUAGE="javascript" onclick="return insImg()"><img class="tbIcon" src="images/image.gif" WIDTH="23" HEIGHT="22"></div>
+  
+  <div class="tbSeparator"></div>
+
+  <div class="tbButton" ID="DECMD_CUT" TITLE="Cut" LANGUAGE="javascript" onclick="return SMTH_onclick('DECMD_CUT','OLECMDEXECOPT_DODEFAULT')"><img class="tbIcon" src="images/cut.gif" WIDTH="23" HEIGHT="22"></div>
+  <div class="tbButton" ID="DECMD_COPY" TITLE="Copy" LANGUAGE="javascript" onclick="return SMTH_onclick('DECMD_COPY','OLECMDEXECOPT_DODEFAULT')"><img class="tbIcon" src="images/copy.gif" WIDTH="23" HEIGHT="22"></div>
+  <div class="tbButton" ID="DECMD_PASTE" TITLE="Paste" LANGUAGE="javascript" onclick="return SMTH_onclick('DECMD_PASTE','OLECMDEXECOPT_DODEFAULT')"><img class="tbIcon" src="images/paste.gif" WIDTH="23" HEIGHT="22"></div>
+</div>
+<object ID="tbContentElement" CLASS="tbContentElement" CLASSID="clsid:2D360201-FFF5-11D1-8D03-00A0C959BC0A" VIEWASTEXT>
+  <param name=Scrollbars value=true>
+</object>
+<object ID="ObjTableInfo" CLASSID="clsid:47B0DFC7-B7A3-11D1-ADC5-006008A5848C" VIEWASTEXT></object>
+<object ID="ObjBlockFormatInfo" CLASSID="clsid:8D91090E-B955-11D1-ADC5-006008A5848C" VIEWASTEXT></object>
+<form NAME="UploadForm" action="upload.asp" method="POST"><input type="hidden" name="UploadDocument"></form>
+<script LANGUAGE="Javascript" SRC="files/toolbars.js"></script>
+</body>
+</html>

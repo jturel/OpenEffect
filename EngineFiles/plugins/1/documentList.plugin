@@ -1,0 +1,170 @@
+<?
+/**
+* Copyright (C) 2002 SIA ESOFTS.
+*
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License 
+* version 2 as published by the Free Software Foundation.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the SIA ESOFTS, 38/40 Blaumana str., 
+* Riga, LV - 1011, LATVIA, e-mail office@esoft.lv 
+*
+* This General Public License does not permit incorporating your program into
+* proprietary programs. Should you require to License Open Effect under the
+* commercial License, please contact SIA ESOFTS for up-to-date information.
+*/
+
+
+
+/*********************************************
+*
+*  LIST constructor plugin (child), for document list
+*
+*********************************************/
+
+
+class documentListPlugin extends listPlugin {
+
+   // Constructor
+   function documentListPlugin(&$parent, $cfg) {
+      $this->listPlugin(&$parent, $cfg);
+      $this->getDocCfg();
+//      $this->parent->endPreParseFun[] = "endPreParse";
+   }
+
+
+   // Set Document list variable (in template)
+   // END preParse function
+//   function endPreParse() {
+//      $SqlStr = "SELECT name FROM ".$this->kernel->tab_cfg->get("groupTable")."
+//                 WHERE ID = ".$this->parent->groupNr;
+//      $result = $this->kernel->db->query($SqlStr);
+//      if ($result && $result->numrows()) {
+//         list($name) = $result->getrow();
+//              $this->tmpl->set_var(array("GROUP_NAME" => $name));
+//      }
+//   }
+
+   // Gegroup group (document) configuration
+   function getDocCfg() {
+//      $this->txtTable = $this->kernel->tab_cfg->get("txtTable");
+//      $this->txtLinkTable = $this->kernel->tab_cfg->get("txtLinkTable");
+      $this->title = $this->cfg->get("titleField");
+   }
+
+      
+   // Pre parse function
+   // get title from txtTable
+   function preParse($row) {
+   
+      if ($row["visible"]) $this->tmpl->set_var(array("PUBLISH" => "checked"));
+                      else $this->tmpl->set_var(array("PUBLISH" => ""));
+
+
+      if ($row['name']) {
+               $this->tmpl->set_var(array('TITLE' => $row['name']));
+               return true;
+      }
+      else 
+      {
+               $this->tmpl->set_var(array("TITLE" => "none"));
+               return false;
+      }
+//       $this->tmpl->set_var(array("TITLE" => "none"));
+   }   
+
+
+   function pubSave($sql = "1") {
+   
+      global $public;
+      if (!$public) return;
+   
+      $hidArray = $this->cfg->get("hidArray");
+      $pubArray = $this->cfg->get("pubArray");
+      $docTable = $this->kernel->tab_cfg->get("docTable");
+      global $$pubArray;
+      global $$hidArray;
+
+      $pubArray = $$pubArray;
+      $hidArray = $$hidArray;
+      
+      if (!is_array($hidArray)) return;
+      $sSql = ""; $hSql = "";
+      reset($hidArray);
+      while(list($key, $val) = each($hidArray)) {
+         if ($pubArray[$key]) {
+            if ($sSql) $sSql .= " OR ";
+                   $sSql .= "ID = $key";
+                } else {
+            if ($hSql) $hSql .= " OR ";
+                   $hSql .= "ID = $key";
+                }
+      }
+
+      if ($hSql) {
+         $SqlStr = "UPDATE $docTable SET visible=0 WHERE $sql AND ($hSql)";
+         $this->kernel->db->query($SqlStr);
+      }
+      if ($sSql) {
+         $SqlStr = "UPDATE $docTable SET visible=1 WHERE $sql AND ($sSql)";
+         $this->kernel->db->query($SqlStr);
+      }
+   }
+
+
+   // Move document (change order)
+   function extFun_move($move,$id) {
+
+//      $id = $this->parent->docNr;
+      $SqlStr = 'SELECT DocID, sortNr FROM '.$this->kernel->tab_cfg->get('docXgroupTable').
+                 ' WHERE GrpID = '.$this->parent->groupNr;
+      if ($this->cfg->check('order')) $SqlStr .= ' ORDER BY '.$this->cfg->get('order');
+      $result = $this->kernel->db->query($SqlStr);
+      if ($result && $count = $result->numrows()) {
+                for ($Cn = 0; $Cn < $count; $Cn++) {
+                    list ($ID , $sortNr) = $result->getrow();
+                    if ($id != $ID) { $sID = $ID; $sSortNr = $sortNr; continue; }
+                              
+                    if ($move == 'up'   && $Cn == 0) break;
+                    if ($move == 'down' && $Cn >= $count - 1) break;
+                              
+                    if ($move == 'down') list($sID, $sSortNr) = $result->getrow();
+                              
+                    $SqlStr = 'UPDATE '.$this->kernel->tab_cfg->get('docXgroupTable').
+                              " SET sortNr = $sortNr WHERE DocID = $sID";
+                    $this->kernel->db->query($SqlStr);
+                    $SqlStr = 'UPDATE '.$this->kernel->tab_cfg->get('docXgroupTable').
+                              " SET sortNr = $sSortNr WHERE DocID = $ID";
+                    $this->kernel->db->query($SqlStr);
+                    break;
+                }
+      }
+   }
+
+
+   function delete($sql = "1") {
+      $delArray = $this->cfg->get("checkArray");
+      $delField = $this->cfg->get("delField");
+      if ($this->cfg->check("xTable")) $table   = $this->cfg->get("xTable");
+                                  else $table   = $this->cfg->get("table");
+      global $$delArray;
+
+      if (!is_array($$delArray)) return;
+//      $sSql = "";
+      reset($$delArray);
+      while(list($key, $val) = each($$delArray)) {
+         $this->kernel->api->removeDoc($this->parent->groupNr, $key);
+//         if ($sSql) $sSql .= " OR ";
+//         $sSql .= "$delField = $key";
+      }
+
+//      $SqlStr = "DELETE FROM $table WHERE $sql AND ($sSql)";
+//      return $this->kernel->db->query($SqlStr);
+      return true;
+   }
+
+   
+}
+
+?>

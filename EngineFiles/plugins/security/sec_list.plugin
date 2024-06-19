@@ -1,0 +1,85 @@
+<?
+/**
+* Copyright (C) 2002 SIA ESOFTS.
+*
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License 
+* version 2 as published by the Free Software Foundation.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the SIA ESOFTS, 38/40 Blaumana str., 
+* Riga, LV - 1011, LATVIA, e-mail office@esoft.lv 
+*
+* This General Public License does not permit incorporating your program into
+* proprietary programs. Should you require to License Open Effect under the
+* commercial License, please contact SIA ESOFTS for up-to-date information.
+*/
+
+
+
+class sec_list extends TlistClass {
+   var 
+     $log = 1;
+  
+   // Constructor
+   function sec_info(&$parent, $cfg) {
+      $this->root_dir = TMPL_DIR;
+      $this->TlistClass(&$parent, $cfg);
+      $this->log = $this->kernel->loger->reg('Security  view CONSTRUCTOR');
+   }
+
+   function List_($start,$end){
+       global $sec_search;
+       $SqlStr = 'select UserID from Users ';
+       if (!sec_search)  $SqlStr .= ' where Name = '."'$sec_search'".' or SName = '."'$sec_search'";
+//       $this->kernel->debug_text = $SqlStr;
+
+       $result = $this->kernel->db->query($SqlStr);
+
+//       $this->kernel->debug_text .= $result->numrows();
+
+       if (!$result || !$count = $result->numrows()) return array();
+
+
+       for ($Cn = 0; $Cn < $result->numrows(); $Cn++) {
+            list($ID) = $result->getrow();
+            $tmp = $this->getUserInfo($ID);
+            $tmp['password'] = '';
+            $tmp['Password'] = '';
+            $tmp['Pass'] = '';
+            $tmp['pass'] = '';
+            $this->nextElement($tmp);
+       }
+   }
+
+     // Get user from base
+     // $ID - user id
+     // RETURN : array of user resource
+   function getUserInfo($ID = 0){
+//         $this->kernel->debug_text .=  $ID.'<br>';
+         $ID = intVal($ID);      
+//         $this->kernel->debug_text .=  $ID.'<br>';
+         if (!$ID) return array();
+//         $this->kernel->debug_text .=  $ID.'<br>';
+         $SqlStr = 'select * from '.$this->kernel->tab_cfg->get('userTable')." where UserID = $ID";
+//         $this->kernel->debug_text .=  $SqlStr.'<br>';
+
+//         $this->kernel->debug_text .=  $result->mysql_num_fields().'<br>';
+
+         $result = $this->kernel->db->query($SqlStr);
+         if (!$result || !$count = $result->numrows()) return array();
+
+         for ($Cn = 0; $Cn < $result->numcols(); $Cn++) {
+            $name = $result->colname($Cn);
+            $returnArray[$name] = $result[$name];
+            $returnArray[$name] = $result->field($name,0);
+//            $this->kernel->debug_text .=  $name.'['.$returnArray[$name].']<br>';
+         }
+         return $returnArray;
+
+   }
+
+
+}
+
+?>

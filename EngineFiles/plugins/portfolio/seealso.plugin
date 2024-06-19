@@ -1,0 +1,98 @@
+<?
+/**
+* Copyright (C) 2002 SIA ESOFTS.
+*
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License 
+* version 2 as published by the Free Software Foundation.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the SIA ESOFTS, 38/40 Blaumana str., 
+* Riga, LV - 1011, LATVIA, e-mail office@esoft.lv 
+*
+* This General Public License does not permit incorporating your program into
+* proprietary programs. Should you require to License Open Effect under the
+* commercial License, please contact SIA ESOFTS for up-to-date information.
+*/
+
+
+class seealso extends pluginClass {
+
+   // Constructor
+   function seealso(&$parent, $cfg) {
+      global $see_also;
+      $this->root_dir = TMPL_DIR;
+      $this->pluginClass(&$parent, $cfg);
+      $this->log = $this->kernel->loger->reg("Portfolio Seee Also CONSTRUCTOR");
+      $this->log->put("Start");
+      $this->api = new rus_api(&$this,$cfg,1);
+
+      $this->col         = $this->cfg->get("ColumnCount");
+      $this->row         = $this->cfg->get("RowCount");
+      $this->RootGrp     = $this->cfg->get("group");
+      $this->RootGrp     = $this->api->GetGroupID($this->RootGrp);
+
+
+      $seealso  = new browse(&$this,$cfg,$this->cfg->get("template_Seealso"), $this->col, $this->row ,$this->MakeArray());
+
+//      $this->html .= $seealso->html;
+      $navigator = new navigator($this,$cfg,$this->cfg->get("template_navigator"), $see_also,$this->count,"",$this->api->genURL('see_also'));
+        
+      $add = array('NAVIGATOR' => $navigator->html,'SEEALSO' => $seealso->html);
+      $a = new document_(&$this,$cfg,$this->cfg->get("template"),$this->parent->docNr,1,array(),$add);
+      $this->html = $a->html;      
+
+   }
+
+   function MakeArray() {
+      global $see_also;
+      $see_also = ($see_also)?$see_also:1; 
+      $docs = $this->api->GetInDocuments($this->RootGrp,$this->parent->docNr);
+/*      $aar = $this->api->GetInGroup($this->RootGrp,$this->parent->docNr);
+      $docs = array();
+        $this->log->put('Create ['.count($aar).']');
+      for ($i=0;$i<count($aar);$i++)
+          $docs = array_merge($docs,$this->kernel->api->getAllDocuments($aar[$i]));
+
+      $this->log->put('Get ['.$this->parent->docNr.']');
+      $this->log->put('Get ['.count($docs).']');
+//        for ($i=0;$i<count($docs);$i++)  
+//                $this->log->put('Get ['.$docs[$i].']');
+
+//        while (list ($key, $val) = each ($docs)) 
+//                $this->log->put("Get [$key] = '$val'");
+
+      $docs=array_unique($docs);
+
+//      $this->log->put('Get ['.count($docs).']');
+//        while (list ($key, $val) = each ($docs)) 
+//                $this->log->put("Get [$key] = '$val'");
+      $docs = array_diff($docs, array($this->parent->docNr,0,'',));
+//      $this->log->put('Get ['.count($docs).']');
+
+      while (list ($key, $val) = each ($docs)) 
+          if ($val != $this->parent->docNr&&$val) $doc[] = $val;
+
+//      while (list ($key, $val) = each ($doc)) 
+//             $this->log->put("Get [$key] = '$val'");
+                  
+*/
+      $count = count($docs);
+      $size = $this->row * $this->col;
+      $start = ($see_also-1) * $size;
+      $end = $start + ($this->row * $this->col);        
+      if ($end>$count) 
+         $end = $count;
+//      $this->log->put("$start = $end");
+      for ($i=$start;$i<$end;$i++){
+//          $Arr[] = $this->api->SetFields($docs[$i]);
+          $Arr[] = $this->api->SetFields($docs[$i],array('title','picture'));
+//         $this->log->put("Create [$i][$id]");
+      }
+
+//      $this->count = round((count($Arr) / ($this->row * $this->col)) +0.55);
+      $this->count = $count/$size;
+      return $Arr;
+   }
+}
+?>

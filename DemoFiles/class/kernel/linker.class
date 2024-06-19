@@ -1,0 +1,42 @@
+<?
+
+/***************************************
+*  Linker class
+*  Parent class for link between objects
+*  
+***************************************/
+
+
+  class linkerClass {
+     var $className = "linkerClass"; // Class name
+     var $parent;  // pointer on parent object
+     var $childs;  // Array of child objects
+     var $kernel;  // pointer on kernel object
+       
+     
+     // Constructor
+     // $parent - pointer on parent class
+     function linkerClass(&$parent) {
+        $this->parent = &$parent;         // create pointer on parent object
+	$this->kernel = &$parent->kernel; // create pointer on kernel object
+     }
+     
+     // Add child object
+     // $obj - Child object which will be add
+     function addChild($obj) {
+        $this->childs[] = $obj;
+	return $this->childs[count($this->childs) - 1];
+     }
+
+     // Delete child object
+     // $offset - Offset of delete object 
+     // $cnt    - counts of delete objects start from offset
+     function delChild($offset, $cnt = 1) {
+        if ($offset + 1 <= count($this->childs)) return false;
+        array_splice($this->childs, $offset, $cnt);
+	return true;
+     }
+
+  } // finished LINKER class
+ 
+?>

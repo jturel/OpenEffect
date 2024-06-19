@@ -1,0 +1,75 @@
+<HTML>
+<HEAD>
+<TITLE>navigation</TITLE>
+<link rel="stylesheet" href="../norm_window.css" type="text/css">
+<SCRIPT LANGUAGE="JavaScript">
+<!--
+var templates       = new Array();
+templates[0] = ['0','##Add New Template##'];
+
+<!-- BEGIN templates_block -->
+templates[templates.length] = ['{ID}','{NAME}'];
+<!-- END templates_block -->
+var tmplId = "{CURENT_XML}", tmplNamen = "";
+function init(){
+  while(tmplId.indexOf('=')!=-1) tmplId = tmplId.substr(tmplId.indexOf('=')+1);
+  var tmpstr = ''
+  for(var i = 0; i < templates.length; i++) {
+    tmpstr += '<option value="'+templates[i][0]+'"'+((templates[i][0]==tmplId)?' selected':'')+'>'+templates[i][1]+'</option>';
+    if(templates[i][0]==tmplId) tmplNamen = (i==0)?"##New Template##":templates[i][1];
+  }
+  document.all.sel.innerHTML = '<table><tr><td rowspan=2 width="100%"><select id="tmplSEL" size="5" style="width:100%;">'+tmpstr+'</select></td><td><input type="button" value="##Edit##" onclick="editTMPL();" class="buttonz"></td></tr><tr><td><input type="button" value="##Delete##" onclick="delTMPL();" class="buttonz"></td></tr></table>';
+  mainForm.TempID.value=tmplId;
+}
+function delTMPL(){
+  if(document.all.tmplSEL.value!="0"){
+    mainForm.TempID.value = document.all.tmplSEL.value;
+    mainForm.Delete.value = "1";
+    mainForm.Save.value = "";
+    mainForm.submit();
+  }
+}
+function editTMPL(){
+  if(document.all.tmplSEL.value!=tmplId){
+    mainForm.TempID.value = document.all.tmplSEL.value;
+    mainForm.Delete.value = "";
+    mainForm.Save.value   = "";
+    mainForm.submit();
+  }
+}
+function saveTMPL(nam,tex){
+  var clr = true;
+  if(tmplId=="0"){ 
+    clr = (nam=="")?false:true;
+    if (clr) {
+      for(var i = 0; i < templates.length; i++) {
+        if(nam==templates[i][1]) { 
+          clr=false;
+          alert("##Such name already exist!##");
+          break;
+        }
+      }
+    } else alert("##Name cannot be empty!##");
+  } 
+  if(clr){
+    mainForm.TempID.value   = tmplId;
+    mainForm.Delete.value   = "";
+    mainForm.Save.value     = "1";
+    mainForm.TempName.value = nam;
+    mainForm.Text.value     = tex;
+    mainForm.submit();
+  }
+}
+//-->
+</SCRIPT>
+</HEAD>
+<BODY bgColor=#E7EBFF onload="init()">
+<div id=sel></div>
+<TABLE id="comps"></TABLE>
+<form method="post" name="mainForm">
+<input type="hidden" name="Save" value="">
+<input type="hidden" name="TempID" value="">
+<input type="hidden" name="TempName" value="">
+<input type="hidden" name="Text" value="">
+<input type="hidden" name="Delete" value="">
+</form></BODY></HTML>

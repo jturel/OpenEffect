@@ -1,0 +1,38 @@
+<?
+
+/***************************************
+*  Loger class
+*  
+***************************************/
+
+
+######################################################################
+#
+#  loger item Class (DB output)
+# 
+ 
+
+ class logerItemClass_db extends linkerClass {
+    var $className = "logerItemClass_db"; // Class name
+    
+    // Constructor
+    // $parent - pointer on parent object
+    function logerItemClass_db(&$parent) {
+       $this->linkerClass(&$parent);
+    }
+
+
+    // Send message to stream
+    // &$str - pointer on string which will be send in output
+    function put(&$str) {
+       $str = str_replace("'", '"', $str); // Remove _'_ signe for right sql query
+       $SqlStr = "INSERT INTO ".$this->parent->dbName."
+                  (Str) VALUES ('$str')";
+       $result = $this->kernel->db->query($SqlStr);
+       if ($result) return true;
+       return false;
+    }
+ }
+
+
+?>

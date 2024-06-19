@@ -1,0 +1,151 @@
+<?
+class maillist extends pluginClass {
+
+   // Constructor
+   function maillist(&$parent, $cfg) {
+      $this->root_dir = TMPL_DIR;
+      $this->pluginClass(&$parent, $cfg);
+      $this->main();
+   }
+   
+   // Main function
+   function main() {
+      $this->log = $this->kernel->loger->reg("MailList");
+
+      global $unsubscribe;
+
+      if (isset($unsubscribe)){
+        $un_email = $this->getEmail($unsubscribe);  
+        if ($un_email) {
+            $this->DeactivateEmail($un_email);
+            $this->PutThanx("nomail","user_error");
+        }
+      }
+
+ 
+      if ($this->cfg->get("result"))
+      {       
+       global $maillist;
+ 
+        $tmp = $this->CheckMail($maillist);
+         if ($tmp)
+         { 
+
+           $code = uniqid (""); 
+           $email_result = $this->InsertEmail($maillist, $code); 
+
+             if ($email_result) 
+               {
+                 $this->log->put("Inserting email result: $maillist :: Subscribe code: $code");
+                 $this->SendMessage($maillist, $code);
+//                 $this->PutThanx("nomail","user_error");
+		 $this->PutThanx("mailok","thanks");
+
+               } else $this->PutError("nomail","int_error");      
+         } else $this->PutError("nomail","user_error");
+       } else $this->tmpl = $this->readTemplate($this->cfg->get("template"));
+
+}
+
+
+   function getEmail($code){
+      $sql = "select mail from MailList where Subscribe_Code = '$code'";
+      $result = $this->kernel->db->query($sql);
+
+      if (!$result || !$result->numrows()) return false;
+      list($id) = $result->getrow();
+
+      return $id;
+   }
+
+//----------------------------------------
+   function PutError($error, $error_text){
+      $error = new error($this, "error/error.conf", $this->kernel->error->lngStream->get($error), $this->kernel->error->lngStream->get($error_text));
+      $this->html = $error->html;
+   }
+
+   function PutThanx($thanx, $thanx_text){
+      $error = new error($this, "error/thanx.conf", $this->kernel->error->lngStream->get($thanx), $this->kernel->error->lngStream->get($thanx_text));
+      $this->html = $error->html;
+   }
+//----------------------------------------
+   
+   // Read template
+   // $fName - file name of template
+   function readTemplate($fName) {
+      $this->log->put("Read template [$fName]");
+      $this->kernel->classLoader->checkClass("templateClass");
+      $tmpl = new templateClass($this->root_dir, "remove");
+      $tmpl->halt_on_error = "yes";
+      $tmpl->set_file(array("body" => $fName));
+
+      if (!$this->cfg->get("result")) {
+         $tmpl->set_var(array("ACTION" => $this->cfg->get("action")));
+      }
+
+      $tmpl->parse("out", array("body")); 
+      
+      $out = $tmpl->get("out");
+      $this->html = $out;
+      return $tmpl;
+   }
+
+   function CheckMail($email){
+        if (preg_match ("/^.+@.+\..{2,3}$/", $email)) {
+           $MailListCount = $this->GetCount($email);
+           if ($MailListCount != 0) {return 0;} else {return 1;}
+        } else { return 0; }    
+   }
+
+   function GetCount($email){
+        $sql = "select count(*) from MailList where mail='$email'";
+      
+        $result = $this->kernel->db->query($sql);
+         list ($count) = $result->getrow();
+ 
+       return $count;   
+   }
+
+   function InsertEmail($email, $code){
+        $id = $this->kernel->db->nextid();
+        $sql = "INSERT INTO MailList(ID, mail, Language, TypeID, Active, Subscribe_code) VALUES($id, '$email', 1, 1, 1, '$code')";      
+        $result = $this->kernel->db->query($sql);
+        return $result;
+   }
+
+   function DeactivateEmail($email){
+        $this->log->put("Deactivate email: $email");
+        $sql = "update MailList set Active=0 where mail='$email'";      
+        $result = $this->kernel->db->query($sql);
+        return $result;
+   }
+
+   function SendMessage($email, $code) {
+        $subject = $this->cfg->get("subject");
+        $fromname = $this->cfg->get("fromname");
+        $fromemail = $this->cfg->get("fromemail");
+        $returnp = $this->cfg->get("return_path");
+
+        $headers .= "From: $fromname <$fromemail>\n";
+        $headers .= "Return-Path: <$returnp>\n";
+
+        $fName = $this->cfg->get("mailtemplate");
+
+        $this->log->put("Read mail template [$fName]");
+        $this->kernel->classLoader->checkClass("templateClass");
+        $tmpl = new templateClass($this->root_dir, "remove");
+
+        $tmpl->halt_on_error = "yes";
+        $tmpl->set_file(array("body" => $fName));
+
+        $tmpl->set_var(array("UNSUBSCRIBE_CODE" => $code));
+
+        $tmpl->parse("out", array("body"));
+        $message = $tmpl->get("out");
+        
+        mail($email, $subject,$message, $headers);
+        $this->log->put("Sending mail to [$email]");
+   }
+   
+}
+?>

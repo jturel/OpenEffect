@@ -1,0 +1,80 @@
+<?
+class groupebrowse extends pluginClass {
+    var $debug=1;
+        
+   // Constructor
+   function groupebrowse(&$parent,$cfg) {
+
+      $this->root_dir = TMPL_DIR;
+      $this->pluginClass(&$parent, $cfg);
+      $arrays = count($array);  
+      if ($debug) $this->log = $this->kernel->loger->reg('Groupe Browse');
+      if ($debug) $this->log->put("Read template [$template]");
+
+      
+      // CFG
+      $template     = $this->cfg->get('template');
+      $templatelist = $this->cfg->get('templatelist');
+      $columns      = $this->cfg->get('columns');
+      $rows         = $this->cfg->get('rows');
+      $TopGroup     = $this->cfg->get('topgroup');
+
+      $this->kernel->debug_text .=  "<br>$template, $templatelist, $columns, $rows, $TopGroup <br>";
+
+      $this->kernel->classLoader->checkClass('templateClass');
+      $tmpl = new templateClass($this->root_dir, 'keep');
+      $tmpl->halt_on_error = 'yes';
+      $tmpl->set_file(array('body_browse_qwer' => $template));
+
+      $x = 0;
+
+      $tmpl->set_block('body_browse_qwer', 'row_block', 'r');
+      $tmpl->set_block('body_browse_qwer', 'column_block', 'outputcolumn');
+//      if ($debug) $this->log->put("\$x = $x [".$arrays.']');
+
+      $TopGroupID = $this->kernel->api->getGroupIDbyName($TopGroup);
+
+      $this->kernel->debug_text .=  " $TopGroup $TopGroupID <br>";
+
+      $arrays = $this->kernel->api->getAllGroups($TopGroupID);
+
+     $this->kernel->debug_text .= count($arrays).'<br>';
+
+
+      for ($i=0;$i<$columns&&($x<count($arrays));$i++){
+          if ($debug) $this->log->put("i = $i");
+          for ($j=0;$j<$rows&&($x<count($arrays));$j++){            
+            if ($debug) $this->log->put("j = $j");
+
+            $name = $this->kernel->api->getGroupName($arrays[$x]);
+
+            $d = new doclist_(&$parent, $cfg, $templatelist, $name);
+
+//            $this->kernel->debug_text .=  $d->html .' '..'<br>';
+//            $this->kernel->debug_text .=  ' '.$arrays[$x].'<br>';
+            
+            $tmpl->set_var(array('LIST' => $d->html));
+            $tmpl->parse('r', 'row_block', true);
+            $tmpl->set_var(array('LIST' => ''));
+           
+            $x++;
+         }
+        $tmpl->set_var(array('GroupName' => $name));
+        $tmpl->parse('outputcolumn', 'column_block', true);
+        $tmpl->set_var(array('r'=>''));
+
+      }
+
+      $tmpl->parse('out', array('body_browse_qwer')); 
+      $out = $tmpl->get('out');
+      $this->html = $out;
+
+   }
+
+/*   function CleatF($r){
+        while (list ($key, $val) = each ($r)) $r[$key]='';
+        return $r;
+   }*/
+
+}
+?>

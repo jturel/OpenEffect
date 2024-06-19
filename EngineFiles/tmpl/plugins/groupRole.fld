@@ -1,0 +1,18 @@
+<?
+
+  $fields  = array(array("name" => "Access",   "type" => 1),
+                   array("name" => "Access_R", "type" => 3, "nodb" => true),
+                   array("name" => "Access_W", "type" => 3, "nodb" => true),
+                   array("name" => "Access_P", "type" => 3, "nodb" => true),
+                   array("name" => "GrpID",    "type" => 1, "default" => $this->parent->groupNr),
+                   array("name" => "RoleID",   "type" => 2, "select" => "list"));
+
+  $lists["list"]  = array();
+  $SqlStr = "SELECT RoleID, Name FROM ".$this->kernel->tab_cfg->get("roleTable")." ORDER BY Name";
+  $result = $this->kernel->db->query($SqlStr);
+  if ($result && $count = $result->numrows()) for ($Cn = 0; $Cn < $count; $Cn++) {
+     list($roleID, $name) = $result->getrow();
+     $lists["list"][] = array("name" => $name, "value" => $roleID);
+  }
+
+?>

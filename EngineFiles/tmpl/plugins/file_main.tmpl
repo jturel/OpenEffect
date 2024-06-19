@@ -1,0 +1,96 @@
+<html>
+<head>
+<title>Images</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<link rel="stylesheet" href="files/upload.css" type="text/css">
+<script language="JavaScript">
+function openWin() {
+  resizedivz();
+  document.getElementById('uploadff').src="parse.php?17&&&dir="+document.list.dir_url.value;
+  document.getElementById('fileUploadDiv').style.visibility = 'visible';
+  disableSmth();
+}
+function closeWin(do_what){
+  if(do_what) upload.document.location.href=upload.document.location.href;
+  document.getElementById('fileUploadDiv').style.visibility = 'hidden';
+  document.getElementById('uploadff').src="";
+  disableSmth();
+}
+function resizedivz(){
+  document.getElementById('fileUploadDiv').style.width=document.body.clientWidth;  
+  document.getElementById('fileUploadDiv').style.height=document.body.clientHeight;  
+  document.getElementById('uploadff').style.left = (document.body.clientWidth - 340)/2;
+  document.getElementById('uploadff').style.top = (document.body.clientHeight - 75)/2;
+}
+function disableSmth(){
+  document.list.alldocs.disabled!=document.list.alldocs.disabled;
+  document.list.newfile.disabled!=document.list.newfile.disabled;
+  document.list.deletedoc.disabled!=document.list.deletedoc.disabled;
+  document.list.newdir.disabled!=document.list.newdir.disabled;
+}
+function wres(){
+  resizedivz();
+  return true;
+}
+function del(){
+    if(confirm('##Are you sure want delete## ?')){
+       upload.document.docs.deleteF.value='##Delete##';
+       upload.document.docs.submit();
+    }
+}
+function openCreateDirWin(){
+  resizedivz();
+  document.getElementById('uploadff').src="parse.php?18&&&dir="+document.list.dir_url.value;
+  document.getElementById('fileUploadDiv').style.visibility = 'visible';
+  disableSmth();
+}
+window.onresize=wres
+</script>
+
+</head>
+<body leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
+<div id=fileUploadDiv style="position:absolute; visibility:hidden; top:0px; left:0px; width:300px; height:300px; z-index:5;">
+  <iframe name="uploadff" width="340" height="75" scrolling="no" frameborder="0" src="" style="position:absolute; top:100px; left:50px;"></iframe>
+</div>
+<form action="{_LINK_SELF}" method="post" name="list">
+  <input type="hidden" name="dir_url" value="">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" class="main" height="100%">
+    <tr> 
+      <td height="10"> 
+        <table width="100%" border="0" cellspacing="0" cellpadding="0" class="browse">
+          <tr> 
+            <td width="30">&nbsp;</td>
+            <td width="24" onfocus="if(this.blur)this.blur()">
+              <input type="checkbox" name="alldocs" value="checkbox" onclick="upload.SelectAllDocs(alldocs.checked);" onfocus="if(this.blur)this.blur()">
+            </td>
+            <td class="caption">##Files##</td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr> 
+      <td> 
+        <table width="100%" border="0" cellspacing="10" cellpadding="0" height="100%" class="bg_color_light">
+          <tr> 
+            <td><iframe name="upload" width="100%" height="100%" frameborder="0" src="parse.php?11" class="bg_color_light"></iframe></td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr> 
+      <td height="40"> 
+        <table width="100%" border="0" cellspacing="5" cellpadding="0">
+          <tr> 
+            <td> 
+              <input type="button" name="newfile" value="New" class="input" onCLick="openWin()" onfocus="if(this.blur)this.blur()">
+              <input type="button" name="deletedoc" value="Delete" class="input" onCLick="del();" onfocus="if(this.blur)this.blur()">
+              <input type="button" name="newdir" value="##Create dir##" onclick="openCreateDirWin();" class="input" onfocus="if(this.blur)this.blur()">
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</form>
+</body>
+</html>

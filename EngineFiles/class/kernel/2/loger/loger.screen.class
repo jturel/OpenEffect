@@ -1,0 +1,51 @@
+<?
+/**
+* Copyright (C) 2002 SIA ESOFTS.
+*
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License 
+* version 2 as published by the Free Software Foundation.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the SIA ESOFTS, 38/40 Blaumana str., 
+* Riga, LV - 1011, LATVIA, e-mail office@esoft.lv 
+*
+* This General Public License does not permit incorporating your program into
+* proprietary programs. Should you require to License Open Effect under the
+* commercial License, please contact SIA ESOFTS for up-to-date information.
+*/
+
+
+
+/***************************************
+*  Loger class
+*  
+***************************************/
+
+ 
+######################################################################
+#
+#  loger item Class (Screen output)
+# 
+ 
+
+ class logerItemClass_screen extends linkerClass {
+    var $className = "logerItemClass_screen"; // Class name
+    
+    // Constructor
+    // $parent - pointer on parent object
+    function logerItemClass_screen(&$parent) {
+       $this->linkerClass(&$parent);
+    }
+
+
+    // Send message to stream
+    // &$str - pointer on string which will be send in output
+    function put(&$str) {
+       print "[".$this->parent->streamName."]<B>$str</B><BR>";
+       return true;
+    }
+ }
+
+
+?>

@@ -1,0 +1,22 @@
+<form name="form1" method="post" action="" enctype="multipart/form-data">
+  <p>
+    <select name="group">
+<!-- BEGIN group_block -->
+      <option value="{value}">{name}</option>
+<!-- END group_block -->
+    </select>
+    <select name="template">
+<!-- BEGIN template_block -->
+      <option value="{value}">{name}</option>
+<!-- END template_block -->
+    </select>
+  </p>
+  <p>
+    <textarea name="CVStext" cols="90" rows="30" wrap="off"></textarea>
+  </p>
+  <p>
+    <input type="submit" name="OK" value="Submit">
+    <input type="reset" name="Cancel" value="Cancel">
+  </p>
+</form>
+{LOG}

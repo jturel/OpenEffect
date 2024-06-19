@@ -1,0 +1,17 @@
+;
+;  This is ERROR language file
+;  ver: ENGLISH
+;
+
+ defaultTemplate = default.tmpl
+ 
+ [Error messages]
+ Unknown error                     = Unknown error
+ Can't find form                   = Can't find form NR : <b>{1}</b> # {1} - form Number
+ Incorrect number of URL parametrs = Incorrect number of URL parametrs
+ Can't find form conf file         = Can't find form configuration file:<br> <b>{1}</b> # {1} - file name + path
+ Can't find plugin                 = Can't find plug-in : {1}
+ Access deny to form		   = Access denied to form : {1}
+ Access deny to group		   = Access denied to group : {1}
+ Access deny to doc		   = Access denied to document : {1}
+ Validation error		   = Validation error:<br><b>{1}</b>

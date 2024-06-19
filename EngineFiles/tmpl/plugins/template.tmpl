@@ -1,0 +1,143 @@
+<HTML>
+<HEAD>
+<TITLE>Components</TITLE>
+<link rel="stylesheet" href="files/norm_window.css" type="text/css">
+<XML ID="componentsXML" SRC="{MAIN_XML}"></XML>
+<XML ID="alreadyXML" SRC="{CURENT_XML}"></XML>
+<SCRIPT LANGUAGE="JavaScript">
+<!--
+var templates       = new Array();
+templates[0] = ['0','##Add New Template##','0'];
+
+<!-- BEGIN templates_block -->
+templates[templates.length] = ['{ID}','{NAME}','{FRMID}'];
+<!-- END templates_block -->
+
+if ( componentsXML.parseError.reason != "" ) alert ( componentsXML.parseError.reason );
+if ( alreadyXML.parseError.reason != "" ) alert ( alreadyXML.parseError.reason );
+var component       = new Array();
+var compsAlreadyAre = new Array();
+var tmplId = "{CURENT_XML}", tmplNamen = "", frmId='0', imgPath = "files/img/template/";
+function init(){
+  while(tmplId.indexOf('=')!=-1) tmplId = tmplId.substr(tmplId.indexOf('=')+1);
+  for(var i = 0; i < templates.length; i++) {
+    if(templates[i][0]==tmplId) {
+      tmplNamen = (i==0)?"##New Template##":templates[i][1];
+      frmId = templates[i][2];
+    }
+  }
+  var x = componentsXML.childNodes[2].childNodes;
+  var z = x.length;
+  for(var i = 0; i < z; i++ ) component[component.length] = new makeComponent(x(i));
+  initComps(component, true);
+  if(alreadyXML.childNodes.length!=0){
+    x = alreadyXML.childNodes[2].childNodes;
+    z = x.length;
+    for(var i = 0; i < z; i++ ) compsAlreadyAre[compsAlreadyAre.length] = new makeComponent(x(i));
+  }
+  initComps(compsAlreadyAre, false);
+}
+function initComps(fromWhat, doWrite){
+  if(doWrite){
+    for(var i = 0; i < fromWhat.length; i++ ) {
+      newRow            = document.all.comps.insertRow();
+      newRow.typez      = "highlite";
+      newRow.numb       = i;
+      newCell           = document.all.comps.rows[newRow.rowIndex].insertCell();
+      newCell.width     = 20;
+      newCell.innerHTML = '<IMG SRC="'+ imgPath + fromWhat[i].icon +'" width="20" height="20">';
+      newCell           = document.all.comps.rows[newRow.rowIndex].insertCell();
+      newCell.innerHTML = '<nobr>'+fromWhat[i].title+'</nobr>';
+    }
+  } else setTimeout("addAlreadyAdded()",10);
+}
+function addAlreadyAdded(){
+  if(typeof(top.design.tab)!="object") setTimeout("addAlreadyAdded()",10);
+  else {
+    top.design.nam.innerHTML = '##Template name##:&nbsp;<INPUT TYPE="TEXT" name="gg" ID="tmplName" value="'+tmplNamen+'" class="inputz">';
+    top.design.nal.innerHTML = '##Form ID##:&nbsp;' + ((frmId=="0")?"":frmId) + '<INPUT TYPE="'+((frmId=="0")?"TEXT":"hidden")+'" name="ggg" ID="frmID" value="'+((frmId=="0")?"":frmId)+'" class="inputz">';
+    top.design.clearIt();
+    for(var i = 0; i < compsAlreadyAre.length; i++) top.design.addComponent(compsAlreadyAre[i]);
+  }
+}
+function makeComponent(node){
+  var x = node.childNodes, z = x.length;
+  this.props = new Array();
+  this.param = new Array();
+  this.elms = new Array();
+  for(var i = 0; i<node.attributes.length ;i++){
+    eval('this.'+node.attributes(i).name+' = "'+node.attributes(i).value+'";');
+    this.props[this.props.length] = node.attributes(i).name;
+  }
+  if(typeof(this.caption)=="undefined") this.caption = "";
+  if(typeof(this.def_val)=="undefined") this.def_val = "";
+  for(var i = 0; i < z; i++ ){
+    if(x(i).nodeName=='elms') this.elms[this.elms.length] = new Elms(x(i));
+    else if(x(i).nodeName=='param') this.param[this.param.length] = new Param(x(i));
+  }
+  return this;
+}
+function Elms(node){
+  this.attrs = new Array();
+  this.vals = new Array();
+  this.elm = new Array();
+  for(var i = 0; i < node.attributes.length; i++) {
+    this.attrs[this.attrs.length] = node.attributes(i).name;
+    this.vals[this.vals.length]   = node.attributes(i).value;
+  }
+  for(var i = 0; i < node.childNodes.length; i++) {
+    this.elm[this.elm.length] = new Elm(((node.childNodes(i).attributes.length > 0)?node.childNodes(i).attributes(0).value:""), ((node.childNodes(i).childNodes.length > 0)?node.childNodes(i).firstChild.nodeValue:""));
+  }
+  return this;
+}
+function Elm(caption, value){
+  this.caption = caption;
+  this.value = value;
+  return this;
+}
+function Param(node){
+  this.attrs = new Array();
+  this.vals = new Array();
+  for(var i = 0; i < node.attributes.length; i++) {
+    this.attrs[this.attrs.length] = node.attributes(i).name;
+    this.vals[this.vals.length]   = node.attributes(i).value;
+  }
+  this.value = (node.childNodes.length > 0)?node.firstChild.nodeValue:"";
+  return this;
+}
+function addComp(no){
+  top.design.addComponent(component[no]);
+}
+function getTR(el){
+  while(el.tagName!="TR" && el.tagName!="BODY") el=el.parentElement;
+  if(el.tagName=="BODY") return false;
+  else return el;
+}
+function mover(){
+  el = getTR(event.srcElement);
+  if(typeof(el)!="boolean") if(el.typez=="highlite") el.className = "body";
+}
+function mout(){
+  el = getTR(event.srcElement);
+  if(typeof(el)!="boolean") if(el.typez=="highlite") el.className = "";
+}
+function clk(){
+  el = getTR(event.srcElement);
+  if(typeof(el)!="boolean") if(el.typez=="highlite") addComp(el.numb);
+}
+document.onmouseover=mover;
+document.onmouseout=mout;
+document.onclick=clk;
+//-->
+</SCRIPT>
+</HEAD>
+<BODY bgcolor=#E7EBFF text="#000000" onload="init();">
+<div id=sel></div>
+<table width="100%" border="0" cellspacing="0" cellpadding="10" class="main">
+  <tr> 
+    <td>
+      <table width="100%" border="0" cellspacing="0" cellpadding="3" height="100%" class="bodyText" id="comps"></table>
+    </td>
+  </tr>
+</table>
+</BODY></HTML>

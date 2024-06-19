@@ -1,0 +1,103 @@
+<?
+/**
+* Copyright (C) 2002 SIA ESOFTS.
+*
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License 
+* version 2 as published by the Free Software Foundation.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the SIA ESOFTS, 38/40 Blaumana str., 
+* Riga, LV - 1011, LATVIA, e-mail office@esoft.lv 
+*
+* This General Public License does not permit incorporating your program into
+* proprietary programs. Should you require to License Open Effect under the
+* commercial License, please contact SIA ESOFTS for up-to-date information.
+*/
+
+
+class portfolio extends pluginClass {
+
+   // Constructor
+   function portfolio(&$parent, $cfg) {
+      global $part_s;
+      $this->root_dir = TMPL_DIR;
+      $this->pluginClass(&$parent, $cfg);
+      $this->log = $this->kernel->loger->reg("Portfolio CONSTRUCTOR");
+      $this->log->put("Start");
+      $this->api = new rus_api(&$this,$cfg);
+
+      $this->main();
+        
+      $models    = new browse($this,$cfg,$this->cfg->get("template_image"), $this->col, $this->row ,$this->MakeArray());      
+      $navigator = new navigator($this,$cfg,$this->cfg->get("template_navigator"), $part_s,$this->gettotal(),'',$this->api->genURL('part_s',1));
+
+      $this->log->put("Read template [$this->template]");
+      $this->kernel->classLoader->checkClass("templateClass");
+      $tmpl = new templateClass($this->root_dir, "remove");
+      $tmpl->halt_on_error = "yes";
+      $tmpl->set_file(array("body_browse_qwer" => $this->template));
+      $tmpl->set_var(array("NAVIGATOR" => $navigator->html,"LIST" => $models->html));
+      $tmpl->parse("out", array("body_browse_qwer")); 
+      $this->html = $tmpl->get("out");
+   }
+   
+   // Main function
+   function main() {
+      $this->template    = $this->cfg->get("template");
+      $this->col         = $this->cfg->get("ColumnCount");
+      $this->row         = $this->cfg->get("RowCount");
+      $Grp               = $this->cfg->get("group");
+      $this->GrpID       = intval($this->api->GetGroupID($Grp));
+//      if ($this->parent->grpNr) $this->GrpID = $this->parent->grpNr;
+      if ($GLOBALS['GRP']) $this->GrpID = $GLOBALS['GRP'];
+      $this->log->put("Grp [$this->GrpID] [".$GLOBALS['GRP']."]");
+
+   }
+
+   // Parse template into HTML vars
+   function MakeArray() {
+      $part_s = $GLOBALS['part_s'];     
+      if ($part_s)
+        $part_s-=1;
+      $GrpID = $this->GrpID;
+      $count = $this->col*$this->row;
+//      $part_s += 0;
+//      if ($part_s<1) $part_s = 0;
+      $part_s*= $count;
+      $SqlStr = "select DocID from $this->DocLinks a, $this->Documents d where a.GrpID = $GrpID and d.ID = a.DocID and d.Visible order by DocID desc LIMIT $part_s,$count"; 
+      $this->log->put("SQL for ids [$SqlStr]<-");        
+      $Arr = array();
+      $result = $this->kernel->db->query($SqlStr);
+      if ($result && $count = $result->numrows()) {
+             for ($i =0;$i<$count;$i++){
+                 list ($ID) = $result->getrow();
+                 $Arr[$i] = $this->GetFields($ID,array('title','picture'));
+//                 $Arr[$i]["LINK"] = "?72&0&$ID";
+                 $Arr[$i]['LINK'] = $this->api->genURL('',1,72,0,$ID);
+//                 $Arr[$i]['ID'] = $ID;
+             }
+      }
+      $this->count = $count;
+      return $Arr;
+   }
+
+   function gettotal(){
+      $pageS = $this->col * $this->row;
+      $GrpID = $this->GrpID;
+      $SqlStr = "select count(DocID) from $this->DocLinks a, $this->Documents d where GrpID = $GrpID and d.ID = a.DocID and d.Visible"; 
+      $this->log->put("SQL for count [$SqlStr]");        
+      $result = $this->kernel->db->query($SqlStr);
+      if ($result && $count = $result->numrows()) {
+         list ($c) = $result->getrow();
+         $this->log->put("SQL for count result [$c]<-");        
+         return round(($c/$pageS)+0.4555);
+       }
+   }
+
+   function getnextID($id) { return $this->api->getnextID($id);  }
+
+   function GetFields($ID){ return $this->api->SetFields($ID); }
+
+}
+?>

@@ -1,0 +1,28 @@
+.mainback {  background-color: #747474}
+          
+.bodytext {
+        color: #C0C0C0;
+        text-decoration : none;
+        font-family : Tahoma, Verdana;
+        font-size : 11px;
+}
+
+A:HOVER {
+        color : #C0C0C0;
+        text-decoration : underline;
+        font-family : Tahoma, Verdana;
+        font-size : 11px;
+}
+
+A{
+        color: #C0C0C0;
+        text-decoration : none;
+        font-family : Tahoma, Verdana;
+        font-size : 11px;
+}
+
+A:VISITED {
+        color: #CECECE;
+        font-family : Tahoma, Verdana;
+        font-size : 11px;
+}

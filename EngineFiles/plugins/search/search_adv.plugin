@@ -1,0 +1,167 @@
+<?
+/**
+* Copyright (C) 2002 SIA ESOFTS.
+*
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License 
+* version 2 as published by the Free Software Foundation.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the SIA ESOFTS, 38/40 Blaumana str., 
+* Riga, LV - 1011, LATVIA, e-mail office@esoft.lv 
+*
+* This General Public License does not permit incorporating your program into
+* proprietary programs. Should you require to License Open Effect under the
+* commercial License, please contact SIA ESOFTS for up-to-date information.
+*/
+
+
+class search_adv extends pluginClass {
+
+   // Constructor
+   function search_adv(&$parent, $cfg) {
+      $this->root_dir = TMPL_DIR;
+      $this->pluginClass(&$parent, $cfg);
+      $this->api = new rus_api(&$this,$cfg);
+      $this->main();
+   }
+   
+   // Main function
+   function main() {
+      $this->log = $this->kernel->loger->reg('Search');
+      $this->ReadCfg();
+      if (!$this->Result) $this->tmpl = $this->readTemplate($this->template);
+      else                $this->Search($this->template);
+      
+   }
+
+   // Read Configuration
+   function ReadCfg() {
+       $this->template    = $this->cfg->get('template');
+       $this->Result      = $this->cfg->get('result');
+       if ($this->Result){
+             $this->filds = $this->cfg->get('fields');
+             $this->oper  = $this->cfg->get('operators');
+             $this->priorH= $this->cfg->get('priorityH');
+             $this->priorL= $this->cfg->get('priorityL');
+//             $this->page  = $this->cfg->get("SizeOfPage");
+             $this->col   = $this->cfg->get('ColumnCount');
+             $this->row   = $this->cfg->get('RowCount');
+       }
+   }
+   
+   function Search($fName){
+        global $part_s,$ID,$gender,$eyes,$hair,$height_f,$height_t,$waist_f,$waist_t;
+        global $bust_t,$bust_f,$hips_t,$hips_f,$shoe_t,$shoe_f,$sizes,$name;
+        $Grp = $this->api->GetGroupID($this->cfg->get('group'));
+        if ($ID){
+		if (!$this->kernel->api->checkDocSecurity($ID, "R"))  
+		   $res = array();
+		else
+		   $res = array($ID);
+        } else
+	{
+            if ($name){
+                $fields[] = 'title';
+                $vars[]   = "Like '%$name%'";		
+            }
+            if ($gender!=''){
+                if ($gender=='Male')   $Grp = 2056;
+                if ($gender=='Female') $Grp = 2058;
+            }
+            if ($sizes=='English'){
+              $height/=2.54;
+              $waist /=2.54;
+              $bust  /=2.54;
+              $hips  /=2.54;
+            }
+            if ($eyes!=''){
+                $fields[] = 'eyes';
+                $vars[]   = "= '$eyes'";
+            }
+            if ($hair!=''){
+                $fields[] = 'hair';
+                $vars[]   = "= '$hair'";
+            }
+            if ($height_f&&$height_t){
+                $fields[] = 'height';
+                $vars[]   = "BETWEEN '$height_f' AND '$height_t'";
+            }
+            if ($waist_f&&$waist_t){
+                $fields[] = 'waist';
+                $vars[]   = "BETWEEN '$waist_f' AND '$waist_t'";
+            }
+            if ($bust_f&&$bust_t){
+                $fields[] = 'bust';
+                $vars[]   = "BETWEEN '$bust_f' AND '$bust_t'";
+            }
+            if ($hips_f&&isset($hips_t)){
+                $fields[] = 'hips';
+                $vars[]   = "BETWEEN '$hips_f' AND '$hips_t'";
+            }
+            if ($shoe_f&&$shoe_t){
+                $fields[] = 'shoe';
+                $vars[]   = "BETWEEN '$shoe_f' AND '$shoe_t'";
+            }
+
+            $array = array($fields,$vars);
+
+            $this->kernel->api->setSearchRoot($Grp);
+            $this->kernel->api->setSearchConditions($array,'AND');
+//            $this->kernel->api->setBorderByPriority(0,10);
+//            $this->kernel->api->setSearchBorderByDate(0,10);
+//            $this->kernel->api->setSearchSortMode(1,"d");
+
+
+            if (!count($res)) $array = array();
+        
+            $res = $this->kernel->api->getAdvancedsearch();
+	}
+
+        $count = count($res);
+      if ($count) {  
+        $this->StartTemplate();
+        $this->tmpl->set_block('body_qscv_asdf','search_block','searchblock');
+        $onpage = $this->col*$this->row;
+        $cc=0;
+        for ($i=$onpage*(($part_s)?($part_s-1):0);$i<$count&&$cc<$onpage;$i++){
+                 $Arr[$cc] = $this->api->SetFields($res[$i]);
+                 $Arr[$cc]['LINK'] = "?72&0&$ID";
+                 $cc++; 
+        }
+
+      $page = $count/$onpage;
+      $models    = new browse($this,$cfg,$this->cfg->get('template_image'), $this->col, $this->row,$Arr);
+      $navigator = new navigator($this,$cfg,$this->cfg->get('template_navigator'), $part_s,$page,'',$this->api->genURL('part_s',1));
+
+      $this->tmpl->set_var(array('NAVIGATOR' => $navigator->html,
+                                 'LIST' => $models->html));
+
+      $this->EndTemplate();
+     } else {
+      $error = new error($this, "error/error.conf", $this->kernel->error->lngStream->get('nothing found'), $this->kernel->error->lngStream->get('nothing found text'));
+      $this->html = $error->html;
+     }
+   }
+
+   function readTemplate($fName) {
+        $this->StartTemplate();
+        $this->EndTemplate();
+   }   
+
+   function StartTemplate() {      
+      $this->log->put("Read template [$this->template]");
+      $this->kernel->classLoader->checkClass('templateClass');
+      $tmpl = new templateClass($this->root_dir, 'remove');
+      $tmpl->halt_on_error = 'yes';
+      $tmpl->set_file(array('body_qscv_asdf' => $this->template));
+      $this->tmpl = $tmpl;
+   }
+
+   function EndTemplate() {
+      $this->tmpl->parse('out', array('body_qscv_asdf'));
+      $out = $this->tmpl->get('out');
+      $this->html = $out;
+   }   
+}
+?>

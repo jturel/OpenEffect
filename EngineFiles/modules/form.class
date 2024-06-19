@@ -1,0 +1,49 @@
+<?
+
+#
+# Table class
+#
+#####################################
+  
+  class form extends linkClass {
+  
+     // Constructor
+     function form($action = "", $method = "POST") {
+        $this->linkClass();
+	
+	// set variables
+	$this->options["action"] = $action;
+	$this->options["method"] = $method;
+     }
+     
+     
+     // Form tags 
+     function formTags() {
+        $this->tag  = "";
+	$this->sTag = $this->formStartTag();
+	$this->fTag = $this->formFinishTag();
+     }
+     
+     
+     // Form start tag
+     function formStartTag() {
+        $out  = "<FORM";
+	$opt  = $this->optionsTOhtml();
+	if ($opt)               $out .= " ".$opt;
+	if ($this->htmlOptions) $out .= " ".$this->htmlOptions;
+	$out .= ">\n";
+	
+	$out  = $this->delDoubleChars($out, " ");
+	return $out;
+     }
+
+     
+     // Form finish tag
+     function formFinishTag() {
+        $out = "</FORM>\n";
+	return $out;
+     }
+     
+  }
+ 
+?>

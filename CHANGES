@@ -1,0 +1,82 @@
+Who: PAUL
+File: /DemoFiles/engine/parse.php
+Function: -
+Changed: String for Windows.
+
+Who: PAUL
+File: /EngineFiles/tmpl/plugins/main.tmpl
+Function: -
+Changed: Relative path (prevents browser "hang-up").
+
+Who: PAUL
+File: /EngineFiles/forms/navigation.inc /EngineFiles/forms/secure.inc /EngineFiles/forms/template.inc /EngineFiles/forms/userEdit.inc /EngineFiles/forms/userRole.inc  /EngineFiles/class/kernel/1/access/access.class
+Function: core
+Changed: Determining power user is done via ID (1), not username. halt() commented, exit inserted.
+
+Who: PAUL
+File: installdemo_mysql.php
+Function: -
+Changed: Clean up of installation data.
+
+Who: PAUL
+File: EngineFiles/class/kernel/2/conf.class DemoFiles/class/kernel/2/conf.class
+Function: loadFile($fileName)
+Changed: more complicated file load; now works in Windows and Unix.
+
+Who: PAUL
+File: EngineFiles/forms/fileUpload.inc
+Function: core
+Changed: commented strings for "file upload bug".
+
+Who: PAUL
+File: EngineFiles/parse.php DemoFiles/index.php DemoFiles/engine/parse.php
+Function: core
+Changed: added getcwd() instead of initial directories definition. Prevents editing of many configuration files, if you want to install only demo.
+
+Who: PAUL
+File: EngineFiles/conf/db_schemes.conf.php DemoFiles/conf/db_schemes.conf.php DemoFiles/class/kernel/db.class EngineFiles/class/kernel/db.class
+Function: core
+Changed: Database configuration file renamed to .php (prevents viewing this file from public access). Necessary changes made in scripts.
+
+Who: PAUL
+File: /InstallScript
+Function: -
+Changed: Fully rewritten installation script (now requires only one step). Installation data now fully used in admin.
+
+Who: PAUL
+Changed: Error message does not appear now when entering admin area.
+
+Who: PAUL
+File: /Manual
+Function: -
+Changed: Manual converted to human-readable HTML. Changes follows.
+
+Who: PAUL
+File: /DemoFiles/tmpl/tmpl/header.tmpl /DemoFiles/tmpl/tmpl/hotnews.tmpl /DemoFiles/tmpl/tmpl/products.tmpl
+Function: -
+Changed: Added correct relative paths ('./'), incl. before {picture}.
+
+Who: vovi
+File: /EngineFiles/conf/plugins/groupEdit.conf
+Function: - 
+Changed: Added default right R (read) for Role Guest (id=122) 
+
+Who: mGx
+File: /EngineFiles/plugins/documents/documents.plugin; Same in DemoFiles
+Function: core 
+Changed: Added advanced unescape function for RichText component
+
+Who: mGx
+File: /EngineFiles/plugins/1/documentEdit.plugin; EngineFiles/class/kernel/1/api.class; Same in DemoFiles
+Function: core 
+Changed: Fixed problem with priority change after document edit
+
+Who: vovi
+File: /EngineFiles/tmpl/plugins/tree_xml.tmpl; Same in DemoFiles
+Function: - 
+Changed: Added encoding defenition
+
+Who: PAUL
+File: *.class; *.inc
+Function: -
+Changed: Trimmed all files

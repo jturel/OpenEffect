@@ -1,0 +1,154 @@
+<?
+/*********************************************
+*
+*  LIST constructor plugin
+*
+*********************************************/
+
+class documentslist extends TlistClass {
+
+      var $log = 1;
+      var $url_name = '3333';
+
+
+   function documentslist(&$parent, $cfg) {
+      $this->TlistClass(&$parent, $cfg);
+//       $this->main();
+   }
+
+   function List_($start,$end){
+//       $this->Grp         = intval($this->api->GetGroupID($this->cfg->get("Group_Name")));
+      $this->debug_text .= '['.']';
+       if ($this->cfg->check("Comment_Group_name"))
+          $this->CommGrp = intval($this->api->GetGroupID($this->cfg->get("Comment_Group_name")));
+       else
+          $this->CommGrp = 6284;
+
+       $comments = ($this->cfg->check('commenton'))?$this->cfg->get('commenton'):0;
+//       $this->log->put("sadfsad sad sadf sad dsafdsafss!!!!!!!!"); 
+      if ($this->Special) $result = $this->api->listF($this->Grp,$this->direction,$this->pagesize,$start);
+      else                $result = $this->api->listF($this->Grp,$this->direction);
+      if ($comments) 
+        for ($Cn = 0; $Cn < count($result); $Cn++) 
+            {
+                if ($id = $result[$Cn]['ID']) {
+                   $this->kernel->api->setSearchRoot($this->CommGrp);
+                   $this->kernel->api->setSearchConditions(array(array('title'),array("= '$id'")),'AND');
+                   $res = $this->kernel->api->getAdvancedsearch();
+                }
+
+                if (count($res)) $commentID = $res[0];
+                $commentID = intval($commentID);
+
+                $result[$Cn]['CommentCount']  = $this->api->GetResComment($commentID,'comment')+0;
+            }
+
+
+      $tp = 0;
+      for ($Cn = 0; $Cn < count($result); $Cn++) {
+        $rre = count($result[$tp]);
+
+        while(!$rre) {
+          $rre = count($result[++$tp]);
+        }
+
+        $this->nextElement($result[$tp++]);
+      } 
+   }
+
+
+   function nextElement($Arr) {
+/* mGx was here */
+     if ($this->kernel->cfg->check("Host_Addr"))
+       $HstAddr = $this->kernel->cfg->get("Host_Addr");
+     else $HstAddr = '';
+
+     if ($this->cfg->check('link')) {
+       $link = $this->cfg->get('link');  
+       $this->tmpl->set_var(array('LINK'   => $link));
+     }    
+/* mGx leave here */
+
+     while (list ($key, $val) = each  ($Arr)) {
+       $val = $this->unezcape($val);  
+       $val = str_replace ("{crosslinkzz}", $HstAddr, $val);   
+       $Arr[$key] = $val;
+     }
+       
+     if (!$this->SOut) $this->tmpl->set_var($Arr);
+       else $this->ex->make($Arr);
+     $this->tmpl->parse('output', 'item_block', true);
+     $this->tmpl->set_var($this->CleatF($Arr));
+   }
+
+
+   function unezcape($sss) {
+     $sss = str_replace ("%3D", "=", $sss);   
+     $sss = str_replace ("%20", " ", $sss);   
+     $sss = str_replace ("%3E", ">", $sss);   
+     $sss = str_replace ("%3C", "<", $sss);   
+     $sss = str_replace ("%3A", ":", $sss);   
+     $sss = str_replace ("%22", '"', $sss);   
+     $sss = str_replace ("%0D%0A", "\n", $sss);   
+     $sss = str_replace ("%7B", "{", $sss);   
+     $sss = str_replace ("%7D", "}", $sss);   
+     $sss = str_replace ("%60", "`", $sss);   
+     $sss = str_replace ("%7E", "~", $sss);   
+     $sss = str_replace ("%21", "!", $sss);   
+     $sss = str_replace ("%23", "#", $sss);   
+     $sss = str_replace ("%24", "$", $sss);   
+     $sss = str_replace ("%5E", "^", $sss);   
+     $sss = str_replace ("%26", "&", $sss);   
+     $sss = str_replace ("%28", "(", $sss);   
+     $sss = str_replace ("%29", ")", $sss);   
+     $sss = str_replace ("%7C", "|", $sss);   
+     $sss = str_replace ("%5C", "\\", $sss);   
+     $sss = str_replace ("%5B", "[", $sss);   
+     $sss = str_replace ("%5D", "]", $sss);   
+     $sss = str_replace ("%3B", ";", $sss);   
+     $sss = str_replace ("%27", "'", $sss);   
+     $sss = str_replace ("%3F", "?", $sss);   
+     $sss = str_replace ("%2C", ",", $sss);   
+     $sss = str_replace ("%25", "%", $sss);   
+
+//  here was diamond
+
+     $sss = str_replace ("%u0101", "â", $sss);
+     $sss = str_replace ("%u0100", "Â", $sss);
+     $sss = str_replace ("%u0113", "ç", $sss);
+     $sss = str_replace ("%u0112", "Ç", $sss);
+     $sss = str_replace ("%u0157", "º", $sss);
+     $sss = str_replace ("%u0156", "ª", $sss);
+     $sss = str_replace ("%u016B", "û", $sss);
+     $sss = str_replace ("%u016A", "Û", $sss);
+     $sss = str_replace ("%u012B", "î", $sss);
+     $sss = str_replace ("%u012A", "Î", $sss);
+     $sss = str_replace ("%F5", "õ", $sss);
+     $sss = str_replace ("%D5", "Õ", $sss);
+     $sss = str_replace ("%u0161", "ð", $sss);
+     $sss = str_replace ("%u0160", "Ð", $sss);
+     $sss = str_replace ("%u0123", "ì", $sss);
+     $sss = str_replace ("%u0122", "Ì", $sss);
+     $sss = str_replace ("%u0137", "í", $sss);
+     $sss = str_replace ("%u0136", "Í", $sss);
+     $sss = str_replace ("%u013C", "ï", $sss);
+     $sss = str_replace ("%u013B", "Ï", $sss);
+     $sss = str_replace ("%u017E", "þ", $sss);
+     $sss = str_replace ("%u017D", "Þ", $sss);
+     $sss = str_replace ("%u010D", "è", $sss);
+     $sss = str_replace ("%u010C", "È", $sss);
+     $sss = str_replace ("%u0146", "ò", $sss);
+     $sss = str_replace ("%u0145", "Ò", $sss);
+
+     $sss = str_replace ("%u201C", "\"", $sss);
+     $sss = str_replace ("%u201D", "\"", $sss);
+     $sss = str_replace ("%u2013", "-", $sss);
+
+//  end - This thing knows Latvian ;)
+
+
+     return $sss;
+   }
+
+}
+?>

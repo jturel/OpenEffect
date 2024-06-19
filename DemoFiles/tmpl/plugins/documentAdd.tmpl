@@ -1,0 +1,91 @@
+<!-- BEGIN close_block -->
+<script language="JavaScript">
+<!--
+//   window.opener.location.href = 'parse.php?5&{_GROUP_ID}&{ID}';
+   parent.returnValue = 'parse.php?5&{_GROUP_ID}&{ID}&templateID={templateID}';
+   parent.close();
+// -->
+</script>
+<!-- END close_block -->
+<!--table width="100%" border="0" cellpadding="3" cellspacing="0">
+  <form method="POST" action="{_LINK_SELF}" name="mainForm">
+  <input type="Hidden" name="UserID" value="{UserID}">
+  <input type="Hidden" name="RecTime" value="{RecTime}">
+  <input type="Hidden" name="LastUpdate" value="{LastUpdate}">
+  <tr>
+    <td width="100%" bgcolor="#D0D0D0"><b>##Documents##:</b></td>
+  </tr>
+  <tr>
+    <td width="100%">
+      <table border="0" cellpadding="0" cellspacing="0">
+        <tr>
+          <td>##Template##:</td>
+          <td>
+            <select name="templateID">
+              {templateID}
+            </select>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td width="100%" bgcolor="#D0D0D0" align="left">
+      <input type="Submit" name="save" value="##Save##">
+      <input type="Button" value="##Cancel##" onClick="parent.returnValue='';parent.close()">
+    </td>
+  </tr>
+  </form>
+</table-->
+
+<form method="POST" action="{_LINK_SELF}" name="mainForm">
+  <input type="Hidden" name="UserID" value="{UserID}">
+  <input type="Hidden" name="RecTime" value="{RecTime}">
+  <input type="Hidden" name="LastUpdate" value="{LastUpdate}">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" class="main">
+    <tr> 
+      <td> 
+        <table width="100%" border="0" id="winhead" cellspacing="0" cellpadding="0" class="captionText">
+          <tr valign="middle" align="left"> 
+            <td width="20"><img src="img/gn_prefer.gif" width="18" height="18"></td>
+            <td>##Documents##:</td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr> 
+      <td> 
+        <table width="100%" border="0" cellspacing="10" cellpadding="0" height="100%" class="bodyWithText">
+          <tr> 
+            <td> 
+              <table width="100%" border="0" class="bodyWithText">
+        <tr>
+          <td>##Template##:</td>
+          <td>
+            <select name="templateID" class="inputz">
+              {templateID}
+            </select>
+          </td>
+        </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr> 
+      <td> 
+        <table width="100%" border="0" cellspacing="5" cellpadding="0">
+          <tr> 
+            <td align="right"> 
+              <!input type="submit" name="save" value="##OK##" class="buttonz">
+      <input type="Submit" name="save" value="##Save##" class="buttonz">
+      <input type="Button" value="##Cancel##" onClick="parent.returnValue='';parent.close()" class="buttonz">
+
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</form>

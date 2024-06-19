@@ -1,0 +1,44 @@
+<?
+class error extends pluginClass {
+
+var $error, $error_descr;
+
+   // Constructor
+   function error(&$parent, $cfg, $error, $error_descr) {
+
+      $this->error = $error;
+      $this->error_descr = $error_descr;
+
+      $this->root_dir = TMPL_DIR;
+      $this->pluginClass(&$parent, $cfg);
+      $this->main();
+   }
+                                      
+   // Main function
+   function main() {
+      $this->log = $this->kernel->loger->reg("ERROR");
+      $this->html = $this->readTemplate($this->cfg->get("template"));      
+   }
+   
+   // Read template
+   // $fName - file name of template
+   function readTemplate($fName) {
+
+     $this->log->put("Root dir [$this->root_dir]");
+
+      $this->log->put("Read template [$fName]");
+      $this->kernel->classLoader->checkClass("templateClass");
+      $tmpl = new templateClass($this->root_dir, "remove");
+      $tmpl->halt_on_error = "yes";
+      $tmpl->set_file(array("body" => $fName));
+
+      $tmpl->set_var(array("ERROR" => $this->error, "ERROR_DESCR" => $this->error_descr));
+
+      $tmpl->parse("out", array("body")); 
+      
+      $out = $tmpl->get("out");
+      return $out;
+   }
+
+}
+?>

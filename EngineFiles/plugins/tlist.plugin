@@ -1,0 +1,137 @@
+<?
+/**
+* Copyright (C) 2002 SIA ESOFTS.
+*
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License 
+* version 2 as published by the Free Software Foundation.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the SIA ESOFTS, 38/40 Blaumana str., 
+* Riga, LV - 1011, LATVIA, e-mail office@esoft.lv 
+*
+* This General Public License does not permit incorporating your program into
+* proprietary programs. Should you require to License Open Effect under the
+* commercial License, please contact SIA ESOFTS for up-to-date information.
+*/
+
+
+/*********************************************
+*
+*  Default LIST plugin
+*  Ruslan Bondar rus@esoft.lv
+*  10/08/2001
+*
+*********************************************/
+
+class TlistClass extends pluginClass {
+
+      var $log = 1;
+      var $url_name = 'qq';
+
+   // Constructor
+   function TlistClass(&$parent, $cfg) {
+      $this->root_dir = TMPL_DIR;
+      $this->pluginClass(&$parent, $cfg);
+      $this->api = new rus_api(&$this,$cfg,$this->log);
+      $this->main();
+   }
+   
+   // Main function
+   function main() {
+      if ($this->log) $this->log = $this->kernel->loger->reg('Default list CONSTRUCTOR');
+      $this->readConf();
+      $this->tmpl = &$this->readTemplateStart($this->cfg->get('template'));
+      if ($this->SOut) {
+         $this->ex = new parse_ex(&$this, &$this->tmpl, &$this->fld,($this->log));
+         $this->ex->init('body_of_list');
+      }
+      $this->listF();
+      $this->readTemplateEnd();
+   }
+   
+   // Read template
+   // $fName - file name of template
+   function readCnf_($name,$def) {  return $this->cfg->check($name)?$this->cfg->get($name):$def;   }
+
+   function readConf() {
+      global $List_Start;
+      $this->Grp                = $this->cfg->get('Group_Name');
+      $this->cfg->dieIfNotExists= 0;
+      $this->direction          = $this->cfg->get('direction');
+      $this->navigatorTemplate  = $this->cfg->get('template_navigator');
+
+      if ($this->cfg->get('Special')){
+         $this->Special         = 1;
+         $this->pagesize        = $this->readCnf_('PageSize',999);
+         $tmp = $GLOBALS[$this->url_name];
+         $this->pageStart       = (isset($tmp))?$tmp:1;
+         $this->pageAdd          = ($this->cfg->check('List_Start'))?$this->cfg->get('List_Start'):0;
+         if ($this->cfg->get('SpecialOutPut')){
+            $this->SOut         = 1;
+            $fld = $this->cfg->get('Special_fields');
+            if ($fld) {
+                if (!is_array($fld)) $fld = array($fld);
+                for ($i=0;$i<count($fld);$i++)
+                    $exp[$fld[$i]] = $this->cfg->get('expresion'.$i);
+            }
+            $this->fld = $exp;
+         }
+      }
+      $this->cfg->dieIfNotExists = 1;
+   }
+
+   function readTemplateStart($fName) {
+      if ($this->log) $this->log->put("Read template [$fName]");
+      $this->kernel->classLoader->checkClass('templateClass');
+      $tmpl = new templateClass($this->root_dir, 'remove');
+      $tmpl->halt_on_error = 'yes';
+      
+      $tmpl->set_file(array('body_of_list' => $fName));
+      $tmpl->set_block('body_of_list', 'item_block', 'output');
+      $this->globalVar = array();
+      return $tmpl;
+   }
+
+   function readTemplateEnd(){
+      if ($this->navigatorTemplate) {
+         if ($this->log) $this->log->put("Run navigator [$this->pageStart,$this->count,'']");
+         
+         $navigator = new navigator(&$this,$cfg,$this->navigatorTemplate,$this->pageStart,$this->count / $this->pagesize ,'',$this->api->genURL($this->url_name,0),$this->globalVar);
+         $this->globalVar['NAVIGATOR'] = $navigator->html;        
+      }
+      $this->tmpl->set_var($this->globalVar);
+//      if ($this->log)
+//              while (list($key,$value) = each($this->globalVar)) {
+//                    $this->log->put("Addictional[$key]= '$value'");
+//              }
+
+      $this->tmpl->parse('out', array('body_of_list'));
+      $out = $this->tmpl->get('out');
+      $this->html = $out;        
+   }
+
+   // List work function
+   function listF() {
+       
+      $start = $this->pageAdd + ($this->pageStart*$this->pagesize)-$this->pagesize;
+      $this->List_($start,$start+$this->pagesize);
+   }
+
+   function List_($start,$end){}
+
+   function nextElement($Arr){
+          if (!$this->SOut) $this->tmpl->set_var($Arr);
+          else              $this->ex->make($Arr);
+          $this->tmpl->parse('output', 'item_block', true);
+          $this->tmpl->set_var($this->CleatF($Arr));
+
+   }
+
+   function CleatF($r){
+        while (list ($key, $val) = each ($r)) $r[$key]='';
+        return $r;
+   }
+
+}
+?>

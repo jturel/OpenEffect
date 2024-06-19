@@ -1,0 +1,255 @@
+<html>
+<head>
+<title>DHTML Editor </title>
+<link REL="stylesheet" TYPE="text/css" HREF="files/toolbars.css">
+<SCRIPT TYPE="text/javascript" LANGUAGE="JavaScript">
+var bLoad=false
+public_description=new Editor
+
+function Editor() {
+  this.put_html=put_html;
+  this.get_html=get_html;
+}
+function get_html() {
+  if (bMode) return idEdit.document.body.innerHTML;
+  else return idEdit.document.body.innerText;
+}
+
+function put_html(sVal) {
+  if (bMode) idEdit.document.body.innerHTML=unescape(sVal);
+  else idEdit.document.body.innerText=sVal;
+}
+var sHeader="<BODY STYLE=\"font:10pt tahoma,arial,sans-serif;margin:0px; BACKGROUND-COLOR: #D2E0FF;\">";
+
+var bMode=true,sel=null;
+
+function format(what,opt,ask) {
+  if (!bMode) return;
+  if (opt=="removeFormat") {
+    what=opt;
+    opt=null;
+  }
+  if (bMode) {
+    if(!ask){
+      if (opt==null) idEdit.document.execCommand(what);
+      else idEdit.document.execCommand(what,"",opt);
+    } else { 
+      if (opt==null) idEdit.document.execCommand(what,ask);
+      else idEdit.document.execCommand(what,ask,opt);
+    }
+    var s=idEdit.document.selection.createRange();
+    if(what!='InsertImage'){
+      var p=s.parentElement();
+      if ((p.tagName=="FONT") && (p.style.backgroundColor!="")) p.outerHTML=p.innerHTML;
+    }
+    idEdit.focus();
+  } 
+  sel=null;
+}
+
+function getEl(sTag,start) {
+  while ((start!=null) && (start.tagName!=sTag)) start = start.parentElement;
+  return start;
+}
+
+function createLink() {
+  if (!bMode) {
+    alert(strErr);
+    idEdit.focus();
+    return;
+  }
+  var isA = getEl("A",idEdit.document.selection.createRange().parentElement())
+  if(isA){
+    if(isA.href.indexOf("{crosslinkzz")!=-1) createLink1();
+    else {
+      var str=window.showModalDialog("files/link.htm",isA ? isA.href : "http:\/\/","dialogHeight: 30px; dialogWidth: 350px; edge: Raised; center: Yes; help: No; resizable: No; status: No; dialogHide: Yes; unadorned: Yes; scroll: No;");
+      if ((str!=null) && (str!="http://")) {
+        str = "http://"+str.substr(str.indexOf("http://"));
+        if ((idEdit.document.selection.type=="None") && (!isA)) {
+          var sel=idEdit.document.selection.createRange();
+          sel.pasteHTML("<A HREF=\""+str+"\">"+str+"</A> ");
+          sel.select();
+        } else format("CreateLink",str);
+      } else idEdit.focus();
+    }
+  } else {
+    var str=window.showModalDialog("files/link.htm",isA ? isA.href : "http:\/\/","dialogHeight: 30px; dialogWidth: 350px; edge: Raised; center: Yes; help: No; resizable: No; status: No; dialogHide: Yes; unadorned: Yes; scroll: No;");
+    if ((str!=null) && (str!="http://")) {
+      str = "http://"+str.substr(str.indexOf("http://"));
+      if ((idEdit.document.selection.type=="None") && (!isA)) {
+        var sel=idEdit.document.selection.createRange();
+        sel.pasteHTML("<A HREF=\""+str+"\">"+str+"</A> ");
+        sel.select();
+      } else format("CreateLink",str);
+    } else idEdit.focus();
+  }
+}
+function createLink1(){
+    var isA = getEl("A",idEdit.document.selection.createRange().parentElement());
+    var str=window.showModalDialog("../../parse.php?34",top.leftFrame.copyIt(),"dialogHeight: 280px; dialogWidth: 250px; dialogTop: px; dialogLeft: px; edge: Raised; center: Yes; help: No; resizable: Yes; status: No; dialogHide: Yes; unadorned: Yes; scroll: Auto;");
+//alert(str);
+    if(typeof(str)!="undefined"){
+      str = str.split("@#$%^&^%$#@");
+      if ((str!=null) && str.length==2) {
+        str[0] = "http://{crosslinkzz}"+str[0];
+        if ((idEdit.document.selection.type=="None") && (!isA)) {
+          var sel=idEdit.document.selection.createRange();
+          sel.pasteHTML("<A HREF=\""+str[0]+"\">"+str[1]+"</A> ");
+          sel.select();
+        }else format("CreateLink",str[0]);
+      }
+    }
+  return true;
+}
+
+var whichMode = 1;
+function changeMode() {
+  if (whichMode == 0){
+    if (event.srcElement.tagName == "IMG") event.srcElement.src="images/HTML.gif";
+    setMode(true);
+    whichMode = 1;
+  } else {
+    if (event.srcElement.tagName == "IMG") event.srcElement.src="images/WYS.gif";
+    setMode(false);
+    whichMode = 0;
+  }
+}
+function encodeHTMLQuotes(strIn){
+  var strOut;
+
+  strOut = strIn;
+/**
+  strOut=strOut.replace(/<P>/g,'<lft>');
+  strOut=strOut.replace(/<P align=center>/g,'<cnt>');
+  strOut=strOut.replace(/<P align=right>/g,'<rht>');
+  strOut=strOut.replace(/<P align=left>/g,'<lft>');
+  strOut=strOut.replace(/<div>/g,'<lft>');
+  strOut=strOut.replace(/<div align=center>/g,'<cnt>');
+  strOut=strOut.replace(/<div align=right>/g,'<rht>');
+  strOut=strOut.replace(/<div align=left>/g,'<lft>');
+
+  strOut=strOut.replace(/<rht>/g,'<div align=right>');
+  strOut=strOut.replace(/<cnt>/g,'<div align=center>');
+  strOut=strOut.replace(/<lft>/g,'<div align=left>');
+  strOut=strOut.replace(/<\/P>/gi,'</div>');
+*/
+  strOut=strOut.replace(/<FB>{/gi,'<FB>&#123;');
+  strOut=strOut.replace(/}<\/FB>/gi,'&#125;</FB>');
+  strOut=strOut.replace(/<STRONG>/g,'<b>');
+  strOut=strOut.replace(/<\/STRONG>/gi,'</b>');
+  strOut=strOut.replace(/<EM>/g,'<i>');
+  strOut=strOut.replace(/<\/EM>/gi,'</i>');
+//  strOut=strOut.replace(/<img/gi,'<img align="right"');
+//alert(strOut);
+  return escape(strOut);
+}
+function formatOutput(tmp) {
+  var out='';
+  var arr = tmp.split('<\/P>');
+  for (i=0; i < arr.length-1; i++)arr[i]=arr[i].substr(arr[i].indexOf('<'));
+  for (i=1; i < arr.length-1; i++){
+    if(arr[i-1].substr(0,5) == arr[i].substr(0,5)){
+      arr[i-1] = arr[i-1]+'<br>'+arr[i].substr(5);
+      arr[i] = '';
+      i++;
+    }
+  }
+  for(i=0; i<arr.length; i++) out+=(arr[i]!='' && arr[i].substr(arr[i].length - 4)!='<\/P>')?arr[i] + '<\/P>':(arr[i]!='')?arr[i]:'';
+  return out;
+}
+
+function preview(){
+  var tmpstr = encodeHTMLQuotes(get_html());
+  var win = document.open('blank.htm', '_blank', 'channelmode=0; directories=0; fullscreen=0; height=300; left=200; location=0; menubar=0; resizable=1; scrollbars=1; status=0; titlebar=0; toolbar=0; top=100; width=300;');
+  win.document.body.innerHTML=tmpstr;
+}
+
+var iFrameName = '';
+
+function normalizeContent(){
+  for(var i = 0; i < parent.document.frames.length; i++){
+    if(parent.document.frames[i].document===document) {
+      iFrameName = parent.document.frames[i].name.substr(5);
+      break;
+    }
+  }
+  inpVal = eval('parent.document.all.'+iFrameName+'_hidden.value')
+  loadDoc(inpVal);
+  setInterval("saveIt()",500)
+}
+
+function setMode(bNewMode) {
+  EnableDisable();
+  if (bNewMode!=bMode) {
+    if (bNewMode) {
+      var sContents=idEdit.document.body.innerText;
+      idEdit.document.open();
+      idEdit.document.write(sHeader);
+      idEdit.document.close();
+      idEdit.document.body.innerHTML=sContents;
+    } else {
+      var fonts=idEdit.document.body.all.tags("FONT")
+      for (var i=0;i<fonts.length;i++) if (fonts[i].style.backgroundColor!="") fonts[i].outerHTML=fonts[i].innerHTML;
+      var sContents=idEdit.document.body.innerHTML;
+      idEdit.document.open();
+      idEdit.document.write("<BODY style=\"font:10pt fixedsys, monospace; margin: 5px;\">");
+      idEdit.document.close();
+      idEdit.document.body.innerText=sContents;
+    }
+    bMode=bNewMode;
+  }
+  idEdit.focus();
+}
+function loadDoc(urls){
+  idEdit.document.open();
+  idEdit.document.write(sHeader);
+  idEdit.document.close();
+  idEdit.document.designMode="On";
+  setTimeout("put_html('"+urls+"');",100);
+}
+function saveIt(){
+  eval('parent.document.all.'+iFrameName+'_hidden.value = encodeHTMLQuotes(get_html());')
+}
+</SCRIPT>
+</head>
+<body onload="normalizeContent();">
+<div class=tbToolbar ID=FormatToolbar>
+  <div class=tbButton ID=DECMD_BOLD TITLE=Bold onclick="format('bold');"><img class=tbIcon src="images/Bold.GIF" WIDTH=23 HEIGHT=22></div>
+  <div class=tbButton ID=DECMD_ITALIC TITLE=Italic onclick="format('italic');"><img class=tbIcon src="images/Italic.GIF" WIDTH=23 HEIGHT=22></div>
+  <div class=tbButton ID=DECMD_UNDERLINE TITLE=Underline onclick="format('underline');"><img class=tbIcon src="images/under.GIF" WIDTH=23 HEIGHT=22></div>
+  
+  <div class=tbSeparator></div>
+  <div class=tbButton ID=DECMD_JUSTIFYLEFT TITLE="Align Left" NAME=Justify onclick="format('justifyleft');"><img class=tbIcon src="images/left.GIF" WIDTH=23 HEIGHT=22></div>
+  <div class=tbButton ID=DECMD_JUSTIFYCENTER TITLE="Align Center" NAME=Justify onclick="format('justifycenter');"><img class=tbIcon src="images/Center.GIF" WIDTH=23 HEIGHT=22></div>
+  <div class=tbButton ID=DECMD_JUSTIFYRIGHT TITLE="Align Right" NAME=Justify onclick="format('justifyright');"><img class=tbIcon src="images/right.GIF" WIDTH=23 HEIGHT=22></div>
+
+  <div class=tbSeparator></div>
+
+  <div class=tbButton ID=DECMD_ORDERLIST TITLE="Bulletted List" onclick="format('insertorderedlist');"><img class=tbIcon src="images/numlist.GIF" WIDTH=23 HEIGHT=22></div>
+  <div class=tbButton ID=DECMD_UNORDERLIST TITLE="Numbered List" onclick="format('insertunorderedlist');"><img class=tbIcon src="images/bullist.GIF" WIDTH=23 HEIGHT=22></div>
+  
+  <div class=tbSeparator></div>
+
+  <div class=tbButton ID=DECMD_OUTDENT TITLE="Decrease Indent" onclick="format('outdent');"><img class=tbIcon src="images/DeIndent.GIF" WIDTH=23 HEIGHT=22></div>
+  <div class=tbButton ID=DECMD_INDENT TITLE="Increase Indent" onclick="format('indent');"><img class=tbIcon src="images/inindent.GIF" WIDTH=23 HEIGHT=22></div>
+  
+  <div class=tbSeparator></div>
+
+  <div class=tbButton ID=DECMD_HYPERLINK TITLE="External Link" onclick="createLink();"><img class=tbIcon src="images/link1.gif" WIDTH=23 HEIGHT=22></div>
+  <div class=tbButton ID=DECMD_HYPERLINK1 TITLE="Internal Link" onclick="createLink1();"><img class=tbIcon src="images/link2.gif" WIDTH=23 HEIGHT=22></div>
+  
+  <div class=tbSeparator></div>
+
+  <div class=tbButton ID=DECMD_CUT TITLE=Cut onclick="format('cut');"><img class=tbIcon src="images/Cut.GIF" WIDTH=23 HEIGHT=22></div>
+  <div class=tbButton ID=DECMD_COPY TITLE=Copy onclick="format('copy');"><img class=tbIcon src="images/Copy.GIF" WIDTH=23 HEIGHT=22></div>
+  <div class=tbButton ID=DECMD_PASTE TITLE=Paste onclick="format('paste');"><img class=tbIcon src="images/Paste.GIF" WIDTH=23 HEIGHT=22></div>
+  
+  <div class=tbSeparator></div>
+
+  <div class=tbButton ID=DECMD_HTML TITLE=HTML/WYSIWYG onclick="changeMode();"><img class=tbIcon src="images/HTML.gif" WIDTH=23 HEIGHT=22></div>
+  <div class=tbSeparator></div>
+</div>
+<iframe id=tbContentElement class=tbContentElement NAME=idEdit WIDTH=500 HEIGHT=400 src=""></IFRAME>
+<script LANGUAGE="Javascript" SRC="files/toolbars.js"></script>
+</body>
+</html>

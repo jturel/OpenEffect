@@ -1,0 +1,42 @@
+<?
+/*********************************************
+*
+*  Priview constructor plugin
+*  Ruslan Bondar (rus@esoft.lv)
+*
+*********************************************/
+
+
+class priview extends pluginClass {
+
+
+   // Constructor
+   function priview(&$parent, $cfg) {
+      $this->root_dir = TMPL_DIR;
+      $this->pluginClass(&$parent, $cfg);
+//      $this->api = new rus_api(&$this,$cfg);
+
+      global $template,$HTTP_GET_VARS;
+//      $this->log         = $this->kernel->loger->reg("priview CONSTRUCTOR");
+
+      $this->kernel->classLoader->checkClass("templateClass");
+      $tmpl = new templateClass($this->root_dir, "remove");
+      $tmpl->halt_on_error = "yes";
+      $SqlStr = "SELECT name FROM $tmplTable WHERE ID = $template";
+      $result = $this->kernel->db->query($SqlStr);
+      if ($result && $result->numrows())
+          list($name) = $result->getrow();
+      if ($name) return 0;
+
+      $tmpl->set_file(array("base_qwe43" => SAIT_TMPL_DIR.'priview/'.$name.'.tmpl'));
+               
+      $tmpl->set_var($HTTP_GET_VARS);
+
+      $tmpl->parse("out", array("base_qwe43"));
+      $this->html = $tmpl->get("out");
+
+   }
+}
+
+ 
+?>

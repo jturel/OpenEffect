@@ -1,0 +1,61 @@
+<?
+
+/*********************************************
+*
+*  Parth constructor plugin
+*
+*********************************************/
+
+class parse_ex extends pluginClass {
+
+   // Constructor
+   function parse_ex(&$parent, &$tmpl, &$array, $log=0) {
+      $this->root_dir = TMPL_DIR;
+      $this->pluginClass(&$parent);
+      if ($log) $this->log = $this->kernel->loger->reg('Advanced Parser CONSTRUCTOR');
+      $this->tmpl = &$tmpl;
+      if (!$this->tmpl){
+           $this->kernel->error->die = 1; 
+           $this->kernel->error->parse('No tmplate object given for Advanced Parser', array()); 
+      }
+      $this->array = &$array;
+      $this->param = $param;
+   }
+   
+   function init($main) {
+        if ($this->log) $this->log->put("Initialization [$main]");
+        while (list($f,$z) = each ($this->array) ) {
+            if (!$f) continue;
+            $q = $f.'_block';
+            if ($this->log) $this->log->put("Make block [$q] [$f]");
+            $this->tmpl->set_block($main,$q ,$f);
+        }
+   }
+
+   function make($valu){
+       if ($this->log) $this->log->put('Make');
+       $this->tmpl->set_var($valu);
+       if ($this->array) reset ($this->array);
+       while (list($f,$e) = each ($this->array)) {
+            if (!$f) continue;
+            $val = $valu[$f];
+            if ($this->log) $this->log->put("Start Parth [$f] [$val] [$e]");
+            if (eval($e)){
+               $this->tmpl->set_var(array($f.'_ins' => $this->getblock_($f)));
+            }
+             else
+               $this->tmpl->set_var(array($f.'_ins' => ''));
+       }
+   }
+
+   function getblock_($name){
+         if ($this->log) $this->log->put("Get block [$name]");
+         $this->tmpl->parse($name, array($name.'_block'));
+         $tmp = $this->tmpl->get($name);
+         if ($this->log) $this->log->put("Result block [$tmp]");
+         $this->tmpl->set_var(array($name => ''));
+         return $tmp;
+   }
+
+}
+?>

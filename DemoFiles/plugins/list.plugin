@@ -1,0 +1,200 @@
+<?
+
+/*********************************************
+*
+*  LIST constructor plugin
+*
+*********************************************/
+
+
+class listPlugin extends pluginClass {
+
+   // Constructor
+   function listPlugin(&$parent, $cfg) {
+      $this->root_dir = TMPL_DIR;
+      $this->pluginClass(&$parent, $cfg);
+      $this->main();
+   }
+   
+   // Main function
+   function main() {
+      $this->log = $this->kernel->loger->reg("LIST CONSTRUCTOR");
+      $this->tmpl = $this->readTemplate($this->cfg->get("template"));
+//      $this->parse();
+   }
+   
+   // Read template
+   // $fName - file name of template
+   function readTemplate($fName) {
+      $this->log->put("Read template [$fName]");
+      $this->kernel->classLoader->checkClass("templateClass");
+      $tmpl = new templateClass($this->root_dir, "remove");
+      $tmpl->halt_on_error = "yes";
+      
+      $tmpl->set_file(array("body" => $fName));
+      $tmpl->set_block("body", "item_block", "itemBlock");
+
+      // Define current form,group and doc ID's...
+      global $REQUEST_URI;
+      $tmpl->set_var(array("_FORM_ID"   => $this->parent->formNr,
+                           "_GROUP_ID"  => $this->parent->groupNr,
+                                                "_DOC_ID"    => $this->parent->docNr,
+                                                "_LINK_SELF" => $REQUEST_URI));
+      
+      return $tmpl;
+   }
+
+   // Parse list and move into HTML var
+   // RETURN : echo of tree
+   function parse($sql = "1") {
+   
+      $type = $this->cfg->get("type");
+      $this->table  = $this->cfg->get("table");
+
+      $this->extFun();
+      if ($type == 1) $this->listF($sql);
+      if ($type == 2) $this->listFX($sql);
+      
+      $this->tmpl->parse("out", array("body"));
+      $out = $this->tmpl->get("out");
+      $this->html = $out;
+      return $out;
+   }
+   
+   // List work function
+   function listF($sql = "1") {
+      $SqlStr = "SELECT ".$this->cfg->get("fields")." FROM ".$this->table."
+                 WHERE ".$sql;
+      if ($this->cfg->check("order")) $SqlStr .= " ORDER BY ".$this->cfg->get("order");
+      $fields = explode(",", $this->cfg->get("fields"));
+      $result = $this->kernel->db->query($SqlStr);
+      if ($result && $count = $result->numrows()) {
+         for ($Cn = 0; $Cn < $count; $Cn++) {
+                    $row = $result->getrow();
+                    $this->preParse($row);
+                    reset($fields);
+             while(list($key, $val) = each($fields))
+                       $this->tmpl->set_var(array(trim($val) => $row[trim($val)]));
+                    $this->tmpl->parse("output", "item_block", true);
+                }
+      }
+   }
+   
+   // List work function
+   // With X table
+   function listFX($sql = "1") {
+      $xTable = $this->cfg->get("xTable");
+      $xExpr  = $this->cfg->get("xExpr");
+//      $SqlStr = "SELECT ".$this->cfg->get("fields")." FROM ".$this->table." a
+//                 LEFT JOIN ".$xTable." x ON ".$xExpr."
+//                 WHERE ".$sql;
+      $SqlStr = "SELECT distinct ".$this->cfg->get("fields")." FROM ".$this->table." a
+                 , ".$xTable." x WHERE ".$xExpr." and ".$sql ;
+//      $SqlStr = "SELECT ".$this->cfg->get("fields")." FROM ".$this->table." a, ".$xTable." x
+//                             WHERE ".$xExpr."
+//                 AND ".$sql;
+      if ($this->cfg->check("order")) $SqlStr .= " ORDER BY ".$this->cfg->get("order");//.' LIMIT 263';
+      global $first_234567;
+      if ($this->navigator) $SqlStr .= ' LIMIT '.intval($first_234567).','.intval($this->navigator);
+      $fields = explode(",", $this->cfg->get("fields"));
+      $result = $this->kernel->db->query($SqlStr);
+      if ($result && $count = $result->numrows()) {
+         for ($Cn = 0; $Cn < $count; $Cn++) {
+                    $row = $result->getrow();
+                    $this->preParse($row);
+                    reset($fields);
+             while(list($key, $val) = each($fields))
+                       $this->tmpl->set_var(array(trim($val) => $row[trim($val)]));
+                    $this->tmpl->parse("output", "item_block", true);
+                }
+      }
+   }
+
+   // Pre parse function
+   // replace in other clases
+   function preParse($row) {
+   }
+
+   
+   // Decode extend functions
+   function extFun() {
+      global $move;
+      
+//      if ($move) $this->extFun_move($move);
+      if ($move) {
+         $moveArray = $this->cfg->get("checkArray");
+         $moveField = $this->cfg->get("delField");
+         if ($this->cfg->check("xTable")) $table   = $this->cfg->get("xTable");
+                                     else $table   = $this->cfg->get("table");
+         global $$moveArray;
+   
+         if (!is_array($$moveArray)) return;
+         
+         $Array = array_keys($$moveArray);
+
+         if ($move=='down')
+          $Array = array_reverse($Array);
+
+         foreach ($Array as $k) 
+             $this->extFun_move($move,$k);         
+      }
+
+   }
+
+   // Move groups (change order)
+   function extFun_move($move,$id) {
+
+//      $id = $this->parent->groupNr;
+      $SqlStr = "SELECT parentID FROM ".$this->table." 
+                 WHERE ID = $id";
+      $result = $this->kernel->db->query($SqlStr);
+      if ($result && $result->numrows()) {
+         list ($pID) = $result->getrow();
+                $SqlStr = "SELECT ID, sortNr FROM ".$this->table."
+                           WHERE parentID = $pID ORDER BY sortNr";
+                $result = $this->kernel->db->query($SqlStr);
+                if ($result && $count = $result->numrows()) {
+                   for ($Cn = 0; $Cn < $count; $Cn++) {
+                       list ($ID , $sortNr) = $result->getrow();
+                              if ($id != $ID) { $sID = $ID; $sSortNr = $sortNr; continue; }
+                              
+                              if ($move == "up"   && $Cn == 0) break;
+                              if ($move == "down" && $Cn >= $count - 1) break;
+                              
+                              if ($move == "down") list($sID, $sSortNr) = $result->getrow();
+                              
+                              $SqlStr = "UPDATE ".$this->table." 
+                                         SET sortNr = $sortNr
+                                                WHERE ID = $sID";
+                              $this->kernel->db->query($SqlStr);
+                              $SqlStr = "UPDATE ".$this->table." 
+                                         SET sortNr = $sSortNr
+                                                WHERE ID = $ID";
+                              $this->kernel->db->query($SqlStr);
+                              break;
+                   }
+                }
+      }
+   }
+   
+   function delete($sql = "1") {
+      $delArray = $this->cfg->get("checkArray");
+      $delField = $this->cfg->get("delField");
+      if ($this->cfg->check("xTable")) $table   = $this->cfg->get("xTable");
+                                  else $table   = $this->cfg->get("table");
+      global $$delArray;
+      
+      if (!is_array($$delArray)) return;
+      $sSql = "";
+      reset($$delArray);
+      while(list($key, $val) = each($$delArray)) {
+         if ($sSql) $sSql .= " OR ";
+                $sSql .= "$delField = $key";
+      }
+      
+      $SqlStr = "DELETE FROM $table WHERE $sql AND ($sSql)";
+      return $this->kernel->db->query($SqlStr);
+   }
+}
+
+?>

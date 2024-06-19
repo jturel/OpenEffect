@@ -1,0 +1,111 @@
+<?
+/**
+* Copyright (C) 2002 SIA ESOFTS.
+*
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License 
+* version 2 as published by the Free Software Foundation.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the SIA ESOFTS, 38/40 Blaumana str., 
+* Riga, LV - 1011, LATVIA, e-mail office@esoft.lv 
+*
+* This General Public License does not permit incorporating your program into
+* proprietary programs. Should you require to License Open Effect under the
+* commercial License, please contact SIA ESOFTS for up-to-date information.
+*/
+
+
+class statistic extends pluginClass {
+
+   // Constructor
+   function statistic(&$parent, $cfg) {
+      $this->root_dir = TMPL_DIR;
+      $this->pluginClass(&$parent, $cfg);
+      $this->api = new rus_api(&$this,$cfg);
+      $this->main();
+   }
+   // Main function
+   function main() {
+      $this->log = $this->kernel->loger->reg("STATISTIC");
+      $this->docID       = $this->cfg->get("DocumentID");
+      $this->contents    = $this->api->SetFields($this->docID);
+      $this->Update();
+      $this->tmpl = $this->readTemplate($this->cfg->get("template"));
+   }
+
+   // Read template
+   // $fName - file name of template
+   function readTemplate($fName) {
+      $this->log->put("Read template [$fName]");
+      $this->kernel->classLoader->checkClass("templateClass");
+      $tmpl = new templateClass($this->root_dir, "remove");
+      $tmpl->halt_on_error = "yes";
+      $tmpl->set_file(array("base" => $fName));
+
+      $tmpl->set_var(array("title" => $this->contents["title"],
+                            "val1" => $this->contents["s1"]+1,
+                            "val2" => $this->contents["s2"]+1,
+                            "val3" => $this->contents["s3"]+0,
+                            "val4" => $this->contents["s4"]+0,
+                            "val5" => $this->contents["s5"]+0));
+      $tmpl->parse("out", array("base"));
+      $out = $tmpl->get("out");
+      $this->html = $out;
+      return $tmpl;
+   }
+
+   function Update(){
+        global $i_was_here;
+//        $this->log->put("UPDATE");
+        setcookie("i_was_here", "yes", time() + 3600);
+        if ($i_was_here=='yes') return;
+        $this->log->put("Doc = $this->docID");
+        $id  = $this->kernel->api->getTxtIDByDocID($this->docID,'s1');
+        $day = $this->kernel->api->getTxtIDByDocID($this->docID,'s2');
+        $this->log->put("$id");
+        $this->log->put("$day");
+//        $date = $this->kernel->api->getDocumentByID($this->docID,"date");
+        $date = $this->contents['date'];
+        if($id){
+                $this->log->put("All += 1");
+                $sql = "update $this->TxtContents set content = content + 1 where id = $id"; 
+//                $this->log->put($sql);
+                $result = $this->kernel->db->query($sql);        
+        } else {
+                $this->log->put("All = 1");
+                $this->kernel->api->createTxt($this->docID,"s1", "1",0);
+//                $this->kernel->api->magicTxt($this->docID,"s1", "1",0);
+        }
+
+        $this->log->put("$id");
+        $this->log->put("$day");
+        $this->log->put("date=$date");
+
+        
+        if($day){
+//                 $this->log->put("day += 1");
+//                 $this->log->put($date);
+                 $this->log->put(date('d'));
+                 if ($date==date('d')) 
+                    $sql = "update $this->TxtContents set content = content + 1 where id = $day"; 
+                 else {
+                    $sql = "update $this->TxtContents set content = 1 where id = $day"; 
+//                    $this->log->put($this->docID.'date'.date('d'));
+                    $this->kernel->api->magicTxt($this->docID,'s3',$this->kernel->api->getDocumentsNum(534),0);
+                    $this->kernel->api->magicTxt($this->docID,'date',date('d'),0);
+                 }
+                 $this->log->put($sql);
+                 $result = $this->kernel->db->query($sql);                        
+//                $this->log->put($sql);
+        } else {
+                 $this->log->put("day = 1");
+//                 $this->kernel->api->createTxt($this->docID,'s2', '1',0);
+                 for ($i=1;$i<5;$i++)
+                   $this->kernel->api->magicTxt($this->docID,"s$i",1,0);
+        }
+      }
+   
+}
+
+?>

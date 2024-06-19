@@ -1,0 +1,98 @@
+<?
+/**
+* Copyright (C) 2002 SIA ESOFTS.
+*
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License 
+* version 2 as published by the Free Software Foundation.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the SIA ESOFTS, 38/40 Blaumana str., 
+* Riga, LV - 1011, LATVIA, e-mail office@esoft.lv 
+*
+* This General Public License does not permit incorporating your program into
+* proprietary programs. Should you require to License Open Effect under the
+* commercial License, please contact SIA ESOFTS for up-to-date information.
+*/
+
+
+
+/*********************************************
+*
+*  LIST constructor plugin
+*
+*********************************************/
+
+
+class lngSelectPlugin extends pluginClass {
+
+   // Constructor
+   function lngSelectPlugin(&$parent, $cfg) {
+      $this->root_dir = TMPL_DIR;
+      $this->pluginClass(&$parent, $cfg);
+      $this->main();
+   }
+   
+   // Main function
+   function main() {
+      $this->log = $this->kernel->loger->reg("LANGUAGE SELECTOR PLUGIN");
+      $this->tmpl = $this->readTemplate($this->cfg->get("template"));
+      $this->lngCfg = $this->kernel->cfger->reg("LANGUAGE SELECTOR CFG", CONF_DIR.$this->kernel->cfg->get("langConfFile"));
+      $this->parse();
+   }
+   
+   // Read template
+   // $fName - file name of template
+   function readTemplate($fName) {
+      $this->log->put("Read template [$fName]");
+      $this->kernel->classLoader->checkClass("templateClass");
+      $tmpl = new templateClass($this->root_dir, "remove");
+      $tmpl->halt_on_error = "yes";
+      
+      $tmpl->set_file(array("body" => $fName));
+      $tmpl->set_block("body", "item_block", "itemBlock");
+
+      // Define current form,group and doc ID's...
+      global $REQUEST_URI;
+      $tmpl->set_var(array("_FORM_ID"   => $this->parent->formNr,
+                           "_GROUP_ID"  => $this->parent->groupNr,
+                           "_DOC_ID"    => $this->parent->docNr,
+                           "_LINK_SELF" => $REQUEST_URI));
+      return $tmpl;
+   }
+
+   // Parse list into HTML var
+   // RETURN : echo of tree
+   function parse() {
+      $this->parseStrings();
+
+      $this->tmpl->set_var("ROOT_URL", $this->kernel->cfg->get("rootURL"));
+      $this->tmpl->parse("out", array("body"));
+      $out = $this->tmpl->get("out");
+      $this->html = $out;
+      return $out;
+   }
+   
+   // Parse language strings into template
+   function parseStrings() {
+      reset($this->lngCfg->childItems);
+      while(list($key, $val) = each($this->lngCfg->childItems)) {
+//   echo "key = $key, val = $val<br>";
+
+         if (trim(strtoupper($key)) == "DEFAULT") continue;
+                $val = $val->get();
+
+/*$rre = $val[0];
+$rree = $this->kernel->langID;
+echo "must be checked if $rre = $rree<br>";
+ */
+                $this->tmpl->set_var(array("VALUE"   => strtolower($key),
+                                           "NAME"    => $val[1],
+                                          "CHECKED" => ($val[0] == $this->kernel->langID ? "selected" : "")));
+                $this->tmpl->parse("select_output", "item_block", true);
+      }
+   }
+
+}
+
+?>

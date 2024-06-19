@@ -1,0 +1,191 @@
+<!-- BEGIN close_block -->
+<script language="JavaScript">
+<!--
+   self.location.href = 'parse.php?5&{_GROUP_ID}&{DOC_ID}';
+// -->
+</script>
+<!-- END close_block -->
+<script language="JavaScript">
+  var SelectPub=false;
+
+  function SelectIt(i){
+    tag = i;
+    while (tag.tagName != "TR"){
+      tag = tag.parentElement;
+    }
+    if (i.checked) tag.className = 'list_light';
+    else tag.className = '';
+  }
+
+  function SelectAllDocs(){
+    var stat = docs.alldocs.checked;
+    for (i=0;i<docs.elements.length;i++){
+      var tag = docs.elements[i];
+      if ((tag.type=='checkbox') && (tag.typez=='doc'))     {
+        tag.checked = stat; 
+        SelectIt(tag);
+      }
+    }
+  }
+
+  function SelectAllPub(){
+    SelectPub = !SelectPub;
+    for (i=0;i<docs.elements.length;i++){
+      var tag = docs.elements[i];
+      if ((tag.type=='checkbox') && (tag.typez=='pub')){
+        tag.checked = SelectPub;
+      }
+    }
+  }
+  function AddDocument1() {
+    return "{_GROUP_ID}";
+  }
+</script>
+
+<script language="JavaScript">
+<!--
+var submittype = '';
+function openWin(doc) {
+  var target = "_blank";
+  var option = "status=no,top=10,left=10,height=200,width=200,resizable=yes";
+  window.open("parse.php?10&{_GROUP_ID}&"+doc, target, option);
+}
+function SelectItI(){
+//    event.cancelBubble();
+//  val = '';
+  var val = new Array();
+  for(tpr=0; tpr<document.docs.elements.length; tpr++){
+    if(document.docs.elements[tpr].checked &&document.docs.elements[tpr].typez=='doc'){
+      val[val.length]=document.docs.elements[tpr].docid;
+//      val=document.docs.elements[tpr].docid;
+    }
+  }
+//    alert("2 "+val)
+    top.topFrame.SetActive(2, val);
+  }
+/**
+function searchForHead(where){
+  out = false;
+  for(iii=0; iii< where.all.length; iii++) if(where.all[iii].id == "winhead") out = where.all[iii];
+  return out;
+}
+*/
+function bonf(){
+  if(typeof(top.leftFrame.document.all.winhead)=='object') top.leftFrame.document.all.winhead.className = 'caption';
+//if(typeof(top.rightFrame.document.all.winhead)=='object') top.rightFrame.document.all.winhead.className = 'mainSelected';
+  if(typeof(document.all.winhead)=='object') document.all.winhead.className = 'mainSelected';
+  if(typeof(top.searchFrame.document.all.winhead)=='object') top.searchFrame.document.all.winhead.className = 'caption';
+//  val = '';
+  var val = new Array();
+  for(tpr=0; tpr<document.docs.elements.length; tpr++){
+    if(document.docs.elements[tpr].checked &&document.docs.elements[tpr].typez=='doc'){
+      val[val.length]=document.docs.elements[tpr].docid;
+//      val=document.docs.elements[tpr].docid;
+    }
+  }
+//    if (val=='') val = "{_GROUP_ID}";
+  top.topFrame.SetActive(2, val);               
+}
+function syncIt(){
+  top.leftFrame.syncRight("{_GROUP_ID}"<!-- BEGIN tree_block -->,"{ID}"<!-- END tree_block -->);
+}
+
+document.onclick=bonf;
+//-->
+</script>
+
+<center>
+<a href=# onclick="syncIt();">synchonize</a>
+  <form name='docs' action="{_LINK_SELF}" method="post">
+  <input type="hidden" name="delete" id="deleteid" value="">
+  <input type="hidden" name="move" id="moveid" value="">
+    <table width="100%" border="0" cellspacing="0" cellpadding="0" class="main">
+      <tr> 
+      <td> 
+        <table width="100%" border="0" id="winhead" cellspacing="0" cellpadding="0" class="caption">
+          <tr valign="middle" align="left"> 
+            <td width="20"><img src="img/gn_folder.gif" width="18" height="18"></td>
+            <td width="100%"><B>##DOCUMENTS##</B></td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr> 
+      <td> 
+        <table width="100%" border="0" cellspacing="10" cellpadding="0" height="100%" class="bg_color_light">
+          <tr> 
+            <td> 
+              <table width="100%" border="0" cellspacing="0" cellpadding="0" class="browse" >
+                <tr> 
+                  <td width="18" align="center" valign="middle"><img src="img/gn_publish.gif" width="18" height="18" onclick="SelectAllPub()"> 
+                  </td>
+                  <td width="100%" class="caption"><nobr>##Documents name##<nobr></td>
+                  <td width="5" valign="middle" align="right"> 
+                    <input type="checkbox" name="alldocs" value="checkbox" onclick="SelectAllDocs();" onfocus="if(this.blur)this.blur()">
+                  </td>
+                </tr>
+{output}
+<!-- BEGIN addDocWithTmpl_block -->
+<script language="JavaScript">
+<!--
+    function AddDocument(doc) {
+//               submittype = 'Add';
+//               alert(DOC.SubmitButton.value);
+//               DOC.SubmitButton.value = "Add";
+//               alert(DOC.SubmitButton.value);
+//               DOC.submit();
+               self.location.href = 'parse.php?5&{_GROUP_ID}&'+doc;
+    }
+//-->
+</script>
+<!-- END addDocWithTmpl_block -->
+<!-- BEGIN addDocWithOutTmpl_block -->
+<script language="JavaScript">
+<!--
+function AddDocument(doc) {
+//  submittype = 'Add';
+//  openWin(0);
+//  DOC.submit();
+  var option = "dialogHeight: 300px; dialogWidth: 400px; dialogTop: px; dialogLeft: px; edge: Raised; center: Yes; help: No; resizable: No; status: No; dialogHide: Yes; unadorned: Yes; scroll: No;"
+  dosmth =  window.showModalDialog("parse.php?28&{_GROUP_ID}&&forms_Nr=10","", option);
+//alert(dosmth)
+  if(dosmth!='' && typeof(dosmth)!='undefined') window.location.href=dosmth;
+//  return window.open("parse.php?28&"+grupid+"&"+docid+"&forms_Nr="+id,"", option);
+}
+//-->
+</script>
+<!-- END addDocWithOutTmpl_block -->
+
+              </table>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr> 
+      <td> 
+        <table width="100%" border="0" cellspacing="5" cellpadding="0">
+          <tr> 
+            <td> 
+              <input type="submit" name="public" value="##Publish##" class="buttonz" onfocus="if(this.blur)this.blur()">
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</form>
+</center>
+
+<!-- BEGIN item_block -->
+              <tr> 
+                <td width="10">
+                  <input type="checkbox" typez="pub" name="publish[{ID}]" {PUBLISH} onfocus="if(this.blur)this.blur()">
+                </td>
+                <td width="100%"><a href="parse.php?5&{_GROUP_ID}&{ID}" onclick="top.topFrame.SetActive(3, '{ID}');"><nobr>{TITLE}</nobr></a> <b>[{ID}]</b></td>
+                <td width="10" valign="middle" align="right"> 
+                  <input type="Hidden" name="hidden[{ID}]" value="1">
+                  <input type="checkbox" typez="doc" docid="{ID}" name="check[{ID}]" value="checkbox" onclick="SelectIt(this); SelectItI();" onfocus="if(this.blur)this.blur()">
+                </td>
+              </tr>
+<!-- END item_block -->

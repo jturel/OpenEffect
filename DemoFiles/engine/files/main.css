@@ -1,0 +1,189 @@
+TABLE.browse TD{
+        BORDER-BOTTOM: #B7C9FF 1px solid ;
+        font-family: Verdana, Arial, Helvetica, sans-serif;
+        font-size: 12px;
+        color: #003366
+}
+TABLE.doc TD{
+        font: 12px Verdana, Arial, Helvetica, sans-serif;
+        color: #003366
+}
+TABLE.mainz{
+        color: #000000;
+        font-family: Verdana, Arial, Helvetica, sans-serif;
+        font-size: 10px; background-color: #B7C9FF: #B7C9FF;
+        background-color : #B7C9FF
+}
+
+TABLE.main {
+        border: 1px solid #7375BF;
+        background-color : #B7C9FF;
+}
+
+.mainSelected {
+        font-family: Verdana, Arial, Helvetica, sans-serif;
+        font-size: 11px;
+        font-weight: bold
+        border: 1px solid #7375BF;
+        background-color : #7375BF;
+}
+
+.bg_color_light {
+        background-color: #E1E9FF
+}
+
+.list {
+        font: 12px Verdana, Arial, Helvetica, sans-serif;
+        color: #003366
+}
+.searchInput{
+        background-color: #D2E0FF;
+        font: 12px Verdana, Arial, Helvetica, sans-serif;
+        color: #003366
+}
+.list_light {
+        background-color: #D2E0FF;
+        cursor: hand
+}
+
+.caption {
+        color: #000000;
+        font-family: Verdana, Arial, Helvetica, sans-serif;
+        font-size: 11px;
+        font-weight: bold
+}
+
+.menu {
+        color: #000000;
+        font-family: Verdana, Arial, Helvetica, sans-serif;
+        font-size: 10px
+}
+
+.input {
+        font: 12px/12px Verdana, Arial, Helvetica, sans-serif;
+        padding-top: 1px;
+        padding-right: 1px;
+        padding-bottom: 1px;
+        padding-left: 1px;
+        background-color: #D2E0FF
+}
+
+A:HOVER {
+        color : #003366;
+        text-decoration : underline;
+        font-family : Verdana, Geneva, Arial, Helvetica, sans-serif;
+        font-size : 12px;
+}
+
+A{
+        color: #003366;
+        text-decoration : none;
+        font-family : Verdana, Geneva, Arial, Helvetica, sans-serif;
+                              font-size : 12px;
+}
+
+A:VISITED {
+        color: #004F9D;
+        font-family : Verdana, Geneva, Arial, Helvetica, sans-serif;
+                              font-size : 12px;
+}
+
+.buttonz {  font-family: Verdana, Arial, Helvetica, sans-serif;  width : 60px;  height : 20px;  font-size : 11px;     ; background-color: #CEDCFF}
+.caption_td { color: #000000; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 11px; font-weight: bold;    vertical-align : bottom;  height : 20px;    }
+
+
+
+.calendar {
+                              position: absolute;
+                              left: -200;
+                              top: -200;
+                              width: 150px;
+                              height:140px;
+                              visibility: hidden;
+                              z-index: 10;
+}
+.calendarFG {
+               font-family : Verdana, Geneva, Arial, Helvetica, sans-serif;
+               font-size : 10px;
+               font-weight : normal;
+               background-color : #3366FF;                  
+}
+
+.calendarCell {
+               font-family : Verdana, Geneva, Arial, Helvetica, sans-serif;
+               font-size : 12px;
+               font-weight : normal;
+               background-color : #00CCFF;   
+               border : 1px solid Black;
+               text-align : center;
+               cursor: hand
+}
+
+.calendarCellSelected {
+               font-family : Verdana, Geneva, Arial, Helvetica, sans-serif;
+               font-size : 12px;
+               font-weight : normal;
+               background-color : Blue;
+               border : 1px solid Black;
+               text-align : center;
+               cursor: hand
+}
+
+.calendarCellCurrent {
+               font-family : Verdana, Geneva, Arial, Helvetica, sans-serif;
+               font-size : 12px;
+               font-weight : bold;
+               background-color : #3399FF;
+               border : 1px solid Black;
+               text-align : center;
+               cursor: hand
+}
+.calendarPrevious {
+               font-family : Verdana, Geneva, Arial, Helvetica, sans-serif;
+               font-size : 12px;
+               font-weight : normal;
+               background-color : #D4D0C8;   
+               border : 1px solid Black;
+               text-align : center;
+               cursor: hand
+}
+.calendarNext {
+               font-family : Verdana, Geneva, Arial, Helvetica, sans-serif;
+               font-size : 12px;
+               font-weight : normal;
+               background-color : #D4D0C8;   
+               border : 1px solid Black;
+               text-align : center;
+               cursor: hand
+}
+.calendarTable {
+               bordder : 1px solid Black;
+}
+.calendarButton {
+               font-family: Verdana, Arial, Helvetica, sans-serif; 
+               font-size: 10px; 
+               border : 1px solid Black;
+               cursor: hand;
+}
+
+.calendarSelect {
+               font-family : Verdana, Geneva, Arial, Helvetica, sans-serif;
+               font-size : 10px;
+               font-weight : normal;
+               background-color : #00CCFF;
+}
+
+.calendarButtonTable {
+               border-bottom : 1px solid Black;  
+               border-left : 1px solid Black;  
+               border-right : 1px solid Black;    
+}
+.calendarSelectTable {        
+                 
+               border-left : 1px solid Black;  
+               border-right : 1px solid Black;
+               border-top : 1px solid Black;
+ }
+.textareaz{
+        background-color: #D2E0FF
+}

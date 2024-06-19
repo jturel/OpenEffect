@@ -1,0 +1,107 @@
+<?
+/**
+* Copyright (C) 2002 SIA ESOFTS.
+*
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License 
+* version 2 as published by the Free Software Foundation.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the SIA ESOFTS, 38/40 Blaumana str., 
+* Riga, LV - 1011, LATVIA, e-mail office@esoft.lv 
+*
+* This General Public License does not permit incorporating your program into
+* proprietary programs. Should you require to License Open Effect under the
+* commercial License, please contact SIA ESOFTS for up-to-date information.
+*/
+
+
+class navigator extends pluginClass {
+
+   // Constructor
+   function navigator(&$parent,$cfg="",$template, $num, $count,$action,$link="",$addict=0) {
+      $this->root_dir = TMPL_DIR;
+      $this->pluginClass(&$parent, $cfg);
+//      $this->num = $num;
+//      $this->count = $count;
+//      $this->action = $action;
+      $this->link = $link;
+      if (!$num) 
+        $num++;
+      $this->num = $num;
+      $this->log = $this->kernel->loger->reg("NAVIGATOR");
+
+      $this->log->put("Read template [$template]");
+      $this->kernel->classLoader->checkClass("templateClass");
+      $tmpl = new templateClass($this->root_dir, "keep");
+      $tmpl->halt_on_error = "yes";
+      $tmpl->set_file(array("body_browse_qwer" => $template));
+      $tmpl->set_block("body_browse_qwer", "back_block", "outback");
+      $tmpl->set_block("body_browse_qwer", "next_block", "outnext");
+      
+//      if ($num&&$num>0&&$num<=$count)
+//         $text = $this->makelink($num,$num);
+      for ($z=1;$z<=$count;$z++)
+        $text .= ' '.$this->makelink($z,$z);
+/*      for ($z=1;$z<10&&count($txt)<4;$z++){
+      {
+         $i = $num-$z;
+         $n = $num+$z;
+         if ($i>0&&$i<=$count) 
+           $txt[$i]=$this->makelink($i,$i);
+         if ($n>0&&$n<=$count) 
+           $txt[$n]=$this->makelink($n,$n);
+      }       
+      while (list($k,$v) = each($txt))
+        if ($k<$num) $text = $v.' '.$text;
+        else         $text = $text.' '.$v;
+*/
+      $text = trim($text);  
+
+//      $c=round(count($txt)/2);
+//      $text = $txt[$c-2].$txt[$c-1].$txt[$c].$txt[$c+1].$txt[$c+2];
+/*      for ($z=0;$z<10;$z++){
+         $i = $z+$num-5;
+         if ($i<1) continue;
+         if ($i>$count) continue;
+         $txt[]=$this->makelink($i,$i);
+      }       
+      $c=round(count($txt)/2);
+      $text = $txt[$c-2].$txt[$c-1].$txt[$c].$txt[$c+1].$txt[$c+2];
+*/
+
+      if ($num>1) {
+         $tmpl->set_var(array('LINK' => $link.($num-1)));
+         $tmpl->parse("outback", "back_block");
+//         $back = $tmpl->get('outback');
+//         $tmpl->set_var(array('outback' => ''));
+      }
+      if ($num<$count) {
+         $tmpl->set_var(array('LINK' => $link.($num+1)));
+         $tmpl->parse("outnext", "next_block");
+//         $next = $tmpl->get('outnext');
+//         $tmpl->set_var(array('outnext' => ''));
+      }
+
+      $tmpl->set_var($addict);
+
+      $count = round($count+0.45);
+      $tmpl->set_var(array('TAB'    =>   $text,
+                           'NUM'    =>   ($count)?$num:0,
+//                           'BACK'   =>   $back,
+//                           'NEXT'   =>   $next,
+                           'COUNT'  =>   $count));
+      $tmpl->parse("out", array("body_browse_qwer")); 
+      $this->html = $tmpl->get("out");
+   }
+
+
+   function makelink($i,$txt){
+//      return "<a href='$this->link$i' class='centerINPUT'>$txt</a>";
+        $sel = ($this->num==$txt)?' selected':'';
+        return "<option value='$this->link$i'$sel>$txt</option>";
+
+   }
+  
+}
+?>

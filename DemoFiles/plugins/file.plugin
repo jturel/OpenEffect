@@ -1,0 +1,159 @@
+<?
+/*********************************************
+*
+*  FILE LIST constructor plugin
+*
+*********************************************/
+
+
+class filePlugin extends pluginClass {
+
+   // Constructor
+   function filePlugin(&$parent, $cfg) {
+      $this->root_dir = TMPL_DIR;
+      $this->pluginClass(&$parent, $cfg);
+      $this->main();
+   }
+   
+   // Main function
+   function main() {
+      $this->log  = $this->kernel->loger->reg("FILE LIST CONSTRUCTOR");
+      $this->tmpl = $this->readTemplate($this->cfg->get("template"));
+//      $this->parse();
+   }
+   
+   // Read template
+   // $fName - file name of template
+   function readTemplate($fName) {
+      $this->log->put("Read template [$fName]");
+      $this->kernel->classLoader->checkClass("templateClass");
+      $tmpl = new templateClass($this->root_dir, "remove");
+      $tmpl->halt_on_error = "yes";
+      
+      $tmpl->set_file(array("body" => $fName));
+      $tmpl->set_block("body", "item_block",  "itemBlock");
+      $tmpl->set_block("body", "dir_block",   "dirBlock");
+      $tmpl->set_block("body", "image_block", "imageBlock");
+
+      // Define current form,group and doc ID's...
+      global $REQUEST_URI, $fl, $dir;
+      $tmpl->set_var(array("_FORM_ID"   => $this->parent->formNr,
+                           "_GROUP_ID"  => $this->parent->groupNr,
+                           "_DOC_ID"    => $this->parent->docNr,
+                           "FIELD"      => $fl,
+                           "DIR"        => ($dir ? $dir : ($this->cfg->check("dir") ? $this->cfg->get("dir") : "/")),
+                           "_LINK_SELF" => $REQUEST_URI));
+      
+      return $tmpl;
+   }
+
+   // Parse list and move into HTML var
+   // RETURN : echo of tree
+   function parse() {
+
+      $imgExt       = trim($this->cfg->get("imgExt"));
+      $imgDir       = trim($this->cfg->get("imgDir"));
+
+      $urlDir       = trim($this->cfg->get("urlDir"));
+//      $rootDir      = trim($this->cfg->get("rootDir"));
+$rootDir = IMG_BASE_DIR;
+      $kernelUrlDir = $this->kernel->cfg->get("rootURL");
+
+      global $dir;      
+      $rootDir = trim($rootDir);
+      if ($dir) 
+         $oDir = $rootDir.'/'.trim($dir);
+      else 
+      {
+         $dir  = trim($this->cfg->get('dir'));
+         $oDir = trim($rootDir).'/'.trim($dir);
+
+      }
+      $oDir = trim($oDir);
+          
+      // DIR list create
+//      print "Rus[$oDir;$dir;$rootDir]";
+      $d = dir("$oDir");
+      while($entry = $d->read()) {
+         if (!is_dir($oDir.$entry)) continue;
+         if ($entry == '.') continue;
+      
+         if ($entry == "..") {
+            $lDir = $dir;
+            if (trim($lDir) == "/" || trim($lDir) == "") $lDir = "/";
+            else {
+               $expStr = explode("/", trim($lDir));
+               if (!trim($expStr[count($expStr) - 1])) $cnt = count($expStr) - 2;
+                                                  else $cnt = count($expStr) - 1;
+               if (!trim($expStr[0])) $cntT = $cnt - 1;
+               if ($cntT <= 0) $lDir = "/";
+               else {
+                  $lDir = "/";
+                  for ($Cn = 0; $Cn < $cnt; $Cn++) {
+                      if (!trim($expStr[$Cn])) continue;
+                      $lDir .= $expStr[$Cn]."/";
+                  }
+               }
+            }
+         } else $lDir = $dir.$entry."/";
+      
+         $this->tmpl->set_var(array("NAME"    => $entry,
+                                    "DIR_URL" => $lDir,
+                                    "PICTURE" => $kernelUrlDir.$imgDir));
+         
+         $this->tmpl->parse("output", "dir_block", true);
+      }      
+      
+
+      // FILE list create
+      $d = dir($oDir);
+//echo "dir = $oDir";
+      while($entry = $d->read()) {
+         if (!is_file($oDir.$entry)) continue;
+      
+         $this->tmpl->set_var(array("NAME"    => $entry,
+                                    "URL"     => $urlDir.$dir.$entry,
+                                    "PICTURE" => ""));
+         
+         $lPos = strrpos($entry, ".");
+         if ($lPos) {
+            $ext = substr($entry, $lPos);
+            if (strpos(" ".$imgExt, $ext))
+               $this->tmpl->parse("PICTURE", "image_block");
+         }
+         
+         $this->tmpl->parse("output", "item_block", true);
+      }      
+      
+      $this->tmpl->parse("out", array("body"));
+      $out = $this->tmpl->get("out");
+      $this->html = $out;
+      return $out;
+   }
+
+   function delete() {
+      $delArray = $this->cfg->get("checkArray");
+      $rootDir  = IMG_BASE_DIR;
+
+      global $dir;
+      if ($dir) $oDir = $rootDir ."/". $dir;
+      else {
+         $oDir = $this->cfg->get("dir");
+         $oDir = $rootDir."/".$oDir;
+      }
+      
+      global $$delArray;
+
+      if (!is_array($$delArray)) return;
+      reset($$delArray);
+      while(list($key, $val) = each($$delArray)) {
+         $file = $oDir."/".$val;
+         if (is_dir($file)) { rmdir($file); continue; }
+         unlink($file);
+      }
+
+   }
+
+}   
+
+?>

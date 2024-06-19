@@ -1,0 +1,130 @@
+<!-- BEGIN close_block -->
+<script language="JavaScript">
+<!--
+   self.location.href = 'parse.php?4&{_GROUP_ID}&';
+// -->
+</script>
+<!-- END close_block -->
+<script language="JavaScript">
+<!--
+    function openWin(formNr) {
+        var target = "_blank";
+        var option = "status=no,top=10,left=10,height=300,width=200,resizable=yes";
+        window.open("{ACTION}?"+formNr+"&{_GROUP_ID}&{_DOC_ID}", target, option);
+    }
+    function previewF() {
+               document.mainForm.action = '{PREVIEW_URL}?26&&&template={template}&ID={ID}&groupID={_GROUP_ID}';
+               document.mainForm.target = 'previewWin';
+               document.mainForm.method = 'GET';
+               document.mainForm.submit();
+               document.mainForm.method = 'POST';
+               document.mainForm.action = '{_LINK_SELF}';
+               document.mainForm.target = '_self';
+    }
+/**
+function searchForHead(where){
+  out = false;
+  for(iii=0; iii< where.all.length; iii++) if(where.all[iii].id == "winhead") out = where.all[iii];
+  return out;
+}
+*/
+function bonf(){
+if(typeof(top.leftFrame.document.all.winhead)=='object') top.leftFrame.document.all.winhead.className = 'caption';
+//if(typeof(top.rightFrame.document.all.winhead)=='object') top.rightFrame.document.all.winhead.className = 'mainSelected';
+if(typeof(document.all.winhead)=='object') document.all.winhead.className = 'mainSelected';
+if(typeof(top.searchFrame.document.all.winhead)=='object') top.searchFrame.document.all.winhead.className = 'caption';
+  top.topFrame.SetActive(3, "{ID}");
+}
+function syncIt(){
+  top.leftFrame.syncRight("{_DOC_ID}","{_GROUP_ID}"<!-- BEGIN tree_block -->,"{ID}"<!-- END tree_block -->);
+}
+
+document.onclick=bonf;
+/**
+function prepareAll(){
+  for(var i = 0; i < document.all.length; i++){
+    if(document.all[i].tagName=='INPUT') if(document.all[i].id.indexOf("_")!=-1) if(document.all[i].id.substr(document.all[i].id.indexOf("_"))=='_hidden'){
+      namen = document.all[i].id.substr(0,document.all[i].id.indexOf("_"));
+//alert(namen)
+//      eval('document.all.'+namen+'_id.saveIt();');
+//doccc = eval('document.all.'+namen+'_id.document.all')
+//tmpstrall = '';
+//for(var j = 0; j < eval('document.all.'+namen+'_id.document.all.length'); i++) tmpstrall += i + ' ' + eval('document.all.'+namen+'_id.document.all['+i+']') + '\n';
+//alert(eval('document.all.'+namen+'_id.document.all.tbContentElement'));
+//alert(tmpstrall);
+alert(document.all[i].value)
+    }
+  }
+}
+*/
+//-->
+</script>
+
+<script language=JavaScript src="files/document.js" type="text/javascript"></script>
+
+<center>
+<a href=# onclick="syncIt();">synchonize</a>
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" class="main">
+    <form action="{_LINK_SELF}" method="post" name="mainForm">
+    <input type="Hidden" name="_id" value="{ID}">
+    <input type="Hidden" name="_template" value="{templateID}">
+    <input type="Hidden" name="_groupid" value="{_groupid}">
+    <input type="Hidden" name="_language" value="{_language}">
+    <input type="Hidden" name="_name" value="{name}">
+     <tr>
+      <td>
+        <table id="winhead" width="100%" border="0" cellspacing="0" cellpadding="0" class="caption">
+          <tr valign="middle" align="left">
+            <td width="20"><img src="img/gn_document.gif" width="18" height="18"></td>
+            <td width="100%" class="captionText"><b>##DOCUMENT##</b></td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr> 
+      <td align="center" class="bg_color_light">
+        <table border="0" cellspacing="0" cellpadding="0" width="600">
+          <tr> 
+            <td>
+              {CONTENT}
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <table border="0" cellspacing="5" cellpadding="0" width="100%">
+          <tr valign="middle">
+            <td width="100">
+              <!--table width="100" border="0" cellspacing="0" cellpadding="0">
+                <!tr onclick="preview();">
+                <tr>
+                  <td width="22"><img src="img/gn_preview.gif" width="18" height="18" onClick="previewF()"></td>
+                  <td width="78" class="list"><a href="#" onClick="previewF()">preview</a></td>
+                </tr>
+              </table>
+            </td-->&nbsp;
+            <td width="100%">&nbsp; </td>
+            <td class="list" width="12%">
+              <table width="77" border="0" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td width="22">
+                    <input type="checkbox" name="as_new" value="checkbox">
+                  </td>
+                  <td width="78" class="list">##as new##</td>
+                </tr>
+              </table>
+            </td>
+            <td valign="top" width="55">
+              <input type="submit" name="save" value="##Save##" class="input">
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </form>
+  </table>
+</center>
+</body>
+</html>

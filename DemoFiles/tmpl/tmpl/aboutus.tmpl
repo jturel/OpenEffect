@@ -1,0 +1,19 @@
+<script language="javaScript">
+<!--
+ function openBrowseWin(field) {
+    var url     = "parse.php?11&&&fl=" + field;
+    var name    = "browseWin";
+    var feature = "status=yes, height=550, width=500, top=30, left=30, ,resizable=yes, scrollbars=yes";
+    open(url, name, feature);
+ }
+//-->
+</script>
+
+##Title##<br>
+<input type="text" name="title" value="{title}"><br>
+##Body##<br>
+<textarea name="body" rows="4">{body}</textarea><br>
+##Picture 1##<br>
+<input type="text" name="picture1" value="{picture1}">
+<input type="Button" value="##Add##" onClick="openBrowseWin('pic1')">
+<br>

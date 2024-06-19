@@ -1,0 +1,216 @@
+<?
+
+/*********************************************
+*
+*  TREE constructor plugin
+*
+*********************************************
+
+
+class treePlugin extends pluginClass {
+
+   // Variable
+   var $xSql    = "";
+   var $xAddSql = "";
+
+   // Constructor
+   function treePlugin(&$parent, $cfg) {
+      $this->kernel->sysLog->put("Object poshe'l ");
+      $this->root_dir = TMPL_DIR;
+      $this->pluginClass(&$parent, $cfg);
+      $this->main();
+   }
+   
+   // Main function
+   function main() {
+      $this->log = $this->kernel->loger->reg("TREE CONSTRUCTOR");
+      $this->tmpl = $this->readTemplate($this->cfg->get("template"));
+//      $this->parse();
+   }
+   
+   // Read template
+   // $fName - file name of template
+   function readTemplate($fName) {
+      $this->log->put("Read template [$fName]");
+      $this->kernel->classLoader->checkClass("templateClass");
+      $tmpl = new templateClass($this->root_dir, "remove");
+      $tmpl->halt_on_error = "yes";
+      
+      $tmpl->set_file(array("body" => $fName));
+      $tmpl->set_block("body", "item_block", "itemBlock");
+
+      // Define current form,group and doc ID's...
+      global $REQUEST_URI;
+      $tmpl->set_var(array("_FORM_ID"   => $this->parent->formNr,
+                           "_GROUP_ID"  => $this->parent->groupNr,
+                                         "_DOC_ID"    => $this->parent->docNr,
+                                                "_LINK_SELF" => $REQUEST_URI));
+      
+      return $tmpl;
+   }
+
+   // Parse tree and move into HTML var
+   // RETURN : echo of tree
+   function parse() {
+   
+      $rootID = $this->cfg->get("rootID");
+      $this->table  = $this->cfg->get("table");
+      if ($this->cfg->check("xTable")) {
+         $this->xTable = $this->cfg->get("xTable");
+      } else $this->xTable = "";
+
+      $this->extFun();
+      $this->tree($rootID);
+      
+      $this->tmpl->parse("out", array("body"));
+      $out = $this->tmpl->get("out");
+      $this->html = $out;
+      return $out;
+   }
+   
+   // Tree work function (recursive)
+   // $pID - parentID of items
+   // $deep - deep level
+   function tree($pID, $deep = 0) {
+      // IF UnControle Loop !!!
+      if ($deep > 20) return;
+    
+      $checked = "";
+      $SqlStr = "SELECT ID,name FROM ".$this->table."
+                 WHERE parentID = $pID ORDER BY sortNr";
+      $result = $this->kernel->db->query($SqlStr);
+      if ($result && $count = $result->numrows()) {
+         for ($Cn = 0; $Cn < $count; $Cn++) {
+                    list($id, $name) = $result->getrow();
+                    if ($this->xTable) $checked = $this->getChecked($id);
+                    $this->tmpl->set_var(array("ID"      => $id,
+                                               "NAME"    => $name,
+                                               "LINK"    => $this->cfg->get("link"),
+                                                                           "TARGET"  => $this->cfg->get("target"),
+                                                                           "CHECKED" => $checked,
+                                                                           "SPACE"   => str_repeat("-&nbsp;", $deep)));
+                    $this->tmpl->parse("output", "item_block", true);
+                    $this->tree($id, $deep + 1);
+                }
+      }
+   }
+   
+   // Ext function for child classes
+   // check records in X tables
+   // example: $this->xSql = "GrpID=1 AND DocID=";
+   function getChecked($id) {
+      $SqlStr = "SELECT * FROM ".$this->xTable."
+                 WHERE ".$this->xSql.$id;
+      $result = $this->kernel->db->query($SqlStr);
+      if ($result && $result->numrows()) return "checked";
+      return "";
+   }
+   
+   // Decode extend functions
+   function extFun() {
+      global $move;
+      
+      if ($move) $this->extFun_move($move);
+   }
+
+   // Move groups (change order)
+   function extFun_move($move) {
+
+      $id = $this->parent->groupNr;
+      $SqlStr = "SELECT parentID FROM ".$this->table." 
+                 WHERE ID = $id";
+      $result = $this->kernel->db->query($SqlStr);
+      if ($result && $result->numrows()) {
+         list ($pID) = $result->getrow();
+                $SqlStr = "SELECT ID, sortNr FROM ".$this->table."
+                           WHERE parentID = $pID ORDER BY sortNr";
+                $result = $this->kernel->db->query($SqlStr);
+                if ($result && $count = $result->numrows()) {
+                   for ($Cn = 0; $Cn < $count; $Cn++) {
+                       list ($ID , $sortNr) = $result->getrow();
+                              if ($id != $ID) { $sID = $ID; $sSortNr = $sortNr; continue; }
+                              
+                              if ($move == "up"   && $Cn == 0) break;
+                              if ($move == "down" && $Cn >= $count - 1) break;
+                              
+                              if ($move == "down") list($sID, $sSortNr) = $result->getrow();
+                              
+                              $SqlStr = "UPDATE ".$this->table." 
+                                         SET sortNr = $sortNr
+                                                WHERE ID = $sID";
+                              $this->kernel->db->query($SqlStr);
+                              $SqlStr = "UPDATE ".$this->table." 
+                                         SET sortNr = $sSortNr
+                                                WHERE ID = $ID";
+                              $this->kernel->db->query($SqlStr);
+                              break;
+                   }
+                }
+      }
+   }
+        
+   // Delete tree items from base
+   // $sql - math filter
+   // $recursive - if true delete recursive
+   function delete($sql = "1", $recursive = true) {
+    return "YOYOYO";
+//   print "YOYOYO";
+      $table    = $this->cfg->get("table");
+      $delArray = $this->cfg->get("checkArray");
+      $delField = $this->cfg->get("delField");
+      global $$delArray;
+      
+      if (!is_array($$delArray)) return;
+      $sSql = "";
+      reset($$delArray);
+      while(list($key, $val) = each($$delArray)) {
+         if ($sSql) $sSql .= " OR ";
+                $sSql .= "$delField = $key";
+                if ($recursive) $this->deleteRecursive($key, $table, $sql);
+      }
+
+      $SqlStr = "DELETE FROM $table WHERE $sql AND ($sSql)";
+      return $this->kernel->db->query($SqlStr);
+   }
+   
+   
+   // work delete function (for recursive)
+   // $pID - parent ID
+   function deleteRecursive($pID, $table, $sql = "1") {
+      $SqlStr = "SELECT ID FROM $table WHERE parentID = $pID";
+      $result = $this->kernel->db->query($SqlStr);
+      if ($result && $count = $result->numrows()) {
+         for ($Cn = 0; $Cn < $count; $Cn++) {
+                    list($id) = $result->getrow();
+                    $this->deleteRecursive($id, $table, $sql);
+                }
+      }
+      $SqlStr = "DELETE FROM $table WHERE parentID = $pID AND $sql";
+      $this->kernel->db->query($SqlStr);
+   }
+
+   // save into x Table
+   function saveX($sql) {
+      $checkArray = $this->cfg->get("checkArray");
+      $xTable     = $this->cfg->get("xTable");
+      $xAddField  = $this->cfg->get("xAddField");
+      global $$checkArray;
+      
+      if (!is_array($$checkArray)) return;
+
+      $SqlStr = "DELETE FROM $xTable WHERE $sql";
+      $this->kernel->db->query($SqlStr);
+
+      reset($$checkArray);
+      while(list($key, $val) = each($$checkArray)) {
+         $SqlStr = "INSERT INTO ".$xTable." ($xAddField)
+                           VALUES (".$this->xAddSql." $key)";
+                $this->kernel->db->query($SqlStr);
+      }
+
+   }
+
+}
+*/
+
+?>

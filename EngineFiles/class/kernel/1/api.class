@@ -1,0 +1,1504 @@
+<?
+/**
+* Copyright (C) 2002 SIA ESOFTS.
+*
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License 
+* version 2 as published by the Free Software Foundation.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the SIA ESOFTS, 38/40 Blaumana str., 
+* Riga, LV - 1011, LATVIA, e-mail office@esoft.lv 
+*
+* This General Public License does not permit incorporating your program into
+* proprietary programs. Should you require to License Open Effect under the
+* commercial License, please contact SIA ESOFTS for up-to-date information.
+*/
+
+
+
+/***************************************
+*  API Class
+*  
+***************************************/
+
+  $this->checkClass("linkerClass", "apiClass");
+  
+
+  class apiClass extends linkerClass {
+     var $className = "apiClass";          // Class name
+     var $langID = 0;                      // LanguageID
+     var $error = 1;                       // return ERROR
+
+  
+     // Constructor
+     // $parent - pointer on parent object
+     function apiClass(&$parent, $langID = 0) {
+        $this->langID = $langID;
+        $this->linkerClass(&$parent);
+     }
+
+###################################
+#            RESOURCES
+###################################
+
+// GET
+
+     // Return resource ID By group ID, resource name & document number
+     // $IDgrp - group number
+     // $Ndocz - number of document
+     // $RName - name of resource
+     // Return resource ID
+     function getDocumentResource($IDgr = 0, $Ndocz = 1, $RName = "") {
+        if (!$this->checkGroupSecurity($IDgr, "R")) return false;
+        if (!$IDdoc = $this->getDocumentID($IDgr, $Ndocz)) return false;
+        if (!$this->checkDocSecurity($IDdoc, "R")) return false;
+        $id = $this->getTxtIDByDocID($IDdoc, $RName);
+        return $id;
+     }
+
+
+     // Return resource Content By document ID and resource name
+     // $IDdoc - document ID
+     // $RName - name of resource
+     // Return resource ID
+     function getDocumentByID($IDdoc = 0, $RName = "") {
+        if (!$this->checkDocSecurity($IDdoc, "R")) return false;
+/*        $SqlStr = "SELECT t.content FROM ".$this->kernel->tab_cfg->get("txtTable")." t
+                   LEFT JOIN ".$this->kernel->tab_cfg->get("txtLinkTable")." l
+                   ON t.ID = l.TxtID
+                   LEFT JOIN ".$this->kernel->tab_cfg->get("docTable")." d
+                   ON d.ID = l.DocID
+                   WHERE l.DocID = $IDdoc
+                   AND d.ID IS NOT NULL
+                   AND d.visible
+                   AND t.name = '$RName'".
+                   (!$this->langID ? "" : " AND (t.Lang = 0 || t.LangID = ".$this->langID)."
+                   LIMIT 1";*/
+        $SqlStr = 'SELECT t.content FROM '.$this->kernel->tab_cfg->get('txtTable').' t, '
+                   .$this->kernel->tab_cfg->get('txtLinkTable').' l, '
+                   .$this->kernel->tab_cfg->get('docTable')." d
+                   WHERE l.DocID = $IDdoc
+                   and t.ID = l.TxtID 
+                   and d.ID = l.DocID
+                   AND d.ID IS NOT NULL
+                   AND d.visible
+                   AND t.name = '$RName'".
+                   (!$this->langID ? "" : " AND (t.Lang = 0 || t.Lang = ".$this->langID)."
+                   LIMIT 1";
+//$this->kernel->log->put("tuta SqlStr [$SqlStr]");
+        $result = $this->kernel->db->query($SqlStr);
+        if (!$result || !$result->numrows()) return false;
+        list($content) = $result->getrow();
+        return $content;
+     }
+
+
+     // Return resource ID By document ID and name resource
+     // $IDdoc - document ID
+     // $RName - name of resource
+     // Return: resource ID
+     function getTxtIDByDocID($IDdoc = 0, $RName = "") {
+        if (!$this->checkDocSecurity($IDdoc, "R")) return false;
+        $SqlStr = 'SELECT t.ID FROM '.$this->kernel->tab_cfg->get('txtTable').' t, '
+                   .$this->kernel->tab_cfg->get('txtLinkTable').' l, '
+                   .$this->kernel->tab_cfg->get('docTable')." d
+                   WHERE l.DocID = $IDdoc
+                   AND t.ID = l.TxtID
+                   AND d.ID = l.DocID
+                   AND d.ID IS NOT NULL
+                   AND t.name = '$RName'".
+                   (!$this->langID ? "" : " AND (t.Lang = 0 || t.Lang = ".$this->langID)."
+                   LIMIT 1";
+        $result = $this->kernel->db->query($SqlStr);
+        if (!$result || !$result->numrows()) return false;
+        list($id) = $result->getrow();
+        return $id;
+     }
+
+
+     function getTxtIDByDocIDL($IDdoc = 0, $RName = "", $Lng = -1) {
+        if (!$this->checkDocSecurity($IDdoc, "R")) return false;
+        $SqlStr = 'SELECT t.ID FROM '.$this->kernel->tab_cfg->get('txtTable').' t, '
+                   .$this->kernel->tab_cfg->get('txtLinkTable').' l, '
+                   .$this->kernel->tab_cfg->get('docTable')." d
+                   WHERE l.DocID = $IDdoc
+                   AND t.ID = l.TxtID
+                   AND d.ID = l.DocID
+                   AND d.ID IS NOT NULL
+                   AND t.name = '$RName'
+                   AND t.Lang = ".$Lng."
+                   LIMIT 1";
+//                   (!$this->langID ? "" : " AND (t.Lang = 0 || t.Lang = ".$this->langID)."
+//echo "tutea vot ---- $SqlStr<br>";
+//echo "$this->langID<br>";
+        $result = $this->kernel->db->query($SqlStr);
+        if (!$result || !$result->numrows()) return false;
+        list($id) = $result->getrow();
+        return $id;
+     }
+
+
+     
+// REMOVE
+     
+     // Delete txt resource (or txt links) from base  by DocID & resourceName
+     // $IDdoc - document ID
+     // $RName - name of resource
+     function removeTxt($IDdoc = 0, $RName = "") {
+        if (!$this->checkDocSecurity($IDdoc, "W")) return false;
+        while ($IDtxt = $this->getTxtIDByDocID($IDdoc, $RName)) {
+              $this->removeLinkTxtToDoc($IDdoc, $IDtxt);
+            
+              $array = $this->getLinkedDocByTxt($IDtxt);
+              if (!is_array($array) || !count($array))
+                 $this->removeTxtByID($IDtxt);
+        }
+        return true;
+     }
+     
+     
+     // Delete txt resource from base by ID
+     // $IDtxt - txt resource ID
+     // RETURN : [true|false]
+     function removeTxtByID($IDtxt = 0) {
+        $SqlStr = "DELETE FROM ".$this->kernel->tab_cfg->get("txtTable")."
+                   WHERE ID = $IDtxt";
+        $r1 = $this->kernel->db->query($SqlStr);
+        $SqlStr = "DELETE FROM ".$this->kernel->tab_cfg->get("txtLinkTable")."
+                   WHERE TxtID = $IDtxt";
+        $r2 = $this->kernel->db->query($SqlStr);
+        return $r1 && $r2;
+     }
+
+// CREATE
+   
+     // Create txt resource by DocID, resource name and Language
+     // $IDdoc - document ID
+     // $RName - resource name
+     // $Content - resource content 
+     // $Lang - language
+     // RETURN : false | new ID of resource
+     function createTxt($IDdoc = 0, $RName = "", $Content = "", $Lang = -1) {
+        if (!$this->checkDocSecurity($IDdoc, "W")) return false;
+        $langID = ($Lang == -1 ? $this->langID : $Lang);
+        $newID  = $this->kernel->db->nextId();
+//        $Content = str_replace('\\','\\\\',$Content);
+        $SqlStr = "INSERT INTO ".$this->kernel->tab_cfg->get("txtTable").
+                  " (ID, name, content, Lang) VALUES ($newID, '$RName', '$Content', $langID)";
+        if (!$this->kernel->db->query($SqlStr)) return false;
+        if (!$this->createLinkTxtToDoc($IDdoc, $newID)) return false;
+        return $newID;
+     }
+
+// UPDATE
+
+     // UPDATE txt resource by DocID, resource name and Language
+     // $IDdoc - document ID
+     // $RName - resource name
+     // $Content - resource content 
+     // $Lang - language
+     // RETURN : false | new ID of resource
+     function updateTxt($IDdoc = 0, $RName = "", $Content = "", $Lang = -1) {
+        if (!$this->checkDocSecurity($IDdoc, "W")) return false;
+        $langID = ($Lang == -1 ? $this->langID : $Lang);
+        $txtID  = $this->getTxtIDByDocID($IDdoc, $RName);
+        $SqlStr = "UPDATE ".$this->kernel->tab_cfg->get("txtTable")."
+                   SET content = '$Content'".(($Lang==-1)?' ':", Lang = $langID ").
+                   "WHERE ID = $txtID";
+        if (!$this->kernel->db->query($SqlStr)) return false;
+        return true;
+     }
+
+
+     // UPDATE,DELETE OR CREATE txt resource by DocID, resource name and Language
+     // (Analize Content string)
+     // $IDdoc - document ID
+     // $RName - resource name
+     // $Content - resource content 
+     // $Lang - language
+     // RETURN : false | new ID of resource
+     function magicTxt($IDdoc = 0, $RName = "", $Content = "", $Lang = -1) {
+        if (!$this->checkDocSecurity($IDdoc, "W")) return false;
+        $langID = ($Lang == -1 ? $this->langID : $Lang);
+
+        if (!$Content) return $this->removeTxt($IDdoc, $RName);
+        $IDtxt = $this->getTxtIDByDocIDL($IDdoc, $RName, $Lang);
+//        $DocLng = getDocumentByID($IDdoc, "");
+
+        if ($IDtxt) return $this->updateTxt($IDdoc, $RName, $Content, $Lang);
+               else return $this->createTxt($IDdoc, $RName, $Content, $Lang);
+     }
+
+
+/*     function magicTxt($IDdoc = 0, $RName = "", $Content = "", $Lang = -1) {
+        if (!$this->checkDocSecurity($IDdoc, "W")) return false;
+        $langID = ($Lang == -1 ? $this->langID : $Lang);
+        if (!$Content) return $this->removeTxt($IDdoc, $RName);
+        $IDtxt = $this->getTxtIDByDocID($IDdoc, $RName);
+        if ($IDtxt) return $this->updateTxt($IDdoc, $RName, $Content, $Lang);
+               else return $this->createTxt($IDdoc, $RName, $Content, $Lang);
+     }
+*/
+
+
+
+// OTHER
+     
+     // CHECK txt resource in document
+     // $IDdoc - document ID
+     // $RName - resource name
+     // RETURN : false|true
+     function isTypeTxt($IDdoc, $RName) {
+        if (!$this->checkDocSecurity($IDdoc, "R")) return false;
+        $id = $this->getTxtIDByDocID($IDdoc, $RName);
+        return ($id ? true : false);
+     }
+
+
+###################################
+#          TEMPLATES
+###################################
+
+// GET
+
+     // Get template name From document template
+     // $IDdoc - document ID
+     // RETURN: template name
+     function getDocumentTemplate($IDdoc = 0) {
+        if (!$this->checkDocSecurity($IDdoc, "R")) return false;
+        $SqlStr = 'SELECT t.name FROM '.$this->kernel->tab_cfg->get("docTable").' d, '
+                   .$this->kernel->tab_cfg->get("templateTable")." t
+                   WHERE d.ID = $IDdoc and d.templateID = t.ID";
+/*        $SqlStr = "SELECT t.name FROM ".$this->kernel->tab_cfg->get("docTable")." d
+                   LEFT JOIN ".$this->kernel->tab_cfg->get("templateTable")." t
+                   ON d.templateID = t.ID
+                   WHERE d.ID = $IDdoc";
+*/
+        $result = $this->kernel->db->query($SqlStr);
+        if (!$result || !$result->numrows()) return false;
+        list($tmplName) = $result->getrow();
+        return $tmplName;
+     }
+
+// SET
+
+     // Get template name From document template
+     // $IDdoc - document ID
+     // RETURN: true|false
+     function setDocumentTemplate($IDdoc = 0, $tmplName = "") {
+        if (!$this->checkDocSecurity($IDdoc, "W")) return false;
+               
+               $SqlStr = 'SELECT ID FROM '.$this->kernel->tab_cfg->get('templateTable')."
+                                 WHERE name = '$tmplName'";
+        $result = $this->kernel->db->query($SqlStr);
+        if (!$result || !$result->numrows()) return false;
+        list($tmplID) = $result->getrow();
+               
+               $SqlStr = 'UPDATE '.$this->kernel->tab_cfg->get('docTable')."
+                                 SET templateID = $tmplID
+                                 WHERE ID = $IDdoc";
+        $this->kernel->db->query($SqlStr);
+        return true;
+     }
+
+
+
+###################################
+#          DOCUMENTS
+###################################
+
+// GET
+
+
+     // Return document ID By group ID and document number
+     // $IDgrp - group number
+     // $Ndocz - number of document
+     // RETURN: document ID
+     function getDocumentID($IDgr = 0, $Ndocz = 1) {
+        if (!$this->checkGroupSecurity($IDgr, "R")) return false;
+        $SqlStr = "SELECT d.ID FROM ".$this->kernel->tab_cfg->get("docTable")." d, "
+                   .$this->kernel->tab_cfg->get("docXgroupTable")." g
+                   WHERE g.GrpID = $IDgr
+                   and g.DocID = d.ID
+                   AND d.visible
+                   ORDER BY g.sortNr DESC";
+/*        $SqlStr = "SELECT d.ID FROM ".$this->kernel->tab_cfg->get("docTable")." d
+                   LEFT JOIN ".$this->kernel->tab_cfg->get("docXgroupTable")." g
+                   ON g.DocID = d.ID
+                   WHERE g.GrpID = $IDgr
+                   AND d.visible
+                   ORDER BY g.sortNr DESC";
+*/
+        $result = $this->kernel->db->query($SqlStr);
+        if (!$result || !$result->numrows()) return false;
+        if (!$result->seek($Ndocz - 1)) return false;
+        list($IDdoc) = $result->getrow();
+        if (!$this->checkDocSecurity($IDdoc, "R",false)) return false;
+        return $IDdoc;
+     }
+
+
+     // Return ALL document ID By group ID
+     // $IDgrp - group number
+     // RETURN: Array of ID documents
+     function getAllDocuments($IDgr = 0,$from=-1,$to=-1) {
+        if (!$this->checkGroupSecurity($IDgr, "R")) return false;
+        $returnArray = array();
+     
+        $SqlStr = "SELECT d.ID FROM ".$this->kernel->tab_cfg->get("docTable")." d, ".
+                   $this->kernel->tab_cfg->get("docXgroupTable")." g
+                   WHERE g.GrpID = $IDgr
+                   AND g.DocID = d.ID
+                   AND d.visible
+                   ORDER BY g.sortNr DESC";
+        if ($to>-1&&$from>-1)
+        $SqlStr .= " LIMIT $from,$to";
+
+/*        $SqlStr = "SELECT d.ID FROM ".$this->kernel->tab_cfg->get("docTable")." d
+                   LEFT JOIN ".$this->kernel->tab_cfg->get("docXgroupTable")." g
+                   ON g.DocID = d.ID
+                   WHERE g.GrpID = $IDgr
+                   AND d.visible
+                   ORDER BY g.sortNr DESC";
+*/
+
+        $result = $this->kernel->db->query($SqlStr);
+        if (!$result || !$count = $result->numrows()) return $returnArray;
+        for ($Cn = 0; $Cn < $count; $Cn++) {
+            list($IDdoc) = $result->getrow();
+            if (!$this->checkDocSecurity($IDdoc, "R",false)) continue;
+            $returnArray[] = $IDdoc;
+        }
+/*        print_r($returnArray);
+        print("<br>");*/
+        return $returnArray;
+     }
+
+     // Return ALL document ID By group ID
+     // $IDgrp - group number
+     // RETURN: Array of ID documents
+     function getAllDocumentsByName($IDgr = 0,$name='',$from=-1,$to=-1) {
+        if (!$this->checkGroupSecurity($IDgr, "R")) return false;
+        $returnArray = array();
+     
+        $SqlStr = "SELECT d.ID FROM ".$this->kernel->tab_cfg->get("docTable")." d, ".
+                   $this->kernel->tab_cfg->get("docXgroupTable")." g
+                   WHERE g.GrpID = $IDgr 
+                   AND d.Name = '$name'
+                   AND g.DocID = d.ID
+                   AND d.visible
+                   ORDER BY g.sortNr DESC";
+        if ($to>-1&&$from>-1)
+        $SqlStr .= " LIMIT $from,$to";
+
+/*        $SqlStr = "SELECT d.ID FROM ".$this->kernel->tab_cfg->get("docTable")." d
+                   LEFT JOIN ".$this->kernel->tab_cfg->get("docXgroupTable")." g
+                   ON g.DocID = d.ID
+                   WHERE g.GrpID = $IDgr
+                   AND d.visible
+                   ORDER BY g.sortNr DESC";
+*/
+
+        $result = $this->kernel->db->query($SqlStr);
+        if (!$result || !$count = $result->numrows()) return $returnArray;
+        for ($Cn = 0; $Cn < $count; $Cn++) {
+            list($IDdoc) = $result->getrow();
+            if (!$this->checkDocSecurity($IDdoc, "R",false)) continue;
+            $returnArray[] = $IDdoc;
+        }
+/*        print_r($returnArray);
+        print("<br>");*/
+        return $returnArray;
+     }
+
+
+     // Return Count of documents in group
+     // $IDgrp - group number
+     // RETURN: Number of documents
+     function getDocumentsNum($IDgr = 0) {
+        if (!$this->checkGroupSecurity($IDgr, "R")) return false;
+/*        $SqlStr = "SELECT DocID FROM ".$this->kernel->tab_cfg->get("docTable")." d, "
+                   .$this->kernel->tab_cfg->get("docXgroupTable")." g
+                   WHERE g.GrpID = $IDgr
+                   AND g.DocID = d.ID
+                   AND d.visible";
+        $result = $this->kernel->db->query($SqlStr);
+        if (!$result || !$count = $result->numrows()) return 0;
+        $Cnt = 0;
+        for ($Cn = 0; $Cn < $count; $Cn++) {
+            list($id) = $result->getrow();
+            if (!$this->checkDocSecurity($id, 'R',false)) continue;
+            $Cnt++;
+        }
+        return $Cnt;
+*/
+        $SqlStr = "SELECT DISTINCT d.ID FROM ".$this->kernel->tab_cfg->get("docTable")." d, "
+                   .$this->kernel->tab_cfg->get("docXgroupTable")." g,"
+                   .$this->kernel->tab_cfg->get('docXroleTable')." s
+                   WHERE d.visible                   
+                   AND g.GrpID = $IDgr
+                   AND d.ID = s.DocID
+                   AND g.DocID = d.ID
+                   AND Access LIKE '%R%'";
+
+        $result = $this->kernel->db->query($SqlStr);
+        if (!$result || !$count = $result->numrows()) return 0;
+        return $count;
+
+     }
+
+
+     // Return Array of groups linked to document
+     // $IDdoc - document ID
+     // RETURN: Array of ID groups
+     function getDocumentGroups($IDdoc = 0) {
+        if (!$this->checkDocSecurity($IDdoc, "R")) return false;
+        $returnArray = array();
+     
+        $SqlStr = "SELECT GrpID FROM ".$this->kernel->tab_cfg->get("docXgroupTable")."
+                   ON DocID = $IDdoc";
+        $result = $this->kernel->db->query($SqlStr);
+        if (!$result || !$count = $result->numrows()) return $returnArray;
+        for ($Cn = 0; $Cn < $count; $Cn++) {
+            list($IDgr) = $result->getrow();
+            if (!$this->checkGroupSecurity($IDgr, "R")) continue;
+            $returnArray[] = $IDgr;
+        }
+        return $returnArray;
+     }
+
+
+     // Get fiels value from document
+     // $IDdoc - document ID
+     // $field - name of fiels
+     // RETURN: value from field
+     function getDocumentField($IDdoc = 0, $field = "*") {
+        if (!$this->checkDocSecurity($IDdoc, "R")) return false;
+     
+        $SqlStr = "SELECT $field FROM ".$this->kernel->tab_cfg->get("docTable")."
+                                 WHERE ID = $IDdoc";
+        $result = $this->kernel->db->query($SqlStr);
+        if (!$result || !$count = $result->numrows()) return false;
+        list($value) = $result->getrow();
+        return $value;
+     }
+
+
+// SET
+
+     //Set fiels value in document
+     // $IDdoc - document ID
+     // $values - array of values (name => value
+     function setDocumentField($IDdoc = 0, $values = array()) {
+        if (!$this->checkDocSecurity($IDdoc, "W")) return false;
+     
+        $fl = "";
+        reset($values);
+               while(list($key, $val) = each($values)) {
+                   if ($fl) $fl .= ", ";
+                   $fl .= "$key = '$val'";
+               }
+     
+        $SqlStr = "UPDATE ".$this->kernel->tab_cfg->get("docTable")."
+                                 SET $fl WHERE ID = $IDdoc";
+        $result = $this->kernel->db->query($SqlStr);
+               return true;
+     }
+
+
+
+
+// REMOVE
+
+
+     // Delete document or link from base
+     // $IDgrp - group number
+     // $IDdoc - documentID
+     function removeDoc($IDgr = 0, $IDdoc = 0) {
+        if ($IDgr) if (!$this->checkGroupSecurity($IDgr, "W")) return false;
+        if (!$this->checkDocSecurity($IDdoc, "W")) return false;
+        $this->removeLinkGroupToDoc($IDgr, $IDdoc);
+        $array = $this->getLinkedGroup($IDdoc);
+        if (!is_array($array) || !count($array)) {
+           $this->removeDocByID($IDdoc);
+           
+           $SqlStr = "DELETE FROM ".$this->kernel->tab_cfg->get("txtLinkTable")."
+                      WHERE DocID = $IDdoc";
+           return $this->kernel->db->query($SqlStr);
+               }
+     }
+
+
+     // Delete document and link to document from base by document ID
+     // $IDdoc - documentID
+     function removeDocByID($IDdoc = 0) {
+        if (!$this->checkDocSecurity($IDdoc, "W")) return false;
+        $SqlStr = "DELETE FROM ".$this->kernel->tab_cfg->get("docTable")."
+                   WHERE ID = $IDdoc";
+        $r1 = $this->kernel->db->query($SqlStr);
+        
+        $SqlStr = "DELETE FROM ".$this->kernel->tab_cfg->get("docXgroupTable")."
+                   WHERE DocID = $IDdoc";
+        $r2 = $this->kernel->db->query($SqlStr);
+        
+//        $r3 = $this->removeDoc($IDdoc);
+        
+        return $r1 && $r2; // && $r3;
+     }
+
+
+// CREATE
+  
+
+     // Create document by group ID and template ID
+     // $IDgr - group ID
+     // $templateID - template ID of document
+     function createDocument($IDgr = 0, $templateID = 0) {
+        if (!$this->checkGroupSecurity($IDgr, "W")) return false;
+        $UserID = $this->kernel->secure->userID;
+        $Time   = date("Y-m-d H:i:s");
+        $ID     = $this->kernel->db->nextId();
+         
+        // create document in base
+        $SqlStr = "INSERT INTO ".$this->kernel->tab_cfg->get("docTable")."
+                   (ID, RecTime, LastUpdate, templateID, UserID)
+                   VALUES
+                   ($ID, '$Time', '$Time', $templateID, $UserID)";
+        $this->kernel->db->query($SqlStr);
+        $this->createLinkGroupToDoc($IDgr, $ID);
+        return $ID;
+     }
+
+
+// UPDATE
+
+
+     // UPDATE document
+     // $IDdoc - document ID
+     // $Info - Array of field update
+     //         ["field1" => "value1", "field2" => "values2"]
+     function updateDocInfo($IDdoc = 0, $Info = array()) {
+        if (!$this->checkDocSecurity($IDdoc, "W")) return false;
+        $str = "LastUpdate = '".date("Y-m-d H:i:s")."'";
+        reset($Info);
+        while(list($key, $val) = each($Info)) {
+           $val = str_replace("'", '"', $val);
+           $str .= ", $key = '$val'";
+        }
+         
+        $SqlStr = "UPDATE ".$this->kernel->tab_cfg->get("docTable")." SET $str WHERE ID = $IDdoc";
+        return $this->kernel->db->query($SqlStr);
+     }
+
+
+###################################
+#            GROUPS
+###################################
+
+// GET
+
+     // Return group ID By parent group ID and group number
+     // $parentIDgrp - group ID of parent
+     // $Ndocz - number of document
+     // RETURN: group ID
+     function getGroupID($parentIDgr = 0, $Ndocz = 1) {
+        if (!$this->checkGroupSecurity($parentIDgr, "R")) return false;
+        $SqlStr = "SELECT ID FROM ".$this->kernel->tab_cfg->get("groupTable")."
+                   WHERE parentID = $parentIDgr
+                   ORDER BY sortNr";
+        $result = $this->kernel->db->query($SqlStr);
+        if (!$result || !$result->numrows()) return false;
+        if (!$result->seek($Ndocz - 1)) return false;
+        list($IDgr) = $result->getrow();
+        if (!$this->checkGroupSecurity($IDgr, "R")) return false;
+        return $IDgr;
+     }
+
+
+     // Return Count of groups in group
+     // $parentIDgrp - parent of group
+     // RETURN: Number of groups
+     function getGroupNum($parentIDgr = 0) {
+        $SqlStr = "SELECT ID FROM ".$this->kernel->tab_cfg->get("groupTable")." WHERE parentID = $parentIDgr";
+        $result = $this->kernel->db->query($SqlStr);
+        if (!$result || !$count = $result->numrows()) return 0;
+        $Cnt = 0;
+        for ($Cn = 0; $Cn < $count; $Cn++) {
+            list($id) = $result->getrow();
+            if (!$this->checkGroupSecurity($id, "R")) continue;
+            $Cnt++;
+        }
+        return $Cnt;
+     }
+
+
+     // Return group NAME by gourp ID
+     // $IDgrp - group ID
+     // RETURN: Name of group
+     function getGroupName($IDgr = 0) {
+        if (!$this->checkGroupSecurity($IDgr, "R")) return "";
+        $SqlStr = "SELECT name FROM ".$this->kernel->tab_cfg->get("groupTable")." d
+                   WHERE ID = $IDgr";
+        $result = $this->kernel->db->query($SqlStr);
+        if (!$result || !$result->numrows()) return "";
+        list($name) = $result->getrow();
+        return $name;
+     }
+
+
+     // Return List ID's of groups in parent group
+     // $parentIDgrp - parent of group
+     // RETURN: Array of ID's 
+     function getAllGroups($parentIDgr = 0) {
+        if (!$this->checkGroupSecurity($parentIDgr, "R")) return false;
+        $returnArray = array();
+        $SqlStr = "SELECT ID FROM ".$this->kernel->tab_cfg->get("groupTable")." d
+                   WHERE parentID = $parentIDgr
+                   ORDER BY sortNr";
+        $result = $this->kernel->db->query($SqlStr);
+        if (!$result || !$count = $result->numrows()) return $returnArray;
+        for ($Cn = 0; $Cn < $count; $Cn++) {
+            list($id) = $result->getrow();
+            if (!$this->checkGroupSecurity($id, "R")) continue;
+            $returnArray[] = $id;
+        }
+        return $returnArray;
+     }
+
+
+     // Return group ID by name
+     // $GrName - name of group
+     // RETURN: group ID
+     function getGroupIDbyName($GrName = '') {
+        $SqlStr = "SELECT ID FROM ".$this->kernel->tab_cfg->get("groupTable")."
+                   WHERE name = '$GrName'";
+        $result = $this->kernel->db->query($SqlStr);
+        if (!$result || !$count = $result->numrows()) return false;
+        list($id) = $result->getrow();
+        return $id;
+     }
+
+     // Return array of group ID from $GrId to rootgroup  (Ruslan B)
+     // $GrId - ID of group
+     // RETURN: array of group ID
+     function getGroupTree($GrId){
+        if (!$this->checkGroupSecurity($GrId, 'R')) return false;
+        $tree[0] = $ID = $GrId;
+        while (($ID>0)&&($n++<30)) {
+           if (isset($this->kernel->secure->group->CashP[$groupNr])) {
+              if ($ID) $tree[] = intval($this->kernel->secure->group->CashP[$groupNr]);
+           } else {
+              $SqlStr = 'SELECT parentID FROM '.$this->kernel->tab_cfg->get('groupTable')." WHERE ID = $ID";
+              $result = $this->kernel->db->query($SqlStr);
+              if ($result && $result->numrows()) {
+                 list($ID) = $result->getrow();
+                 if ($ID) $tree[] = intval($ID);
+              } 
+              else break;
+           }
+        }
+        return $tree;
+     }
+
+// REMOVE
+
+     // Remove group from base
+     // $IDgrp - group ID
+     // $resursive - [true|false] delete or not child groups
+     // RETURN: [true|false]
+     function removeGroup($IDgr = 0, $resursive = false) {
+        if (!$this->checkGroupSecurity($IDgr, 'W')) return false;
+        $SqlStr = 'DELETE FROM '.$this->kernel->tab_cfg->get('groupTable')."
+                   WHERE ID = $IDgr";
+        $result = $this->kernel->db->query($SqlStr);
+        if (!$result) return;
+        if ($recursive) {
+           $listID = $this->getAllGroups($IDgr);
+           for ($Cn = 0; $Cn < count($listID); $Cn++)
+               $this->removeGroup($listID[$Cn], $recursive);
+        }
+     }
+
+
+// CREATE
+
+
+     // Create group in base
+     // $parentIDgrp - parant group ID
+     // RETURN: [false | ID new group]
+     function createGroup($parentIDgr = 0) {
+        if (!$this->checkGroupSecurity($parentIDgr, 'W')) return false;
+        $ID     = $this->kernel->db->nextId();
+        $sortNr = $this->kernel->db->nextId();
+        $SqlStr = 'INSERT INTO '.$this->kernel->tab_cfg->get('groupTable').
+                  " (ID, parentID, sortNr) VALUES ($ID, $parentIDgr, $sortNr)";
+        return (!$this->kernel->db->query($SqlStr) ? 0 : $ID);
+     }
+
+
+// UPDATE
+
+
+     // Update group info in base
+     // $IDgrp - group ID
+     // $Info - array with fields of record
+     // RETURN: [false|true]
+     function updateGroupInfo($IDgr = 0, $Info = array()) {
+        if (!$this->checkGroupSecurity($IDgr, "W")) return false;
+        $str = "";
+        if (is_array($Info)) {
+           reset($Info);
+           while(list($key, $val) = each($Info)) {
+              if ($str) $str .= ", ";
+              $str .= "$key = '$val'";
+           }
+        }
+        if (!$str) return false;
+        $SqlStr = "UPDATE ".$this->kernel->tab_cfg->get("groupTable")."
+                   SET $str WHERE ID = $IDgr";
+        return $this->kernel->db->query($SqlStr);
+     }
+
+
+###################################
+#            SEARCH
+###################################
+
+
+     // Decode text string to SQL operator
+     // $field - search field in database
+     // $text - search string
+     // RETURN: SQL string
+     function getFindSqlFromStr($field, $text) {
+        if (!is_array($field)) $field = array($field);
+        $outStr = "";
+        $text = strtoupper($text);
+        $expStr = explode(' ', $text);
+        for ($Cn = 0; $Cn < count($field); $Cn++) {
+            for ($Cn2 = 0; $Cn2 < count($expStr); $Cn2++) {
+                if (!trim($expStr[$Cn2])) continue;
+                if ($outStr) $outStr .= ' OR ';
+                $outStr .= " UCASE($field[$Cn]) LIKE '%".trim($expStr[$Cn2])."%' ";
+            }
+        }
+        if (!trim($outStr)) return '(1)';
+        return "($outStr)";
+     }
+
+
+     // Prepere access check for documents
+     // 
+     // RETURN: SQL string
+     function prepAccessCheck() {
+        $out = "";
+        for ($Cn = 0; $Cn < count($this->kernel->secure->groupsID); $Cn++) {
+            if ($out) $out .= " OR ";
+            $out .= " RoleID = ".$this->kernel->secure->groupsID[$Cn]." ";
+        }
+        if (!$out) return " (0) ";
+        return " ($out) ";
+     }
+
+
+     // Return list of documents
+     // Sorting by sortNr
+     // $SPrior - first priorety
+     // $EPrior - last priorety
+     // $text - string for search
+     // RETURN : array of ID documets
+     function findDocByPriority($SPrior = 0, $EPrior = 10, $text = "") {
+        $sqlText = $this->getFindSqlFromStr("keyWords", $text);
+        $SqlStr = "SELECT ID FROM ".$this->kernel->tab_cfg->get("docTable")."
+                   WHERE $sqlText
+                   AND visible
+                   ORDER BY ID DESC";
+         $result = $this->kernel->db->query($SqlStr);
+         if ($result && $count = $result->numrows()) {
+            $outArray = array();
+            for ($Cn = $SPrior; $Cn <= $EPrior; $Cn++) {
+                if ($Cn >= $count) return $outArray;
+                $result->seek($Cn);
+                list($id) = $result->getrow();
+                $outArray[] = $id;
+            }
+            return $outArray;
+         }
+         return array();
+     }
+
+
+     // Return list of documents
+     // Sorting by Date 
+     // $SDate - first priorety
+     // $EDate - last priorety
+     // $text - string for search
+     // RETURN : array of ID documets
+     function findDocByDate($SDate = 0, $EDate = 10, $text = "") {
+        $sqlText = $this->getFindSqlFromStr("keyWords", $text);
+        $SqlStr = "SELECT ID FROM ".$this->kernel->tab_cfg->get("docTable")."
+                   WHERE $sqlText
+                   AND visible
+                   AND RecTime >= '$SDate'
+                   AND RecTime <= '$EDate'
+                   ORDER BY RecTime DESC";
+         $result = $this->kernel->db->query($SqlStr);
+         if ($result && $count = $result->numrows()) {
+            $outArray = array();
+            for ($Cn = 0; $Cn < $count; $Cn++) {
+                list($id) = $result->getrow();
+                if (!$this->checkDocSecurity($id, "R",false)) continue;
+                $outArray[] = $id;
+            }
+            return $outArray;
+         }
+         return array();
+     }
+
+
+
+     // Set search mode
+     // $sortType - sort type (acd,desc) [A|D] - D-default
+     // $sortMode - sorting mode
+     //             1 - Date
+     //             2 - Priority
+     //             3 - LastUpdate
+     //             4 - DocTpID
+     //             5 - ID
+     function setSearchSortMode($sortMode = 1, $sortType = "D") {
+        $this->searchOrder = "";
+        switch($sortMode) {
+           case 1  : $this->searchOrder .= "RecTime"; break;
+           case 2  : $this->searchOrder .= "sortNr"; break;
+           case 3  : $this->searchOrder .= "LastUpdate"; break;
+           case 4  : $this->searchOrder .= "templateID"; break;
+           case 5  : $this->searchOrder .= "ID"; break;
+           default : $this->searchOrder .= "RecTime"; break;
+        }
+        if (uppercase($sortType) == "D") $this->searchOrder .= " DESC";
+     }
+
+
+     // Set search limits
+     // $Begin - from which element start search
+     // $Count - hom many items get from search [if 0 - unlimit]
+     function setSearchBorder($Begin = 1, $Count = 0) {
+        $this->searchBegintItem = $Begin;
+        $this->searchItemCounts = $Count;
+     }
+
+
+     // Set search priorety 
+     // $Begin - from which priorety start search
+     // $End - in whitch priorety finish search
+     function setSearchBorderByPriority($Begin = 0, $End = 0) {
+        $this->searchBeginPriority = $Begin;
+        $this->searchEndPriority   = $End;
+     }
+
+
+     // Set search dates
+     // $Begin - from which date start search
+     // $End - in whitch date finish search
+     function setSearchBorderByDate($Begin = "0000-00-00", $End = "9999-12-31") {
+        $this->searchBeginDate = $Begin;
+        $this->searchEndDate   = $End;
+     }
+
+
+     // Build SQL operator for search in group tree
+     // $IDgr - group ID
+     function searchGroupTree($IDgr, $field = "GrpID") {
+        $accessText = $this->prepAccessCheck();
+        if ($this->searchGroupSQL) $this->searchGroupSQL .= " OR ";
+        $this->searchGroupSQL .= $field."=".$IDgr;
+/*        $SqlStr = "SELECT g.ID FROM ".$this->kernel->tab_cfg->get("groupTable")." g
+                   LEFT JOIN ".$this->kernel->tab_cfg->get("groupXroleTable")." s
+                   ON g.ID = s.GrpID
+                   WHERE parentID = $IDgr
+                   AND $accessText
+                   GROUP BY g.ID";
+*/
+        $SqlStr = 'SELECT g.ID FROM '.$this->kernel->tab_cfg->get('groupTable').' g, '
+                   .$this->kernel->tab_cfg->get("groupXroleTable")." s
+                   WHERE parentID = $IDgr
+                   AND g.ID = s.GrpID
+                   AND $accessText
+                   GROUP BY g.ID";
+        $result = $this->kernel->db->query($SqlStr);
+        if (!$result || !$count = $result->numrows()) return;
+        for ($Cn = 0; $Cn < $count; $Cn++) {
+            list($id) = $result->getrow();
+            $this->searchGroupTree($id);
+        }
+     }
+
+
+     // Set search group
+     // $IDgr - group ID
+     function setSearchRoot($IDgr = 0) {
+        $this->searchGroupID  = $IDgr;
+        $this->searchGroupSQL = "";
+        $this->searchGroupTree($IDgr);
+        $this->searchGroupSQL = "(".$this->searchGroupSQL.")";
+        
+     }
+
+
+     // return result array of search documents in resources 
+     // $Conditions - array with resources names and search strings
+     // first array - resources name
+     // second array - sql operators
+     // $type - type of operation [AND|OR]
+     function setSearchConditions($Conditions = array(array(),array()), $type = "AND") {
+        $this->searchResName = $Conditions[0];
+        $this->searchResSqlIn  = $Conditions[1];
+               if ($type == "AND") $this->searchConditionCnt = count($Conditions[0]);
+                                     else $this->searchConditionCnt = 0;
+        
+        if (!count($Conditions[0]) || !count($Conditions[0])) {
+           $this->searchResSQL = "(1)";
+           return;
+        }
+        
+        $this->searchResSQL = "";
+        for ($Cn = 0; $Cn < count($Conditions[0]); $Cn++) {
+            if (!trim($Conditions[0][$Cn])) continue;
+//            for ($Cn2 = 0; $Cn2 < count($Conditions[1]); $Cn2++) {
+//            if (!trim($Conditions[1][$Cn])) continue;
+            if ($this->searchResSQL) $this->searchResSQL .= " OR "; //" ".strtoupper($type)." ";
+            if ($Conditions[1][$Cn])
+            $this->searchResSQL .= " (t.name = '".$Conditions[0][$Cn]."' AND UCASE(t.content) ".strtoupper($Conditions[1][$Cn]).
+                                     ($this->langID ? " AND (t.Lang = 0 OR t.Lang = ".$this->langID.")" : ""). ")";
+            else 
+            $this->searchResSQL .= ' ('.$Conditions[0][$Cn].
+                                   ($this->langID ? ' AND (t.Lang = 0 OR t.Lang = '.$this->langID.')' : ''). ')';
+//            }
+        }
+        
+        if (!trim($this->searchResSQL)) $this->searchResSQL = " (1) ";
+        $this->searchResSQL = "(".$this->searchResSQL.")";
+     }
+
+
+     // Total count find documents
+     // RETURN: count
+     function getSearchTotalResult() {
+        return $this->searchCount;
+     }
+
+
+
+     // get Search result
+     // $text - string for search
+     // RETURN : array of ID documets
+     function getSearch($text = "") {
+        $this->searchCount = 0;
+        $sqlText    = $this->getFindSqlFromStr("keyWords", $text);
+        $accessText = $this->prepAccessCheck();
+
+        if ($this->searchBeginDate) $searchBeginDate = $this->searchBeginDate;
+                               else $searchBeginDate = "0000-00-00";
+        if ($this->searchEndDate) $searchEndDate = $this->searchEndDate;
+                             else $searchEndDate = "9999-12-31";
+
+/*        $SqlStr = "SELECT d.ID FROM ".$this->kernel->tab_cfg->get("docTable")." d
+                   LEFT JOIN ".$this->kernel->tab_cfg->get("docXroleTable")." s
+                   ON d.ID = s.DocID
+                   WHERE $sqlText
+                   AND $accessText
+                   AND UCASE(Access) LIKE '%R%'
+                   AND visible 
+                   AND LastUpdate >= '$searchBeginDate'
+                   AND LastUpdate <= '$searchEndDate'
+                   ".($this->searchOrder ? " ORDER BY ".$this->searchOrder." " : "")."
+                   GROUP BY d.ID";
+*/
+        $SqlStr = 'SELECT d.ID FROM '.$this->kernel->tab_cfg->get('docTable').' d
+                   , '.$this->kernel->tab_cfg->get('docXroleTable')." s
+                   WHERE $sqlText
+                   AND d.ID = s.DocID
+                   AND $accessText
+                   AND UCASE(Access) LIKE '%R%'
+                   AND visible 
+                   AND LastUpdate >= '$searchBeginDate'
+                   AND LastUpdate <= '$searchEndDate'
+                   ".($this->searchOrder ? ' ORDER BY '.$this->searchOrder.' ' : '').
+                   ' GROUP BY d.ID';
+         $result = $this->kernel->db->query($SqlStr);
+         if (!$result || !$count = $result->numrows()) return array();
+         
+         $sCn = ($this->searchBeginItem ? $this->searchBeginItem - 1 : 0);
+         $pCn = $this->searchBeginItem - 1 + $this->searchItemCount;
+         $fCn = ($pCn > $count ? $count : $pCn);
+         $fCn = ($fCn < 0 ? 0 : $fCn);
+         $fCn = ($this->searchItemCount ? $fCn : $count);
+         
+         $outArray = array(); $Cnt = 0;
+         for ($Cn = $sCn; $Cn < $fCn; $Cn++) {
+             $result->seek($Cn);
+             list($id) = $result->getrow();
+             $outArray[] = $id;
+             $Cnt++;
+         }
+         $this->searchCount = $Cnt;
+         return $outArray;
+     }
+
+
+    
+     // get ADVANCED Search result
+     // $text - string for search
+     // RETURN : array of ID documets
+     function getAdvancedSearch($text = "") {
+        $this->searchCount = 0;
+        $accessText = $this->prepAccessCheck();
+        $sqlText    = $this->getFindSqlFromStr("t.content", $text);
+
+//         echo $accessText."<br>";
+//         echo $sqlText."<br>";
+
+        if ($this->searchBeginDate) $searchBeginDate = $this->searchBeginDate;
+                               else $searchBeginDate = "0000-00-00";
+        if ($this->searchEndDate) $searchEndDate = $this->searchEndDate;
+                             else $searchEndDate = "9999-12-31";
+
+        $SqlStr = 'SELECT d.ID, COUNT(DISTINCT t.name) AS Cnt
+                                FROM '.$this->kernel->tab_cfg->get('docTable').' d,'.
+                  $this->kernel->tab_cfg->get('docXroleTable').' s,'.
+                  $this->kernel->tab_cfg->get('txtLinkTable').' tl,'.
+                  $this->kernel->tab_cfg->get('txtTable').' t'.
+                  ($this->searchGroupID ? ','.$this->kernel->tab_cfg->get('docXgroupTable').' g ' : ' ').
+                  'WHERE  d.ID = s.DocID And d.ID = tl.DocID and tl.TxtID = t.ID and d.ID = g.DocID'.
+                  " and $accessText AND $sqlText "
+                   .($this->searchGroupID ? "AND ".$this->searchGroupSQL." AND g.GrpID IS NOT NULL AND g.GrpID != '' " : "")."
+                   ".($this->searchResSQL ? "AND ".$this->searchResSQL : "")."
+                   AND UCASE(Access) LIKE '%R%'
+                   AND visible 
+                   AND t.ID IS NOT NULL AND t.ID != ''
+                   AND LastUpdate >= '$searchBeginDate'
+                   AND LastUpdate <= '$searchEndDate'
+                   ".($this->searchOrder ? " ORDER BY ".$this->searchOrder." " : "")."
+                   GROUP BY d.ID ".($this->searchConditionCnt ? " HAVING Cnt >= ".$this->searchConditionCnt." " : " ");
+//         echo $SqlStr;
+//         $this->kernel->log->put("Search SqlStr [$SqlStr]");
+         $result = $this->kernel->db->query($SqlStr);
+         if (!$result || !$count = $result->numrows()) return array();
+
+//         echo $count;
+         
+         $sCn = ($this->searchBeginItem ? $this->searchBeginItem - 1 : 0);
+         $pCn = $this->searchBeginItem - 1 + $this->searchItemCount;
+         $fCn = ($pCn > $count ? $count : $pCn);
+         $fCn = ($fCn < 0 ? 0 : $fCn);
+         $fCn = ($this->searchItemCount ? $fCn : $count);
+         
+         $outArray = array(); $Cnt = 0;
+         for ($Cn = $sCn; $Cn < $fCn; $Cn++) {
+             $result->seek($Cn);
+             list($id) = $result->getrow();
+             $outArray[] = $id;
+             $Cnt++;
+         }
+         $this->searchCount = $Cnt;
+         return $outArray;
+     }
+
+
+###################################
+#            SECURE
+###################################
+
+// USER
+
+     // Create user in base
+     // $UserInfo - array with fields of record
+     // RETURN : [true|false]
+     function createUser($userInfo = array()) {
+         $str1 = ""; $str2 = "";
+         if (is_array($userInfo)) {
+            reset($userInfo);
+            while(list($key, $val) = each($userInfo)) {
+               $str1 .= ", $key";
+               $str2 .= ", '$val'";
+            }
+         }
+         $IDuser = $this->kernel->db->nextId();
+         $SqlStr = "INSERT INTO ".$this->kernel->tab_cfg->get("userTable")."
+                    (UserID $str1) VALUES ($IDuser $str2)";
+         return (!$this->kernel->db->query($SqlStr) ? 0 : $IDuser);
+     }
+
+
+     // UPDATE user in base
+     // $IDuser - user ID
+     // $UserInfo - array with fields of record
+     // RETURN : [true|false]
+     function updateUser($IDuser = 0, $userInfo = array()) {
+         $str = "";
+         if (is_array($userInfo)) {
+            reset($userInfo);
+            while(list($key, $val) = each($userInfo)) {
+               if ($str) $str .= ", ";
+               $str .= "$key = '$val'";
+            }
+         }
+         if (!$str) return false;
+         $SqlStr = "UPDATE ".$this->kernel->tab_cfg->get("userTable").
+                   " SET $str WHERE UserID=$IDuser";
+         return $this->kernel->db->query($SqlStr);
+     }
+
+
+     // DELETE user from base
+     // $IDuser - user ID
+     // RETURN : [true|false]
+     function removeUser($IDuser = 0) {
+         $SqlStr = "DELETE FROM ".$this->kernel->tab_cfg->get("userTable").
+                   " WHERE UserID=$IDuser";
+         return $this->kernel->db->query($SqlStr);
+     }
+
+     // GET array of users from base
+     // $IDuser - user ID
+     // RETURN : [Array]
+     function listOfUsers($IDuser = 0) {
+         $SqlStr = "SELECT UserID,Nick FROM ".$this->kernel->tab_cfg->get("userTable");
+         if ($IDuser)
+           $SqlStr .= " WHERE UserID=$IDuser";
+         $result = $this->kernel->db->query($SqlStr);
+         if (!$result || !$count = $result->numrows()) return $returnArray;
+         for ($Cn = 0; $Cn < $count; $Cn++){
+            list($ID,$name) = $result->getrow();
+            $returnArray[$ID] = $name;
+         }
+         return $returnArray;
+     }
+
+// ROLE
+
+     // GET array of role from base
+     // $IDuser - role ID
+     // RETURN : [Array]
+     function listOfRoles($IDrole = 0) {
+         $SqlStr = "SELECT RoleID,Name FROM ".$this->kernel->tab_cfg->get('roleTable');
+         if ($IDuser)
+           $SqlStr .= " WHERE RoleID=$IDrole";
+         $result = $this->kernel->db->query($SqlStr);
+         if (!$result || !$count = $result->numrows()) return $returnArray;
+         for ($Cn = 0; $Cn < $count; $Cn++){
+            list($ID,$name) = $result->getrow();
+            $returnArray[$ID] = $name;
+         }
+         return $returnArray;
+     }
+
+     // Create role in base
+     // $RoleInfo - array with fields of record
+     // RETURN : [true|false]
+     function createRole($roleInfo = array()) {
+         $str1 = ""; $str2 = "";
+         if (is_array($roleInfo)) {
+            reset($roleInfo);
+            while(list($key, $val) = each($roleInfo)) {
+               $str1 .= ", $key";
+               $str2 .= ", '$val'";
+            }
+         }
+         $IDrole = $this->kernel->db->nextId();
+         $SqlStr = "INSERT INTO ".$this->kernel->tab_cfg->get("roleTable")."
+                    (RoleID $str1) VALUES ($IDrole $str2)";
+         return (!$this->kernel->db->query($SqlStr) ? 0 : $IDrole);
+         
+     }
+
+
+     // UPDATE role in base
+     // $IDrole - ID of role
+     // $RoleInfo - array with fields of record
+     // RETURN : [true|false]
+     function updateRole($IDrole = 0, $roleInfo = array()) {
+         $str = "";
+         if (is_array($roleInfo)) {
+            reset($roleInfo);
+            while(list($key, $val) = each($roleInfo)) {
+               if ($str) $str .= ", ";
+               $str .= "$key = '$val'";
+            }
+         }
+         if (!$str) return false;
+
+         $SqlStr = "UPDATE ".$this->kernel->tab_cfg->get("roleTable")."
+                    SET $str WHERE RoleID = $IDrole";
+         return $this->kernel->db->query($SqlStr);
+         
+     }
+
+
+     // DELETE role from base
+     // $IDrole - ID of role
+     // RETURN : [true|false]
+     function deleteRole($IDrole = 0) {
+         $SqlStr = "DELETE FROM ".$this->kernel->tab_cfg->get("roleTable")."
+                    WHERE RoleID = $IDrole";
+         return $this->kernel->db->query($SqlStr);
+     }
+
+     // LINK role to user
+     // $IDrole - ID of role
+     // RETURN : [true|false]
+     function LinkUserToRole($IDrole = 0,$IDuser=0) {
+         $table = $this->kernel->tab_cfg->get("userXroleTable");      
+         $SqlStr = "DELETE FROM $table WHERE RoleID=$IDrole AND UserID=$IDuser;";
+         $this->kernel->db->query($SqlStr);
+//         $this->kernel->db->query($SqlStr);
+         $SqlStr = "INSERT INTO $table (RoleID,UserID) VALUES($IDrole,$IDuser);";
+         return $this->kernel->db->query($SqlStr);
+     }
+
+
+// SYSTEM
+
+     // CHANGE (add, remove) security role in base for GROUP
+     // $IDgr - group ID
+     // $Role - role ID
+     // $Right - string with right (exm: "RW"), if empty then delete
+     // RETURN : [true|false]
+     function magicSecurityGroup($IDgr = 0, $Role = 0, $Right = "R") {
+        // For DELETE 
+        $table = $this->kernel->tab_cfg->get("groupXroleTable");
+        if (!$Right) {
+           $SqlStr = "DELETE FROM $table WHERE GrpID=$IDgr AND RoleID=$Role";
+           return $this->kernel->db->query($SqlStr);
+        }
+        // Check exist record in table
+        $SqlStr = "SELECT GrpID FROM $table WHERE GrpID=$IDgr AND RoleID=$Role";
+        $result = $this->kernel->db->query($SqlStr);
+        if ($result && $result->numrows()) {
+           // Update security
+           $SqlStr = "UPDATE $table SET Access='".strtoupper($Right)."' WHERE GrpID=$IDgr AND RoleID=$Role";
+           $result = $this->kernel->db->query($SqlStr);
+        } else {
+           // Insert security
+           $SqlStr = "INSERT INTO $table (GrpID,RoleID,Access) VALUES ($IDgr,$Role,'".strtoupper($Right)."')";
+           $result = $this->kernel->db->query($SqlStr);
+        }
+        return false;
+     }
+
+
+     // CHANGE (add, remove) security role in base for DOCUMENT
+     // $IDdoc - document ID
+     // $Role - role ID
+     // $Right - string with right (exm: "RW"), if empty then delete
+     // RETURN : [true|false]
+     function magicSecurityDoc($IDdoc = 0, $Role = 0, $Right = "R") {
+        $table = $this->kernel->tab_cfg->get("docXroleTable");
+        // For DELETE 
+        if (!$Right) {
+           $SqlStr = "DELETE FROM $table WHERE DocID = $IDdoc AND RoleID = $Role";
+           return $this->kernel->db->query($SqlStr);
+        }
+        // Check exist record in table
+        $SqlStr = "SELECT DocID FROM $table WHERE DocID = $IDdoc AND RoleID = $Role";
+        $result = $this->kernel->db->query($SqlStr);
+        if ($result && $result->numrows()) {
+           // Update security
+           $SqlStr = "UPDATE $table SET Access = '".strtoupper($Right)."' WHERE DocID = $IDdoc AND RoleID = $Role";
+           $result = $this->kernel->db->query($SqlStr);
+        } else {
+           // Insert security
+           $SqlStr = "INSERT INTO $table (DocID, RoleID, Access) VALUES ($IDdoc, $Role, '".strtoupper($Right)."')";
+           $result = $this->kernel->db->query($SqlStr);
+        }
+        return false;
+     }
+
+
+
+
+###################################
+#            LINKS
+###################################
+
+// GET
+
+     // Return list of document ID's to txt resource
+     // $IDtxt - txt resource ID
+     // RETURN : array of document ID's
+     function getLinkedDocByTxt($IDtxt = 0) {
+        $returnArray = array();
+        $SqlStr = "SELECT DocID FROM ".$this->kernel->tab_cfg->get("txtLinkTable")."
+                   WHERE TxtID = $IDtxt
+                   GROUP BY DocID";
+        $result = $this->kernel->db->query($SqlStr);
+        if (!$result || !$count = $result->numrows()) return $returnArray;
+        for ($Cn = 0; $Cn < $count; $Cn++) {
+            list($docID) = $result->getrow();
+            if (!$this->checkDocSecurity($docID, "R")) continue;
+            $returnArray[] = $docID;
+        }
+        return $returnArray;
+     }
+
+
+     // Return list of txt resource linked to document
+     // $IDdoc - document ID
+     // RETURN : array of resource ID's
+     function getLinkedTxt($IDdoc = 0) {
+        if (!$this->checkDocSecurity($IDdoc, "R")) return array();
+        $returnArray = array();
+        $SqlStr = "SELECT TxtID FROM ".$this->kernel->tab_cfg->get("txtLinkTable")."
+                   WHERE DocID = $IDdoc
+                   GROUP BY TxtID";
+        $result = $this->kernel->db->query($SqlStr);
+        if (!$result || !$count = $result->numrows()) return $returnArray;
+        for ($Cn = 0; $Cn < $count; $Cn++) {
+            list($txtID) = $result->getrow();
+            $returnArray[] = $txtID;
+        }
+        return $returnArray;
+     }
+
+
+     // Return list of document linked to group
+     // $IDgr - group ID
+     // RETURN : array of document ID's
+     function getLinkedDocByGroup($IDgr = 0) {
+        if (!$this->checkGroupSecurity($IDgr, "R")) return array();
+        $returnArray = array();
+        $SqlStr = "SELECT DocID FROM ".$this->kernel->tab_cfg->get("docXgroupTable")."
+                   WHERE GrpID = $IDgr
+                   GROUP BY DocID";
+        $result = $this->kernel->db->query($SqlStr);
+        if (!$result || !$count = $result->numrows()) return $returnArray;
+        for ($Cn = 0; $Cn < $count; $Cn++) {
+            list($docID) = $result->getrow();
+            if (!$this->checkDocSecurity($docID, "R")) continue;
+            $returnArray[] = $docID;
+        }
+        return $returnArray;
+     }
+
+
+     // Return list of groups linked to document
+     // $IDdoc - document ID
+     // RETURN : array of groups ID's
+     function getLinkedGroup($IDdoc = 0) {
+        if (!$this->checkDocSecurity($IDdoc, "R")) return array();
+        $returnArray = array();
+        $SqlStr = "SELECT GrpID FROM ".$this->kernel->tab_cfg->get("docXgroupTable")."
+                   WHERE DocID = $IDdoc
+                   GROUP BY GrpID";
+        $result = $this->kernel->db->query($SqlStr);
+        if (!$result || !$count = $result->numrows()) return $returnArray;
+        for ($Cn = 0; $Cn < $count; $Cn++) {
+            list($grpID) = $result->getrow();
+            if (!$this->checkGroupSecurity($grpID, "R")) continue;
+            $returnArray[] = $grpID;
+        }
+        return $returnArray;
+     }
+
+
+// DELETE
+
+     // Delete txt resource link from base
+     // $IDdoc - document ID
+     // $IDtxt - txt resource ID
+     // RETURN : [true|false]
+     function removeLinkTxtToDoc($IDdoc = 0, $IDtxt = 0) {
+        if (!$this->checkDocSecurity($IDdoc, "W")) return false;
+        $SqlStr = "DELETE FROM ".$this->kernel->tab_cfg->get("txtLinkTable")."
+                   WHERE TxtID = $IDtxt AND DocID = $IDdoc";
+        return $this->kernel->db->query($SqlStr);
+     }
+
+     // Delete document link
+     // $IDgrp - group number
+     // $IDdoc - documentID
+     function removeLinkGroupToDoc($IDgr = 0, $IDdoc = 0) {
+//        if (!$this->checkDocSecurity($IDdoc, "W")) return false;
+//        if (!$this->checkGroupSecurity($IDgr, "W")) return false;
+        $SqlStr = "DELETE FROM ".$this->kernel->tab_cfg->get("docXgroupTable")."
+                   WHERE ".($IDgr ? "GrpID = $IDgr AND": "")." DocID = $IDdoc";
+        return $this->kernel->db->query($SqlStr);
+     }
+
+// CREATE
+
+
+     // Create link from txt resource to document
+     // $IDdoc - document ID
+     // $IDtxt - txt resource ID
+     // RETURN : [true|false]
+     function createLinkTxtToDoc($IDdoc = 0, $IDtxt = 0) {
+        if (!$this->checkDocSecurity($IDdoc, "W")) return false;
+        $SqlStr = "INSERT INTO ".$this->kernel->tab_cfg->get("txtLinkTable")."
+                   (DocID, TxtID) VALUES ($IDdoc, $IDtxt)";
+        return $this->kernel->db->query($SqlStr);
+     }
+
+
+     // Create link from group to document
+     // $IDgr - group ID
+     // $IDdoc - document ID
+     // RETURN : [true|false]
+     function createLinkGroupToDoc($IDgr = 0, $IDdoc = 0) {
+//        if (!$this->checkDocSecurity($IDdoc, "W")) return false;
+//        if (!$this->checkGroupSecurity($IDgr, "W")) return false;
+        $sortNr = $this->kernel->db->nextId();
+
+        $SqlStr = "INSERT INTO ".$this->kernel->tab_cfg->get("docXgroupTable")."
+                   (GrpID, DocID, sortNr) VALUES ($IDgr, $IDdoc, $sortNr)";
+               return $this->kernel->db->query($SqlStr);
+     }
+
+// mGx was here
+// UPDATE
+     // Update link from group to document
+     // $IDgr - group ID
+     // $IDdoc - document ID
+     // RETURN : [true|false]
+     function updateLinkGroupToDoc($IDgr = 0, $IDdoc = 0) {
+        $SqlStr = "SELECT sortNr FROM ".$this->kernel->tab_cfg->get("docXgroupTable")." WHERE GrpID = $IDgr AND DocID = $IDdoc";
+        $rezult = $this->kernel->db->query($SqlStr);
+        list ($sortNr) = $rezult->getrow();
+
+        $SqlStr = "UPDATE ".$this->kernel->tab_cfg->get("docXgroupTable")."
+                   SET sortNr = $sortNr WHERE GrpID = $IDgr AND DocID = $IDdoc";
+
+        return $this->kernel->db->query($SqlStr);
+     }      
+
+
+###################################
+#         SECURITY CHECK
+###################################
+
+   
+     // Check document securety for User
+     // $IDdoc - document ID
+     // RETURN : [true|false]
+     function checkDocSecurity($IDdoc = 0, $right = "N",$r=true) {
+        $stat = $this->kernel->secure->doc->check($IDdoc, $right,$r);
+        if ($stat) $this->error = 1;
+              else $this->error = 2;
+        return $stat;
+     }
+
+
+     // Check group securety for User
+     // $IDgr - group ID
+     // RETURN : [true|false]
+     function checkGroupSecurity($IDgr = 0, $right = "N") {
+        $stat = $this->kernel->secure->group->check($IDgr, $right);
+        if ($stat) $this->error = 1;
+              else $this->error = 2;
+        return $stat;
+     }
+
+
+  } // finished API class
+ 
+?>

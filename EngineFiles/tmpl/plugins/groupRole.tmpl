@@ -1,0 +1,43 @@
+<!-- BEGIN close_block -->
+<script language="JavaScript">
+<!--
+   window.opener.location.href = 'parse.php?2&{GrpID}&';
+   self.close();
+// -->
+</script>
+<!--
+<!-- END close_block -->
+<table width="100%" border="0" cellpadding="3" cellspacing="0">
+  <form method="post" action="{ACTION}" name="mainForm">
+  <input type="Hidden" name="GrpID" value="{GrpID}">
+  <tr>
+    <td width="100%" bgcolor="#D0D0D0"><b>##Role list##</b></td>
+  </tr>
+  <tr>
+    <td width="100%">
+      <table border="0" cellpadding="0" cellspacing="0">
+        <tr>
+          <td>##Role##:</td>
+          <td><select name="RoleID">{RoleID}</select></td>
+        </tr>
+        <tr>
+          <td>##Access##:</td>
+          <td>
+            <input type="Text" name="Access" value="{Access}" size="15" maxlength="10"><br>
+            <input type="CheckBox" name="Access_R" {Access_R}> ##Read##<br>
+            <input type="CheckBox" name="Access_W" {Access_W}> ##Write##<br>
+            <input type="CheckBox" name="Access_P" {Access_P}> ##Publish##<br>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td width="100%" bgcolor="#D0D0D0" align="left">
+      <input type="Submit" name="save" value="##Save##">
+      <input type="Button" value="##Cancel##" onClick="close()">
+    </td>
+  </tr>
+</form>
+</table>
+

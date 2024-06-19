@@ -1,0 +1,14 @@
+<HTML><HEAD>
+<SCRIPT LANGUAGE="JavaScript">
+  var tmpSTR = document.location.href.substr(document.location.href.indexOf('&')+1);
+  var grID = (tmpSTR.indexOf('&')==-1)?tmpSTR:'';
+  if(grID=='') for(var i = 0; i < tmpSTR.indexOf('&'); i++) grID += tmpSTR.charAt(i);
+  document.write('<XML ID="menuXML" SRC="parse.php?22&'+grID+'"></XML>');
+</SCRIPT>
+
+<SCRIPT LANGUAGE="JavaScript">
+  function doParse(){
+    parent.parseXML(menuXML);
+  }
+</SCRIPT>
+</HEAD><BODY onload="doParse();"></BODY></HTML>

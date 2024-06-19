@@ -1,0 +1,56 @@
+<!-- BEGIN close_block -->
+<script language="JavaScript">
+</script>
+<!-- END close_block -->
+<html>
+<head>
+<title>GROUPS LINK</title>
+<script language="JavaScript">
+window.returnValue='';
+function doneWin(){
+  var arrOut = '';
+  var tmpSTR = '@#$%^'
+  for(var i=0; i<dialogIFrame.document.treeForm.elements.length; i++){
+    if(dialogIFrame.document.treeForm.elements[i].checked) {
+      arrOut +=((arrOut=='')?'':tmpSTR) + dialogIFrame.document.treeForm.elements[i].value + tmpSTR + dialogIFrame.document.treeForm.elements[i].parentElement.parentElement.cells[2].innerText;
+    }
+  } 
+  window.returnValue=arrOut;
+  window.close();
+}
+</script>
+<link rel="stylesheet" href="files/norm_window.css" type="text/css">
+</head>
+
+<body bgcolor="#E7EBFF" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" class="main">
+    <tr> 
+      <td> 
+        <table width="100%" border="0" cellspacing="0" cellpadding="0" class="caption">
+          <tr valign="middle" align="left"> 
+            <td width="20"><img src="files/img/gn_folder1.gif" width="18" height="18"></td>
+            <td class="captionText">##GROUPS##</td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr> 
+      <td> 
+        <iframe name="dialogIFrame" width="100%" height="200" frameborder="0" src="parse.php?12&&{ID}"></iframe>
+      </td>
+    </tr>
+    <tr> 
+      <td> 
+        <table width="100%" border="0" cellspacing="5" cellpadding="0">
+          <tr> 
+            <td align=right> 
+              <input type="button" name="##Save##" value="Save" class="buttonz" onclick="doneWin()">
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+  </form>
+</body>
+</html>

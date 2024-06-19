@@ -1,0 +1,90 @@
+<?
+/**
+* Copyright (C) 2002 SIA ESOFTS.
+*
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License 
+* version 2 as published by the Free Software Foundation.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the SIA ESOFTS, 38/40 Blaumana str., 
+* Riga, LV - 1011, LATVIA, e-mail office@esoft.lv 
+*
+* This General Public License does not permit incorporating your program into
+* proprietary programs. Should you require to License Open Effect under the
+* commercial License, please contact SIA ESOFTS for up-to-date information.
+*/
+
+
+class userDynamicLanguagePlugin {
+
+var $_get_res ='';
+
+        function _form_id(&$kernel){
+           return $kernel->formNr;
+        }
+
+        function _doc_id(&$kernel){
+           return $kernel->docNr;
+        }
+
+        function _grp_id(&$kernel){
+           return $kernel->grpNr;
+        }
+
+        function _link_self(&$q){
+           global $HTTP_REFERER;
+           return $HTTP_REFERER;
+        }
+
+        function _link_query(&$q){
+           global $QUERY_STRING;
+           return $QUERY_STRING;
+        }
+        function _link_request(&$q){
+           global $REQUEST_URI;
+           return $REQUEST_URI;
+        }
+
+        function _link_request(&$q){
+           global $SCRIPT_NAME;
+           return $SCRIPT_NAME;
+        }
+        function _get(&$q){
+          if ($this->_get_res) 
+             return $this->_get_res;
+          global $HTTP_GET_VARS;
+                  $t = $HTTP_GET_VARS;
+           while (list($k,$v)=each($t)){
+                if (!preg_match('/&/',$v)&&$k!='FromDB'&&$k!='login')
+                   if (!is_array($v))
+                      $url .= '&'.$k.'='.$v;
+                   else 
+                      $url .= '&'.$k.'[]='.implode('&'.$k.'[]=',$v);
+          }
+          $this->_get_res = $url;
+          return $url;
+        }
+        function _post(&$q){
+          if ($this->_get_ress) 
+             return $this->_get_ress;
+          global $HTTP_POST_VARS;
+                  $t = $HTTP_POST_VARS;
+           while (list($k,$v)=each($t)){
+                if (!preg_match('/&/',$v)&&$k!='FromDB'&&$k!='login')
+                   if (!is_array($v))
+                      $url .= '&'.$k.'='.$v;
+                   else 
+                      $url .= '&'.$k.'[]='.implode('&'.$k.'[]=',$v);
+          }
+          $this->_get_ress = $url;
+          return $url;
+        }
+        // Fucncion part_s  
+        // B0rland (rus@esoft.lv) 
+        function part_s(&$q){
+             global $HTTP_GET_VARS;
+             return $HTTP_GET_VARS['part_s'];            
+        }
+}
+?>

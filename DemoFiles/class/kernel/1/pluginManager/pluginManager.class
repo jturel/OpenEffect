@@ -1,0 +1,240 @@
+<?
+
+/***************************************
+*  PlugIN Manager class
+*  
+***************************************/
+
+  $this->checkClass("linkerClass", "urlDecodeClass");
+  
+
+  class pluginManagerClass extends linkerClass {
+     var $className = "pluginManagerClass";       // Class name
+     var $showtime = 0;
+
+  
+     // Constructor
+     // $parent - pointer on parent object
+     function pluginManagerClass(&$parent) {
+        $this->linkerClass(&$parent);
+        
+        
+        // create log object
+        $this->log = &$this->kernel->loger->reg("PLUGIN MANAGER");
+
+        if ($this->kernel->debug_ip){
+          list($usec, $sec) = explode(' ',microtime()); 
+          $time = ((float)$usec + (float)$sec) - $this->kernel->debug_time; 
+          $this->kernel->debugplugins .= 'PluginManager start \t :['.$time.'](From start)<br>';
+        }
+
+        // Check Class exists and create manager objects or die if not exists
+        $this->kernel->classLoader->checkClass("urlDecodeClass");
+//        $manager = new urlDecodeClass($this);                            //RB
+        $manager = &$this->kernel->urlDecode;
+        $this->scan($manager);
+
+
+        if ($this->kernel->debug_ip){
+          list($usec, $sec) = explode(' ',microtime()); 
+          $time = ((float)$usec + (float)$sec) - $this->kernel->debug_time; 
+          $this->kernel->debugplugins .= 'PluginManager after scan \t :['.$time.'](From start)<br>';
+        }
+//        $this->log->put("Start;2");
+
+        // load plugins classes
+        $this->kernel->classLoader->checkClass("classLoaderClass");
+//        $this->log->put("Start;3");
+        $this->plugins = new classLoaderClass(PLUGIN_DIR, true);
+//        $this->log->put("Start;4");
+        
+        // Get real (full) form file name and load config (this file)
+        $formFile   = $this->getFormFile($this->formNr);
+//        $this->log->put("Start;5");
+
+        if ($this->kernel->debug_ip){
+          list($usec, $sec) = explode(' ',microtime()); 
+          $time = ((float)$usec + (float)$sec) - $this->kernel->debug_time; 
+          $this->kernel->debugplugins .= 'PluginManager get from file \t :['.$time.'](From start)<br>';
+        }
+
+
+        $this->html = $this->loadForm($formFile);
+
+
+        
+     }
+     
+     // get FormNr,groupNr & docNr & check Form NR 
+     // &$manager - obj of decode class (formNr)
+     function scan(&$manager) {
+        $this->formNr  = $manager->formNr;
+        if ($this->formNr <= 0) {
+           $this->kernel->error->die = true;
+           $this->kernel->error->parse("Can't find form", array($this->formNr));
+        }
+        $this->groupNr = $manager->groupNr;
+        $this->docNr   = $manager->docNr;
+
+        // Save language DATA to kernel object
+        $this->kernel->langID   = $manager->langID;
+        $this->kernel->langName = $manager->langName;
+
+        $this->log->put("value [formNr:".$this->formNr."][groupNr:".$this->groupNr."][docNr:".$tghis->docNr."]");
+     }
+     
+     // Get real NAME of form configurator file
+     // $formNr - Number of form
+     function getFormFile($formNr) {
+        $this->log->put("Start;");
+        if ($this->kernel->cfg->check("filePlugINLocator")) {
+           $fileLocate = $this->kernel->cfg->get("filePlugINLocator");
+           $fName = CONF_DIR.$fileLocate;
+           if (is_file($fName)) {
+              $formConf = $this->kernel->cfger->reg("PLUGIN_LOCATOR", $fName);
+              if ($formConf->check($formNr)) {
+                 $fName = FORM_DIR.$formConf->get($formNr);
+                 $this->log->put("get form file name : $fName");
+                 return $fName;
+              }
+           }
+        }
+        $this->log->put("get form file name : ".FORM_DIR.$formNr.".inc");
+        return FORM_DIR.$formNr.".inc";
+     }
+     
+     // Load form configuration file
+     // $fileName - file name of FORM configuration file (real)
+     function loadForm($fName) {
+        if (!is_file($fName)) {
+           $this->kernel->error->die = true;
+           $this->kernel->error->parse("Can't find form conf file", array($fName));
+        }
+        
+        include $fName;
+        $this->log->put("Include FORm file : OK");
+        return $out;
+     }
+
+
+     // Start page configurator (start)
+     // $mainTemplate - main template (container)
+     function &start($mainTemplate = "") {
+        if ($this->showtime){
+                list($usec, $sec) = explode(" ",microtime()); 
+                $this->time = ((float)$usec + (float)$sec); 
+                $this->log->put("Start All");
+        }
+
+        $this->kernel->classLoader->checkClass("templateClass");
+        $this->tmpl = new templateClass(TMPL_DIR);
+        $this->tmpl->halt_on_error = 
+               $this->kernel->cfg->get("templateHaltOnError");
+        if ($mainTemplate) $this->tmpl->set_file(array("page" => $mainTemplate));
+                      else $this->tmpl->set_var(array("page" => ""));
+
+        // Define current form,group and doc ID's...
+        global $REQUEST_URI;
+        $this->tmpl->set_var(array("_FORM_ID"   => $this->formNr,
+                                   "_GROUP_ID"  => $this->groupNr,
+                                   "_DOC_ID"    => $this->docNr,
+                                   "_LINK_SELF" => $REQUEST_URI));
+
+
+        return $this->tmpl;
+     }
+
+     // Finished page configurator (end)
+     // $mainTemplateLng - Language file
+     function end($mainTemplateLng = "") {
+        $this->tmpl->parse("out", array("page"));
+        if ($mainTemplateLng) {
+           $mainLngObj = $this->kernel->lnger->reg("FORM_LNG", $mainTemplateLng);
+
+/*           if (class_exists("userDynamicLanguagePlugin")) {      
+                $component = new userDynamicLanguagePlugin();
+                $compArray = get_class_methods("componentPlugin");
+                for ($Cn = 0; $Cn < count($compArray); $Cn++) {
+                    if ($compArray[$Cn] == 'componentPlugin') continue;
+                    eval("\$tmpl->set_var(\$compArray[\$Cn], \$component->".$compArray[$Cn]."());");
+                }
+           }
+*/
+           $this->tmpl->parseLng("out", $mainLngObj, &$this);
+        }
+        $out = $this->tmpl->get("out");
+
+        if ($this->showtime){
+                list($usec, $sec) = explode(" ",microtime()); 
+                $time = ((float)$usec + (float)$sec) - $this->time; 
+                $this->log->put("End All \t time:[$time]");
+        }
+        return $out;
+     }
+
+   
+     // Include Plugin and run
+     // $block - in what block parse output
+     // $pluginName - name of plugin
+     // $cfg - config file
+     // $append [true|false] - append to block
+     function parse($block, $pluginName, $cfg = "", $append = false) {
+        if (!class_exists($pluginName)) {
+           $this->kernel->error->die = true;
+           $this->kernel->error->parse("Can't find plugin", array($pluginName));
+        }
+        if ($cfg) {
+           $this->kernel->classLoader->checkClass("confItemClass");
+           $cfgObj = new confItemClass($this, "CONF");
+           $cfgObj->rootDir = CONF_PLUGIN_DIR;
+           $cfgObj->scan($cfg);
+        }
+        $this->kernel->classLoader->checkClass($pluginName);
+
+        if ($this->kernel->debug_ip){
+                $this->kernel->debugplugins .= "Start plugin [$pluginName]<br>";
+                list($usec, $sec) = explode(" ",microtime()); 
+                $time = ((float)$usec + (float)$sec); 
+        }
+
+        $str = "\$obj = new $pluginName(\$this".($cfgObj ? ", \$cfgObj" : "").");";
+        eval($str);
+        if ($append) $this->tmpl->set_var($block, $this->tmpl->get_var($block).$obj->html);
+                else $this->tmpl->set_var($block, $obj->html);
+
+        if ($this->kernel->debug_ip){
+                list($usec, $sec) = explode(" ",microtime()); 
+                $time = ((float)$usec + (float)$sec)- $time; 
+                $this->kernel->debugplugins .= "End plugin [$pluginName] \t time:[$time]<BR>";
+        }
+     }
+
+     // parse string to tamplate
+     // $block - in what block parse output
+     // $str - string
+     // $append [true|false] - append to block
+     function parseStr($block, $str, $append = false) {
+//echo "bl = $block<br>";
+        if ($append) $this->tmpl->set_var($block, $this->tmpl->get_var($block).$str);
+                else $this->tmpl->set_var($block, $str);
+     }
+
+
+     // parse file to template
+     // $block - in what block parse output
+     // $file - file name
+     // $append [true|false] - append to block
+     // $rootDir - rootDir for file
+     function parseFile($block, $file, $append = false, $rootDir = BASE_DIR) {
+        $fp = @fopen($rootDir."/".$file, "r");
+        if (!$fp) return false;
+        $str = fread($fp, filesize($rootDir."/".$file));
+        if ($append) $this->tmpl->set_var($block, $this->tmpl->get_var($block).$str);
+                else $this->tmpl->set_var($block, $str);
+        return true;
+     }
+
+     
+  } // finished PluginManagerClass
+ 
+?>

@@ -1,0 +1,215 @@
+<HTML>
+<HEAD>
+<TITLE>Design</TITLE>
+<link rel="stylesheet" href="../norm_window.css" type="text/css">
+<SCRIPT LANGUAGE="JavaScript">
+<!--
+var component = new Array();
+var tab, Active, nam, imgPath = "../img/template/";
+function addComponent(comp){
+  component[component.length] = new makeComponent(comp);
+  writeComponent(component.length-1,-1);
+}
+/********************** Init Component Start *****************************************/
+function makeComponent(comp){
+  this.props = new Array();
+  this.param = new Array();
+  this.elms  = new Array();
+  for(var i = 0; i < comp.props.length; i++) {
+    this.props[i] = comp.props[i];
+    eval('this.'+comp.props[i]+' = comp.'+comp.props[i]);
+  }
+  for(var i = 0; i < comp.param.length; i++) this.param[i] = new Param(comp.param[i]);
+  for(var i = 0; i < comp.elms.length;  i++) this.elms[i]  = new Elms(comp.elms[i]);
+  return this;
+}
+function Param(param){
+  this.attrs = new Array();
+  this.vals  = new Array();
+  for(var i = 0; i < param.attrs.length; i++){
+    this.attrs[i] = param.attrs[i];
+    this.vals[i]  = param.vals[i];
+  }
+  this.value = param.value;
+  return this;
+}
+function Elms(elms){
+  this.attrs = new Array();
+  this.vals  = new Array();
+  this.elm   = new Array();
+  for(var i = 0; i < elms.attrs.length; i++){
+    this.attrs[i] = elms.attrs[i];
+    this.vals[i]  = elms.vals[i];
+  }
+  for(var i = 0; i < elms.elm.length; i++) this.elm[i]   = new Elm(elms.elm[i]);
+  return this;
+}
+function Elm(elm){
+  this.caption = elm.caption;
+  this.value = elm.value;
+  return this;
+}
+function writeComponent(what, where){
+  alt = createALT(what);
+  where = (where==-1)? tab.rows.length: where;
+  comp = component[what];
+  newRow = tab.insertRow(where);
+  newRow.compNo = what;
+  newCell = tab.rows[newRow.rowIndex].insertCell();
+  newCell.innerHTML = '<IMG SRC="' + imgPath + comp.icon +'" ALT="'+alt+'" onclick="showProps()">';
+  newCell = tab.rows[newRow.rowIndex].insertCell();
+  newCell.innerHTML = '<nobr><span class="captionText">'+comp.title+'</span> <span class="captionTextTable">'+comp.caption+'</span></nobr>';
+  newCell.width = "100%";
+  newCell = tab.rows[newRow.rowIndex].insertCell();
+  newCell.innerHTML = '<nobr><IMG SRC="' + imgPath + 'delete_t.gif" ALT="DELETE" onclick="delIt()"><IMG SRC="' + imgPath + 'up.gif" ALT="UP" onclick="moveUp()"><IMG SRC="' + imgPath + 'down.gif" ALT="DOWN" onclick="moveDown()"></nobr>';
+}
+function createALT(n){
+  c = component[n];
+  return ' Name: '+c.name+'\n title: '+c.title+'\n value: '+c.def_val;
+}
+/********************** Init Component End *****************************************/
+/********************** Save Block Start *******************************************/
+function makeXML(comp){
+  var strOut = '<component name=@#$'+ comp.name;
+  strOut += '@#$ title=@#$' + comp.title + '@#$ caption=@#$' + comp.caption + '@#$';
+  strOut += ' def_val=@#$' + comp.def_val + '@#$ def_val_type=@#$' + ((comp.def_val_type != "" && typeof(comp.def_val_type) != "undefined")? comp.def_val_type + '@#$':'@#$');
+  strOut += ' icon=@#$' + comp.icon + '@#$>';
+  for(var i = 0; i < comp.param.length; i++){
+    strOut += '<param';
+    for(var j = 0; j < comp.param[i].attrs.length; j++) strOut += " " + comp.param[i].attrs[j] + "=@#$" + comp.param[i].vals[j]+"@#$";
+    strOut += '>' + comp.param[i].value + '</param>';
+  }
+  for(var i = 0; i < comp.elms.length; i++){
+    strOut += '<elms';
+    for(var j = 0; j < comp.elms[i].attrs.length; j++) strOut += " " + comp.elms[i].attrs[j] + "=@#$" + comp.elms[i].vals[j]+"@#$";
+    strOut += '>';
+    for(var j = 0; j < comp.elms[i].elm.length; j++) strOut += '<elm caption=@#$' + comp.elms[i].elm[j].caption + '@#$>' + comp.elms[i].elm[j].value + '</elm>';
+    strOut += '</elms>';
+  }
+  strOut += '</component>';
+  return strOut;
+}
+function saveIt(){
+  var strOut = "<components>";
+  for(var i = 0; i < tab.rows.length; i++) strOut += makeXML(component[tab.rows[i].compNo]);
+  strOut += "</components>";
+//  alert(strOut);
+  top.navigation.saveTMPL(document.all.tmplName.value, strOut, document.all.frmID.value);
+}
+/********************** Save Block End *******************************************/
+/********************** Ordering Start *******************************************/
+function delIt(){
+  var itNumber = getRowNumber(event.srcElement);
+  if(getRowNumber(event.srcElement) >= 0) tab.deleteRow(itNumber);
+}
+function moveUp(){
+  var No = getRowNumber(event.srcElement);
+  if(No > 0){
+    n = tab.rows[No].compNo;
+    tab.deleteRow(No);
+    writeComponent(n, No-1)
+  }
+}
+function moveDown(){
+  var No = getRowNumber(event.srcElement);
+  if(No < tab.rows.length-1){
+    n = tab.rows[No].compNo;
+    tab.deleteRow(No);
+    writeComponent(n, No+1)
+  }
+}
+function getRowNumber(el){
+  while(el.tagName!='TR' && el.tagName!='BODY') el = el.parentElement;
+  return ((el.tagName=='TR')?el.rowIndex:-1);
+}
+/********************** Ordering End *****************************************/
+function showProps(){
+  No = getRowNumber(event.srcElement);
+  if(No!=-1){
+    Active = tab.rows[No].compNo;
+    top.properties.showProps();
+  }
+}
+function adjustParams(com, parNo, paramsNo){
+  if(com.elms[parNo].elm.length < paramsNo){
+    lim = paramsNo - com.elms[parNo].elm.length;
+    for(var i = 0; i < lim; i++) com.elms[parNo].elm[com.elms[parNo].elm.length] =  new Elm(new emptyElm());
+  } else if (com.elms[parNo].elm.length > paramsNo){
+    tmp = new Array();
+    for(var i = 0; i < paramsNo; i++) tmp[i] = com.elms[parNo].elm[i];
+    com.elms[parNo].elm = new Array();
+    for(var i = 0; i < paramsNo; i++) com.elms[parNo].elm[i] = tmp[i];
+  }
+}
+function emptyElm(){
+  this.caption = "";
+  this.value = "";
+  return this;
+}
+function resetActive(){
+  rowNr = -1;
+  for(var i = 0; i < tab.rows.length; i++) if(Active==tab.rows[i].compNo) {rowNr = i; break;}
+  if(rowNr != -1){
+    tab.deleteRow(rowNr);
+    writeComponent(Active, rowNr);
+  }
+}
+function clearIt(){
+//  tab.innerHTML = "";
+  for(var i = tab.rows.length; i > 0; i--) tab.deleteRow(i-1);
+  component = new Array();
+  Active = "";
+//  nam.innerHTML = "";
+//  nal.innerHTML = "";
+  top.properties.clearIt();
+}
+function init(){
+  nam = document.all.tmplNameTD;
+  nal = document.all.frmIDTD;
+  tab = document.all.comps;
+}
+</SCRIPT>
+</HEAD>
+
+<BODY BGCOLOR="#E7EBFF" onload="init()">
+<table width="100%" height="99%" border="0" cellspacing="0" cellpadding="0" class="main">
+  <tr>
+    <td>
+      <table width="100%" border="0" id="winhead" cellspacing="0" cellpadding="0" class="captionText">
+        <tr valign="middle" align="left">
+          <td width="20"><img src="../img/template/template.gif" width="20" height="20"></td>
+          <td>TEMPLATE</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td align=left valign=top height="100%">
+      <table width="100%" border="0" cellspacing="10" cellpadding="0" height="100%" class="bodyWithText">
+        <tr>
+          <TD align=left valign=top id=tmplNameTD height="20"></TD>
+          <TD align=right valign=top id=frmIDTD height="20"></TD>
+        </tr>
+        <tr>
+          <td valign=top colspan=2>
+            <table border="0" cellspacing="2" cellpadding="0" class="browse" width="100%" id="comps">
+            </table>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <table width="100%" border="0" cellspacing="5" cellpadding="0">
+        <tr>
+          <td align="right" valign=bottom>
+            <input type="button" name="save" value="Save" class="buttonz" onclick="saveIt()">
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+<TABLE>
+</BODY>
+</HTML>

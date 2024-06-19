@@ -1,0 +1,58 @@
+<SCRIPT LANGUAGE="JavaScript">
+<!--
+var parit;
+function showCalc(event, input){
+               var calendar = document.getElementById('calendar');
+  if(calendar.style.visibility!='visible'){
+    calendarIframe.setInputName(input);
+    calendar.style.left=event.clientX-event.offsetX+document.body.scrollLeft;
+    calendar.style.top=event.clientY-event.offsetY+event.srcElement.offsetHeight+document.body.scrollTop;
+    var str;
+//    eval('str = '+input+'.value.split("/");');
+    str = document.getElementById(input).value.split("/");
+    parit = false;
+    if(str.length==3){
+      if(parseInt(str[0].charAt(0))==0)str[0]=str[0].substr(1)
+      if(parseInt(str[1].charAt(0))==0)str[1]=str[1].substr(1)
+      if(parseInt(str[2])>=calendarIframe.fromDate && parseInt(str[2])<=calendarIframe.tillDate) if(parseInt(str[1])>=1 && parseInt(str[1])<=12){
+        limit = calendarIframe.GetDaysInMonth(parseInt(str[1]), parseInt(str[2]));
+        if(parseInt(str[0])>=1 && parseInt(str[0])<=limit) parit = true;
+      }
+    }
+    if(parit) {
+      calendarIframe.setDateInForm(parseInt(str[1])-1, parseInt(str[2]));
+      calendarIframe.document.getElementById('c_'+parseInt(str[0])).className = 'calendarCellSelected';
+    }else calendarIframe.setDateInForm(calendarIframe.CurDate.getMonth(), calendarIframe.CurDate.getFullYear());
+    calendar.style.visibility='visible';
+    calendarIframe.document.body.focus();
+  }
+}
+function wOncl(e){
+  var calendar = document.getElementById('calendar');
+  x = event.clientX;
+  y = event.clientY;
+  t = parseInt(calendar.style.top.substr(0,calendar.style.top.length-2));
+  l = parseInt(calendar.style.left.substr(0,calendar.style.left.length-2));
+  if(calendar.style.visibility=='visible' && (x < t || x > (calendar.offsetHeight + t) || y < l || y > (calendar.offsetWidth + l)) && event.srcElement.id!='shcalc') {
+    document.getElementById("calendar").style.visibility="hidden";
+  }
+  return;
+}
+document.onmousedown = wOncl;
+
+function init(){
+}
+//-->
+</SCRIPT>
+<script LANGUAGE="JavaScript" SRC="files/add.js"></script>
+<script language="javaScript">
+  function ShowUploadFile(idd){
+    option = "dialogHeight: 500px; dialogWidth: 800px; dialogTop: 100px; dialogLeft: 100px; edge: Raised; center: Yes; help: No; resizable: Yes; status: No; dialogHide: Yes; unadorned: Yes; scroll: No;";
+    arr  = showModalDialog("parse.php?24","", option);
+    if(typeof(arr)!='undefined') eval('document.all.'+idd+'.value = arr;');
+  }
+</script>
+
+<div id=calendar class=calendar  onblur='document.getElementById("calendar").style.visibility="hidden";'>
+  <IFRAME ID="calendarIframe" NAME="calendarIframe" SRC="files/calendar/calendar.htm" WIDTH="150" HEIGHT="140" frameborder="0" scrolling="No"  vspace="0" hspace="0" marginheight="0" marginwidth="0"></IFRAME>
+</div>

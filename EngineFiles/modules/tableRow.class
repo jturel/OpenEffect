@@ -1,0 +1,49 @@
+<?
+
+#
+# Table class (Row class)
+#
+#####################################
+  
+  class tableRow extends linkClass {
+  
+     // Constructor
+     function tableRow($width = "", $align = "") {
+        $this->linkClass();
+	
+	// set variables
+	$this->options["width"] = $width;
+	$this->options["align"] = $align;
+     }
+     
+     
+     // Form tags 
+     function formTags() {
+        $this->tag  = "";
+	$this->sTag = $this->formStartTag();
+	$this->fTag = $this->formFinishTag();
+     }
+     
+     
+     // Form start tag
+     function formStartTag() {
+        $out  = "<TR";
+	$opt  = $this->optionsTOhtml();
+	if ($opt)               $out .= " ".$opt;
+	if ($this->htmlOptions) $out .= " ".$this->htmlOptions;
+	$out .= ">\n";
+	
+	$out  = $this->delDoubleChars($out, " ");
+	return $out;
+     }
+
+     
+     // Form finish tag
+     function formFinishTag() {
+        $out = "</TR>\n";
+	return $out;
+     }
+     
+  }
+ 
+?>

@@ -1,0 +1,311 @@
+<?
+
+/*********************************************
+*
+*  FORM constructor plugin
+*
+*  Types :
+*  0 - Hidden
+*  1 - Text
+*  2 - Select box
+*  3 - CheckBox
+*  4 - List
+*
+*********************************************/
+
+
+class formPlugin extends pluginClass {
+
+   var $action = "index.php";
+
+   // Constructor
+   function formPlugin(&$parent, $cfg) {
+      $this->root_dir = TMPL_DIR;
+      $this->pluginClass(&$parent, $cfg);
+      $this->main();
+   }
+   
+   // Main function
+   function main() {
+      $this->log = $this->kernel->loger->reg("FORM CONSTRUCTOR");
+      $this->tmpl = $this->readTemplate($this->cfg->get("template"));
+      list($this->fields, $this->lists) =
+          $this->readFields($this->cfg->get("fields"));
+   }
+   
+   // Read template
+   // $fName - file name of template
+   function readTemplate($fName) {
+      $this->log->put("Read template [$fName]");
+      $this->kernel->classLoader->checkClass("templateClass");
+      $tmpl = new templateClass($this->root_dir, "remove");
+      $tmpl->halt_on_error = "yes";
+      $tmpl->set_file(array("body" => $fName));
+
+      // Define current form,group and doc ID's...
+      global $REQUEST_URI;
+      $tmpl->set_var(array("_FORM_ID"   => $this->parent->formNr,
+                           "_GROUP_ID"  => $this->parent->groupNr,
+                           "_DOC_ID"    => $this->parent->docNr,
+                           "_LINK_SELF" => $REQUEST_URI));
+
+      return $tmpl;
+   }
+   
+   
+   // Read fields file
+   // $fName - file name of fields
+   function readFields($fName) {
+      $this->log->put("Read fields [$fName]");
+      $rName = $this->root_dir."/".$fName;
+      if (is_file($rName)) {
+         include $rName;
+         $this->log->put("Read fields : DONE");
+         return array($fields, $lists);
+      }
+      $this->log->put("Read fields : FALSE");
+      return array(array(), array());
+   }
+   
+   
+   // Parse fields in templates
+   function parseFields() {
+      $count = count($this->fields);
+      for ($Cn = 0; $Cn < $count; $Cn++) {
+
+          $value = "";
+//        if ($this->fields[$Cn]["type"] == 0) continue;
+
+//          print $this->fields[$Cn]["name"];
+          global $$this->fields[$Cn]["name"];
+          eval("\$rValue = \$".$this->fields[$Cn]["name"].";");
+//          print $rValue."<br>";
+
+          if ($this->fields[$Cn]["type"] == 0) 
+             $value = $rValue;
+          if ($this->fields[$Cn]["type"] == 1) 
+             $value = $rValue;
+          if ($this->fields[$Cn]["type"] == 2)
+             $value = $this->selectBox($this->fields[$Cn]["select"], $rValue);
+          if ($this->fields[$Cn]["type"] == 3)
+             $value = $this->checkBox($rValue);
+          if ($this->fields[$Cn]["type"] == 4) 
+             $value = $this->listStr($this->fields[$Cn]["list"], $rValue);
+
+          $this->tmpl->set_var(array($this->fields[$Cn]["name"] => $value));
+          if ($this->fields[$Cn]["rName"]) $rName = $this->fields[$Cn]["rName"];
+                                      else $rName = $this->fields[$Cn]["name"];
+          $this->tmpl->set_var(array("real_".$this->fields[$Cn]["name"] => $rName));
+      }
+      $this->tmpl->set_var(array("ACTION" => $this->action));
+   }
+
+   // Read Item from base
+   function readItem($sql = "1") {
+      $SqlStr = "";
+      $count = count($this->fields);
+      for ($Cn = 0; $Cn < $count; $Cn++) {
+          if ($this->fields[$Cn]["type"] == 0) continue;
+          if ($this->fields[$Cn]["type"] == 4) continue;
+          if ($this->fields[$Cn]["nodb"] == true) continue;
+          if ($SqlStr) $SqlStr .= ",";
+          $SqlStr .= $this->fields[$Cn]["name"];
+      }
+      $SqlStr = "SELECT $SqlStr FROM ".$this->cfg->get("table")."
+                 WHERE $sql LIMIT 1";
+      $result = $this->kernel->db->query($SqlStr);
+      if (!$result || !$result->numrows()) return false;
+      $row = $result->getrow();
+
+      reset($row);
+      while (list($key, $val) = each($row))
+            $GLOBALS[$key] = $val;
+   }
+
+   // Set default values
+   function setDefault() {
+      $count = count($this->fields);
+      for ($Cn = 0; $Cn < $count; $Cn++) {
+          if ($this->fields[$Cn]["type"] == 0) continue;
+          if ($this->fields[$Cn]["type"] == 4) continue;
+          if (isSet($this->fields[$Cn]["default"]) && 
+              !isSet($GLOBALS[$this->fields[$Cn]["name"]])) 
+                $GLOBALS[$this->fields[$Cn]["name"]] = 
+                         $this->fields[$Cn]["default"];
+//         else $GLOBALS[$this->fields[$Cn]["name"]] = "";
+      }
+   }
+   
+   // Parse template into HTML vars
+   function parse() {
+      $this->setDefault();
+      $this->parseFields();
+      
+      $this->tmpl->parse("out", array("body"));
+      $this->html = $this->tmpl->get("out");
+      return $this->html;
+   }
+   
+
+   // IF have ID return ID
+   // in false, create new ID
+   function getID($id) {
+      if ($id) return $id;
+      return $this->kernel->db->nextid();
+   }
+
+   // DELETE data from database
+   function delete($sql = "1") {
+      $SqlStr = "DELETE FROM ".$this->cfg->get("table")."
+                 WHERE $sql LIMIT 1";
+      return $this->kernel->db->query($SqlStr);
+   }
+      
+   
+   // Save data
+   function save($sql = "1") {
+      if (!$this->checkNeedFields()) return false;
+      
+      $SqlStr = "SELECT * FROM ".$this->cfg->get("table").
+                " WHERE $sql LIMIT 1";
+      $result = $this->kernel->db->query($SqlStr);
+      if ($result && $result->numrows())
+              return $this->save_update($sql);
+         else return $this->save_insert();
+   }
+   
+   
+   // Save Data (update)
+   function save_update($sql = "1") {
+      $SqlStr = 'UPDATE '.$this->cfg->get('table').' SET ';
+      if ($count = count($this->fields)) {
+         $SqlStr2 = "";
+         for ($Cn = 0; $Cn < $count; $Cn++) {
+             if ($this->fields[$Cn]["type"] == 0) continue;
+             if ($this->fields[$Cn]["type"] == 4) continue;
+             if ($this->fields[$Cn]["nodb"] == true) continue;
+
+             global $$this->fields[$Cn]["name"];             
+             eval("\$rValue = \$".$this->fields[$Cn]["name"].";");
+             if ($SqlStr2) $SqlStr2 .= ",";
+             $SqlStr2 .= $this->fields[$Cn]["name"]."=";
+             
+             // Text type
+             if ($this->fields[$Cn]["type"] == 1)
+                $SqlStr2 .= '"'.$rValue.'"';
+             // SelectBox
+             if ($this->fields[$Cn]["type"] == 2)
+                $SqlStr2 .= '"'.$rValue.'"';
+             // CheckBox
+             if ($this->fields[$Cn]["type"] == 3)
+                $SqlStr2 .= ($rValue ? 1 : 0);
+             // List
+             if ($this->fields[$Cn]["type"] == 4)
+                $SqlStr2 .= '"'.$rValue.'"';
+         }
+         $SqlStr .= $SqlStr2;
+         $SqlStr .= " WHERE $sql";
+         return $this->kernel->db->query($SqlStr);
+      }
+      return false;
+   }
+   
+   // Save Data (insert)
+   function save_insert() {
+      $SqlStr = "INSERT INTO ".$this->cfg->get("table")."(";
+      if ($count = count($this->fields)) {
+         $SqlStr2 = "";
+         for ($Cn = 0; $Cn < $count; $Cn++) {
+             if ($this->fields[$Cn]["type"] == 0) continue;
+             if ($this->fields[$Cn]["type"] == 4) continue;
+             if ($this->fields[$Cn]["nodb"] == true) continue;
+             
+             if ($SqlStr2) $SqlStr2 .= ",";
+             $SqlStr2 .= $this->fields[$Cn]["name"];
+         }
+         $SqlStr .= $SqlStr2;
+         $SqlStr .= ") VALUES (";
+         $SqlStr2 = "";
+         for ($Cn = 0; $Cn < $count; $Cn++) {
+             if ($this->fields[$Cn]["type"] == 0) continue;
+             if ($this->fields[$Cn]["type"] == 4) continue;
+             if ($this->fields[$Cn]["nodb"] == true) continue;
+
+             global $$this->fields[$Cn]["name"];
+             eval("\$rValue = \$".$this->fields[$Cn]["name"].";");
+             if ($SqlStr2) $SqlStr2 .= ",";
+
+             // Text type
+             if ($this->fields[$Cn]["type"] == 1)
+                $SqlStr2 .= '"'.$rValue.'"';
+             // SelectBox
+             if ($this->fields[$Cn]["type"] == 2)
+                $SqlStr2 .= '"'.$rValue.'"';
+             // CheckBox
+             if ($this->fields[$Cn]["type"] == 3)
+                $SqlStr2 .= ($rValue ? 1 : 0);
+             // SelectBox
+             if ($this->fields[$Cn]["type"] == 4)
+                $SqlStr2 .= '"'.$rValue.'"';
+         }
+         $SqlStr .= $SqlStr2;
+         $SqlStr .= ")";
+         return $this->kernel->db->query($SqlStr);
+      }
+      return false;
+   }
+
+
+   // Check need fields
+   function checkNeedFields() {
+      $count = count($this->fields);
+      for ($Cn = 0; $Cn < $count; $Cn++) {
+          global $$this->fields[$Cn]["name"];
+          if ($this->fields[$Cn]["need"] &&
+             !$$this->fields[$Cn]["name"]) return false;
+      }
+      return true;
+   }
+   
+
+   /***   Create 'select' output   ***/
+   function selectBox($field, $default) {
+      $output = "<option value=''></option>\n";
+      $select = $this->lists[$field];
+      
+      for ($Cn = 0; $Cn < count($select); $Cn++) {
+//          if ((!$select[$Cn]['value'])||(!$select[$Cn]['name'])) continue;             // RB 
+          $output .= "<option value='".$select[$Cn]['value']."'";
+          if ($select[$Cn]['value'] == $default) $output .= ' selected';
+          $output .= '>';
+          $output .= $select[$Cn]['name'];
+          $outptu .= "</option>\n";
+      }
+      
+      return $output;
+   }
+
+   /***   Create 'list' output   ***/
+   function listStr($field, $default) {
+      $list = $this->lists[$field];
+      
+      $output = "";
+      for ($Cn = 0; $Cn < count($list); $Cn++) {
+          if ($Cn) $output .= ', ';
+          $output .= $list[$Cn];
+      }
+      
+      return $output;
+   }
+
+   /***   Create 'checkBox' output   ***/
+   function checkBox($value) {
+      if ($value) return 'checked';
+      return '';
+   }
+
+
+   
+}
+
+?>

@@ -1,0 +1,244 @@
+<?
+/**
+* Copyright (C) 2002 SIA ESOFTS.
+*
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License 
+* version 2 as published by the Free Software Foundation.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the SIA ESOFTS, 38/40 Blaumana str., 
+* Riga, LV - 1011, LATVIA, e-mail office@esoft.lv 
+*
+* This General Public License does not permit incorporating your program into
+* proprietary programs. Should you require to License Open Effect under the
+* commercial License, please contact SIA ESOFTS for up-to-date information.
+*/
+
+
+
+/***************************************
+*  Configuration class
+*  Read config file and decode strings
+*  
+***************************************/
+
+  // Check extends classes
+  $this->checkClass("streamClass",     "confClass, confItemClass");
+  $this->checkClass("streamItemClass", "confStringClass");
+
+
+  class confClass extends streamClass {
+     var $className = "confClass";  // Class name
+     var $childClassName = "confItemClass";  // Child class name
+     var $rootDir = "";  // Set Root DIR for file
+  
+  
+     // Constructor
+     // $parent - pointer on parent object
+     // $fileName - open stream "DEFAULT" and scan this file
+     function confClass(&$parent, $fileName = "") {
+        $this->streamClass(&$parent);
+        if ($fileName) $this->reg("DEFAULT", $fileName);
+               $this->log = $this->kernel->loger->reg("CONFIGURATION");
+     }
+     
+     
+     // Configuration stream registrator
+     // $name - stream name
+     // $fileName - name of file configuration
+     function &reg($name, $fileName) {
+//        print "File [$name, $fileName]<BR>";
+        if ($name && $fileName) {
+                  $this->log->put("registr stream : $name");
+                  $this->log->put("file name : $fileName");
+                  $item = &$this->regStream($name);
+                  $item->rootDir = $this->rootDir;
+                  $item->scan($fileName);
+               } else $item = false;
+               return $item;
+     }
+     
+  } // Finish confClass class
+
+
+######################################################################
+#
+#  Configuration item class
+#
+
+  class confItemClass extends streamClass {
+     var $className = "confItemClass"; // Class name
+     var $childClassName = "confStringClass"; // Child class name
+     var $dieIfNotExists = true; // [true|false] - if true then die if not find KEY
+     var $rootDir = ""; // Root dir of config file
+     
+     
+     // Constructor
+     // $parent - pointer on parent object
+     // $name - empty parametrs
+     function confItemClass(&$parent, $name, $fileName = "") {
+        $this->streamClass(&$parent);
+               $this->streamName = $name;
+               if ($fileName) $this->scan($fileName);
+     }
+     
+     // Scan configuration file
+     // $fileName - Which file name will be scan
+     function scan($fileName) {
+             if (is_array($fileName))
+                  $this->decodeArray($fileName);        // Decode file
+              else {
+               $this->fileName = $this->rootDir."/".$fileName;
+               $fileArray = $this->loadFile($this->fileName); // Load config file
+               if (is_array($fileArray))
+                  $this->decodeFile($fileArray);        // Decode file
+             }
+     }
+
+     // Load config file
+     // $fileName - which file load
+     // RETURN : array with strings from file
+     function loadFile($fileName) {
+if (substr($fileName,0,1)=='/' and file_exists(substr($fileName,1,strlen($fileName)-1))) $fileName=substr($fileName,1,strlen($fileName)-1);
+$array = file($fileName);
+
+//while (list ($line_num, $line) = each ($array)) {
+//    echo "<b>Line $line_num:</b> " . htmlspecialchars ($line) . "<br>\n";
+//}
+               return $array;
+     }
+     
+     
+     // Decode Array (remove empty and remark strings)
+     // &$fileArray - pointer on file Array
+     // RETURN : true|false <- opertaion status
+     function decodeFile(&$fileArray) {
+        if (!is_array($fileArray)) return false;
+               for ($Cn = 0; $Cn < count($fileArray); $Cn++) {
+//               print "!!decode [$str]<BR>";
+                   $str = trim($fileArray[$Cn]);
+                   if (!$str) continue;
+                   if (ereg("^(;|#|//|\[)", $str)) continue;
+                   $this->decodeString($str);
+               }
+               return true;
+     }
+
+     // Decode Array (remove empty and remark strings)
+     // &$fileArray - pointer on file Array
+     // RETURN : true|false <- opertaion status
+     function decodeArray(&$fileArray) {
+        if (!is_array($fileArray)) return false;
+            foreach ($fileArray as $key => $value) {
+                   if (!$key) continue;
+                   $key = strtoupper($key);
+                   $item = &$this->regStream($key);
+                   $item->value = $value;
+            }
+        return true;
+     }     
+     
+     // Decode String
+     // $str - string for decoding
+     function decodeString($str) {
+//        print "decpde [$str]<BR>";
+        $pos = strpos(" ".$str, "=");
+               if (!$pos) return false;
+               $key   = trim(substr($str, 0, $pos - 1));
+               $value = trim(substr($str, $pos));
+               if ($key) {
+                  $key = strtoupper($key);
+                  $item = &$this->regStream($key);
+                  $item->set($value);
+               }
+     }
+
+     // Check exists key
+     // $key - key for search
+     function check($ikey = "DEFAULT") {
+//        print "test [$ikey]<BR>";
+        $key = strtoupper($ikey);
+               if (!is_object($this->childItems[$key])) return false;
+               return true; 
+     }
+     
+     // get Value 
+     // $key - key for get value from array
+     function get($ikey = "DEFAULT") {
+        $key = strtoupper($ikey);
+               if (!is_object($this->childItems[$key])) {
+                  if ($this->dieIfNotExists) {
+                     $str = "Configuration error, can't find key :\n  key : $ikey\n  stream name : ".$this->streamName."\n  file name : ".$this->fileName;
+                     $this->kernel->errorLog->put($str);
+                     die("<b>".str_replace("\n", "<br>", $str)."</b>");
+                  }
+                  return false;
+               }
+               return $this->childItems[$key]->get();
+     }
+     
+     // set Value 
+     function set($key, $value) {
+        $key = strtoupper($key);
+               if (!is_object($this->childItems[$key]))
+                  $this->regStream($key);
+               $this->childItems[$key]->set($value);
+     }
+     
+  }
+
+  
+######################################################################
+#
+#  Configuration string class
+#
+
+  
+  // Configuration  
+  class confStringClass extends streamItemClass {
+     var $className = "confStringClass";
+     var $value = "";
+     
+     // Constructor
+     // $parent - pointer on parent object
+     // $key - key for configuration string
+     function confStringClass(&$parent, $key) {
+        $this->streamItemClass(&$parent, $key);
+     }
+     
+     
+     // Set value
+     function set($value) {
+               $value = trim($value);
+               if (ereg("^'.*'", $value, $val)) {         // Check if string start with _'_ symbol
+                  $value = substr($val[0], 1, strlen($val[0]) - 2);
+               } elseif (ereg("^\".*\"", $value, $val)) { // Check if string start with _"_ symbol
+                  $value = substr($val[0], 1, strlen($val[0]) - 2);
+               } else { 
+                  if (is_array($val = split("(;|#|//|\[)", $value)))
+                     $value = trim($val[0]);
+                                               
+                  if (ereg(",", $value)) {               // Explode string if have ','
+                     $value = explode(",", $value);
+                     for ($Cn = 0; $Cn < count($value); $Cn++)
+                                $value[$Cn] = trim($value[$Cn]);
+                  }
+               }
+               
+               $this->value = $value;
+     }
+     
+     // Get value
+     function get() {
+        return $this->value;
+     }
+     
+     // Get Key
+     function getKey() {
+        return $this->key;
+     }
+     
+  }
+ 
+?>

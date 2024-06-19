@@ -1,0 +1,40 @@
+<html>
+<head>
+<title>##Create new dir##</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<link rel="stylesheet" href="files/upload.css" type="text/css">
+<SCRIPT LANGUAGE=JavaScript FOR=Create EVENT=onclick>
+  opener.mainForm.dirName.value = document.getElementById("dirName").value;
+  opener.mainForm.submit();
+  self.close();
+</SCRIPT>
+</head>
+<body leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" class="main" height="100%">
+    <tr> 
+      <td> 
+        <table width="100%" border="0" cellspacing="10" cellpadding="0" height="100%" class="bg_color_light">
+          <tr valign="middle" align="left"> 
+            <td width="50%" align="right" class="caption">##Create new dir##</td>
+            <td class="caption"> 
+              <input class="input" type="Text" name="dirNameI" id="dirName" size="30" value="">
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr> 
+      <td height="30"> 
+        <table width="100%" border="0">
+          <tr> 
+            <td align="right" valign="middle"> 
+              <input type="button" name="createb" id="Create" value="##Create##" class="input">
+              <input type="button" value="##Cancel##" onClick="self.close()" class="input">
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

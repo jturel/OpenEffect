@@ -1,0 +1,172 @@
+<!-- BEGIN close_block -->
+<script language="JavaScript">
+<!--
+// -->
+</script>
+<!-- END close_block -->
+<html>
+<head>
+<title>tree project </title>
+<link rel="stylesheet" href="files/tree.css" type="text/css">
+<script language="JavaScript">var imgPath = "files/";</script>
+<script language="JavaScript" src="files/tree.js"></script>
+<script language="JavaScript">
+<!--
+/**************************************************************************************************
+*
+*                                  page dependant code start
+*
+**************************************************************************************************/
+<!-- BEGIN item_block -->
+<!-- END item_block -->
+var inData;
+var insStr = '<div id="#divID#" class="tree" typez="#divType#" showStat="show" hasDocs="#hasDocs#" hasGroups="#hasGroups#">' + 
+               '<table id="#tabID#" width="100%" border="0" cellspacing="0" cellpadding="0" class="browse">' +
+                 '<tr>' +
+                   '<td width="#shiftX#"><img src="files/img/!pix.gif" width="#shiftX#" height="10"></td>' +
+                   '<td width="18"><img id="#imgID#" src="#imgSrc#" width="18" height="18" alt="#imgAlt#" typez="imgz"></td>' +
+//                   '<td width="100%"><a target="rightFrame" href="#hrefID#" hrefReal="#hrefID#" class="treelink" typez="linkz">#linkTitle#</a></td>' +
+                   '<td width="100%">#linkTitle#</td>' +
+                   '#ckbx#' +
+                 '</tr>' +
+               '</table>' +
+               '<!--TREENODES-->' +
+             '</div>';
+var ckbxSTR      = '<td width="10" align="right"><INPUT TYPE="CHECKBOX" value="#ckbxValue#" NAME="#ckbxName#" #CHECKEDID# typez="ckbxz"></td>';
+var dataToChange = ["#ckbx#","#divID#","#divType#","#tabID#","#shiftX#","#imgID#","#imgSrc#","#imgAlt#","#hrefID#","#linkTitle#","#ckbxValue#","#ckbxName#","#CHECKEDID#","#hasDocs#","#hasGroups#"];
+var imgPrefix    = "img", divPrefix = "node", tabPrefix = "tab", hrefPrefixGroup = "parse.php?4&", hrefPrefixDoc = "parse.php?5&", ckbxValPrefixStart = "check[", ckbxValPrefixEnd = "]";
+var addSupGroup  = false;
+var shift        = 20;
+var showDoc      = false;
+var showGroups   = true;
+var showCkbx     = true;
+var showCkbxDoc  = false;
+var Active;
+
+function initIt(){
+  name   = new Array();
+  inData = parent.dialogArguments;
+  for(var i = 0; i < inData.length - 1; i++) name[name.length] = inData[i];
+  loaded = true;
+
+  sync = getElById("sync");
+  sync.innerHTHL = '<CENTER><SPAN class=sync>##loading...##</SPAN></CENTER>';
+  sync.style.display = "block";
+  name0 = getElById(name[0]);
+  name0.style.display = "none";
+  name0.innerHTML = inData[inData.length-1];
+  var lin = document.all.tags('A');
+  for(var i = lin.length-1; i >=0 ; i--) {
+    var ln = lin[i];
+    var peh = ln.parentElement;
+    peh.innerHTML = peh.innerHTML.replace(ln.outerHTML, ln.innerText);
+  }
+
+  Active = getSelected();
+  changeShowDocProperty(showDoc);
+}
+
+function clickIt(){
+  el = event.srcElement;
+  event.cancelBubble = true;
+  switch (el.typez){
+    case "imgz": 
+                     var nodeNo = getNumderInArray(name , divPrefix + el.id.substr(imgPrefix.length));
+                     openIt(nodeNo);     
+                     break;
+    case "ckbxz":    
+                     Active = getSelected();
+                     break;
+    default:         break;
+  }
+}
+function setActive(){
+  if(typeof(document.all.winhead)=='object') document.all.winhead.className = 'mainSelected';
+  if(typeof(top.rightFrame.document.all.winhead)=='object') top.rightFrame.document.all.winhead.className = 'caption';
+  if(typeof(top.searchFrame.document.all.winhead)=='object') top.searchFrame.document.all.winhead.className = 'caption';
+  tmp = getSelected(true);
+  top.topFrame.SetActive(1, tmp);
+}
+
+function checkAll(el){
+  for(var i=0; i<document.treeForm.elements.length; i++){
+    if(typeof(FindCHKID(document.treeForm.elements[i].name))!='boolean') {
+     document.treeForm.elements[i].checked=el.checked;
+    } 
+  }
+}
+function getSelected(){
+  var arra = new Array();
+  var CHKID;
+  for(ik=0; ik<document.treeForm.elements.length; ik++){
+    CHKID = FindCHKID(document.treeForm.elements[ik].name);
+    if(document.treeForm.elements[ik].checked && typeof(CHKID)!='boolean') {
+      arra[arra.length]=document.treeForm.elements[ik].value;
+      document.getElementById(tabPrefix+CHKID).className = 'list_light';
+    } else if (typeof(CHKID)!='boolean') {
+      document.getElementById(tabPrefix+CHKID).className = 'browse';
+    }
+  }
+  return arra;
+}
+function FindCHKID(inst){
+  if (inst.indexOf('[')==-1) return false;
+  tmpSTR = inst.substr(inst.indexOf('[')+1);
+  cur=0;
+  outst='';
+  for(var i = 0; i<tmpSTR.indexOf(']');i++) outst+=tmpSTR.charAt(i);
+  return outst;
+}
+document.onclick = clickIt;
+onload  = initIt;
+/**************************************************************************************************
+*
+*                                  page dependant code end
+*
+**************************************************************************************************/
+
+//-->
+</script> 
+</head>
+
+<body bgcolor="#E7EBFF" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
+<!body bgcolor="#E7EBFF">
+  <form name="treeForm" action="" method="post" target="">
+  <input type="hidden" name="groupId" value="">
+  <input type="hidden" name="save" id="deleteid" value="1">
+  <input type="hidden" name="delete" id="deleteid" value="">
+  <input type="hidden" name="move" id="moveid" value="">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" class="main">
+    <tr> 
+      <td> 
+        <table width="100%" border="0" cellspacing="10" cellpadding="0" class="bg_color_light">
+          <tr> 
+            <td> 
+              <table width="100%" border="0" cellspacing="0" cellpadding="0" >
+                <tr> 
+                  <td colspan="2" align="center" valign="middle">
+                    <table width="100%" border="0" cellspacing="0" cellpadding="0" class=browse>
+                      <tr> 
+                        <td width="18">&nbsp;</td>
+                        <td class="caption" align=left>##Group names##</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr> 
+                  <td> 
+  <div id="sync" class="tree"><CENTER><SPAN class=sync>##shynchronyzing...##</SPAN></CENTER></div>            
+  <div id="node" class="tree"><!--TREENODES--></div>            
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+  </form>
+  <IFRAME NAME="myiframe" SRC="start.htm" WIDTH="1" HEIGHT="1" style="visibility:hidden; display: none;"></IFRAME>
+</body>
+</html>

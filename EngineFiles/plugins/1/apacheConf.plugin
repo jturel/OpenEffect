@@ -1,0 +1,100 @@
+<?
+/**
+* Copyright (C) 2002 SIA ESOFTS.
+*
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License 
+* version 2 as published by the Free Software Foundation.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the SIA ESOFTS, 38/40 Blaumana str., 
+* Riga, LV - 1011, LATVIA, e-mail office@esoft.lv 
+*
+* This General Public License does not permit incorporating your program into
+* proprietary programs. Should you require to License Open Effect under the
+* commercial License, please contact SIA ESOFTS for up-to-date information.
+*/
+
+
+
+/*********************************************
+*
+* Work with Access Apache config files
+*
+*********************************************/
+
+
+class apacheConfPlugin extends pluginClass {
+
+   // Constructor
+   function apacheConfPlugin(&$parent, $cfg) {
+      $this->pluginClass(&$parent, $cfg);
+      $this->getCfg();
+   }
+   
+   
+   // Get config strings from config file
+   function getCfg() {
+      $this->passFile  = $this->cfg->get("passFile");
+      $this->groupFile = $this->cfg->get("groupFile");
+      $this->groupName = $this->cfg->get("groupName");
+   }
+
+
+   // Create Group file   
+   function makeGroup() {
+      $out = $this->groupName.":";
+      $SqlStr = "SELECT Nick FROM ".$this->kernel->tab_cfg->get("userTable");
+      print $SqlStr;
+      $result = $this->kernel->db->query($SqlStr);
+      if ($result && $count = $result->numrows()) {
+         for ($Cn = 0; $Cn < $count; $Cn++) {
+	     list($name) = $result->getrow();
+	     $out .= " $name";
+	 }
+      }
+      
+      print $out;
+      
+      $file = BASE_DIR."/".$this->groupFile;
+      $fp = @fopen($file, "w+");
+      if ($fp) {
+         fwrite($fp, $out);
+         fclose($fp);
+      }
+   }
+   
+   // Create Pass file
+   function makeUser() {
+      $salt = md5(uniqid(rand()));
+      $salt = substr($salt, 0, 2);
+      
+      $out = "";
+      $SqlStr = "SELECT Nick,Password FROM ".$this->kernel->tab_cfg->get("userTable");
+      $result = $this->kernel->db->query($SqlStr);
+      if ($result && $count = $result->numrows()) {
+         for ($Cn = 0; $Cn < $count; $Cn++) {
+	     list($name, $pass) = $result->getrow();	     
+	     $out .= "$name:".crypt($pass, $salt)."\n";
+	 }
+      }
+      
+      print $out;
+      
+      $file = BASE_DIR."/".$this->passFile;
+      $fp = @fopen($file, "w+");
+      if ($fp) {
+         fwrite($fp, $out);
+         fclose($fp);
+      }
+   }
+   
+   // Create all acces files
+   function make() {
+      $this->makeGroup();
+      $this->makeUser();
+   }
+   
+}
+
+?>

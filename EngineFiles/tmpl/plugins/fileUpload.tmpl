@@ -1,0 +1,46 @@
+<!-- BEGIN close_block -->
+<script language="JavaScript">
+<!--
+parent.closeWin(true);
+// -->
+</script>
+<!-- END close_block -->
+
+<html>
+<head>
+<title>##Create new dirUpload file##</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<link rel="stylesheet" href="files/upload.css" type="text/css">
+</head>
+<body leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
+  <form action="{_LINK_SELF}" method="post" enctype="multipart/form-data" target="_self" name="mainForm">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" class="main" height="100%">
+    <tr> 
+      <td> 
+        <table width="100%" border="0" cellspacing="10" cellpadding="0" height="100%" class="bg_color_light">
+          <tr valign="middle" align="left"> 
+            <td width="50%" align="right" class="caption">##File upload##</td>
+            <td class="caption"> 
+              <input type="Hidden" name="dir" value="{DIR}">
+              <input type="File" name="fileName" size="20" value="" class="input">
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr> 
+      <td height="30"> 
+        <table width="100%" border="0">
+          <tr> 
+            <td align="right" valign="middle"> 
+              <input type="submit" name="upload" value="##Upload##" class="input" onclick="document.mainForm.dir.value=parent.list.dir_url.value;">
+              <input type="button" value="##Cancel##" onClick="parent.closeWin(false);" class="input">
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+  </form>
+</body>
+</html>

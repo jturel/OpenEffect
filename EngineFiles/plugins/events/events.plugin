@@ -1,0 +1,102 @@
+<?
+/**
+* Copyright (C) 2002 SIA ESOFTS.
+*
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License 
+* version 2 as published by the Free Software Foundation.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the SIA ESOFTS, 38/40 Blaumana str., 
+* Riga, LV - 1011, LATVIA, e-mail office@esoft.lv 
+*
+* This General Public License does not permit incorporating your program into
+* proprietary programs. Should you require to License Open Effect under the
+* commercial License, please contact SIA ESOFTS for up-to-date information.
+*/
+
+
+class events extends pluginClass {
+
+   // Constructor
+   function events(&$parent, $cfg) {
+      $this->root_dir = TMPL_DIR;
+      $this->pluginClass(&$parent, $cfg);
+      $this->api = new rus_api(&$this,$cfg);
+      $this->main();
+   }
+   
+   // Main function
+   function main() {
+      $this->log = $this->kernel->loger->reg('Events');
+      $this->cfg->dieIfNotExists = 0;
+      $this->arhiv =   $this->cfg->get('arhive');
+      $this->cfg->dieIfNotExists = 1;
+    $this->tmpl = $this->readTemplate($this->cfg->get('template'));
+      
+   }
+   
+   // Read template
+   // $fName - file name of template
+   function readTemplate($fName) {
+      $this->log->put("Read template [$fName]");
+      $this->kernel->classLoader->checkClass("templateClass");
+      $tmpl = new templateClass($this->root_dir, "remove");
+      $tmpl->halt_on_error = "yes";
+      $tmpl->set_file(array("body_asdfa" => $fName));
+
+      $tmpl->set_block("body_asdfa", "selected_month_block", "selectedBlock");
+      $tmpl->set_block("body_asdfa", "month_block", "normalBlock");
+      $this->tmpl = &$tmpl;
+
+      for($i=date("m")+0;$i<=15;$i++)
+        $this->makemonth($i);
+
+      $tmpl->parse("out", array("body_asdfa")); 
+      
+      $out = $tmpl->get("out");
+      $this->html = $out;
+      return $tmpl;
+   }
+
+
+   function makemonth($month){
+        global $mnth;
+        $mnth = (!$mnth)?date("m")+0:$mnth;
+
+        
+        if (($mnth+0)==($month+0) || $this->arhiv) {
+           $res = $this->getMonth($month);
+           for ($i=0;$i<count($res);$i++){
+                $tmp = $this->api->SetFieldsEx($res[$i]);
+                list($tmp['day']) = split('-',$tmp['date'],3);
+                $this->tmpl->set_var($tmp);
+                $this->tmpl->parse("selectedBlock","selected_month_block",true);
+           }
+        }
+
+       $this->tmpl->set_var(array("MONTH_NAME" => '##'.date('F', mktime(0,0,0,$month,1,2000)).'##',
+                                  "MONTH_URL"  => $this->api->genURL("mnth").$month));
+       $this->tmpl->parse("normalBlock","month_block",true);
+       $this->tmpl->set_var(array("selectedBlock" => ""));
+   }
+
+      function getMonth($num){
+        $SqlStr = 'select d.ID from Documents d, TxtDetails td, TxtContents tc,DocLinks l '.
+              'where d.ID = td.DocID and td.TxtID = tc.ID and l.DocID = d.ID and '.
+              "l.GrpID = 843 and tc.name = 'date' and MONTH(tc.content) = $num order by tc.content";
+//        $this->log->put("$SqlStr");
+        $result = $this->kernel->db->query($SqlStr);
+        if (!$result || !$count = $result->numrows()) return $returnArray;
+        for ($Cn = 0; $Cn < $count; $Cn++) {
+            list($grpID) = $result->getrow();
+            if (!$this->kernel->api->checkDocSecurity($grpID, "R")) continue;
+            $returnArray[] = $grpID;
+        }
+        return $returnArray;
+   }
+
+
+
+}
+?>

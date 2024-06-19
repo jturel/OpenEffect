@@ -1,0 +1,18 @@
+<?
+
+  $fields  = array(array("name" => "ID",         "type" => 1),
+                   array("name" => "UserID",     "type" => 1),
+		   array("name" => "RecTime",    "type" => 1),
+		   array("name" => "LastUpdate", "type" => 1),
+                   array("name" => "templateID", "type" => 2, "select" => "list"));
+		   
+  
+  $lists["list"] = array();
+  $SqlStr = "SELECT ID, name FROM ".$this->kernel->tab_cfg->get("templateTable");
+  $result = $this->kernel->db->query($SqlStr);
+  if ($result && $count = $result->numrows()) for ($Cn = 0; $Cn < $count; $Cn++) {
+     list($id, $name) = $result->getrow();
+     $lists["list"][] = array("name" => $name, "value" => $id);
+  }
+
+?>

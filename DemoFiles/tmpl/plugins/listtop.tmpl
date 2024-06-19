@@ -1,0 +1,31 @@
+<html>
+<body leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
+<script language="JavaScript">
+<!--
+function goo(q){
+  alert("parse.php?30&"+q);   
+  document.dd.src = "parse.php?30&"+q;
+  dd.src = "parse.php?30&"+q;
+  document.dd.url = "parse.php?30&"+q;
+  dd.url = "parse.php?30&"+q;
+  document.dd.href = "parse.php?30&"+q;
+  dd.href = "parse.php?30&"+q;
+}
+// -->
+function loadDocs(){
+  var str = "parse.php?30&" + fff.parentID.options[fff.parentID.selectedIndex].value;
+alert(str);
+  document.all.iframeID.src = str;
+}
+</script>
+<Form action="#" name="fff" method="post">
+
+    <select name="parentID" class="inputz" onchange="loadDocs();">
+<!-- BEGIN item_block -->
+    <option value='{value}'>{name}</option>
+<!-- END item_block -->
+    </select>
+</Form>
+<iframe id="iframeID" name="dd" width="100%" height="100%" frameborder="0" src="parse.php?30&{GRP}" scrolling="NO"></iframe>
+</body>
+</html>

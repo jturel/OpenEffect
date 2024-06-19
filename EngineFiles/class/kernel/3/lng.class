@@ -1,0 +1,98 @@
+<?
+/**
+* Copyright (C) 2002 SIA ESOFTS.
+*
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License 
+* version 2 as published by the Free Software Foundation.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the SIA ESOFTS, 38/40 Blaumana str., 
+* Riga, LV - 1011, LATVIA, e-mail office@esoft.lv 
+*
+* This General Public License does not permit incorporating your program into
+* proprietary programs. Should you require to License Open Effect under the
+* commercial License, please contact SIA ESOFTS for up-to-date information.
+*/
+
+
+
+/***************************************
+*  Language class
+*  Read config file and decode strings
+*  
+***************************************/
+
+  // Check extends classes
+  $this->checkClass("confClass",       "lngClass");
+  $this->checkClass("confItemClass",   "lngItemClass");
+  $this->checkClass("confStringClass", "lngStringClass");
+
+
+  class lngClass extends confClass {
+     var $className = "lngClass";  // Class name
+     var $childClassName = "lngItemClass";  // Child class name
+  
+  
+     // Constructor
+     // $parent - pointer on parent object
+     // $fileName - open stream "DEFAULT" and scan this file
+     function lngClass(&$parent, $lngDir = "/") {
+        $this->confClass(&$parent, "");
+    $this->rootDir = $lngDir;
+    
+    $this->log = $this->kernel->loger->reg("LANGUAGE");
+    $this->log->put("set root dir : $lngDir");
+     }
+     
+  } // Finish lngClass class
+
+
+######################################################################
+#
+#  Language item class (stream)
+#
+
+  class lngItemClass extends confItemClass {
+     var $className = "lngItemClass"; // Class name
+     var $childClassName = "lngStringClass"; // Child class name
+     
+     
+     // Constructor
+     // $parent - pointer on parent object
+     // $name - empty parametrs
+     function lngItemClass(&$parent, $name) {
+        $this->confItemClass(&$parent, $name);
+     }
+     
+     // Get value , or key string if key not exists...
+     // $key - key for get value from array
+     function get($key = "DEFAULT") {
+//echo "get lng here<br>";
+        $upKey = strtoupper($key);
+    if (!is_object($this->childItems[$upKey])) return $key;
+    return $this->childItems[$upKey]->get();
+     }
+  }
+
+  
+######################################################################
+#
+#  Language string class
+#
+
+  
+  // Configuration  
+  class lngStringClass extends confStringClass {
+     var $className = "lngStringClass";
+     
+     // Constructor
+     // $parent - pointer on parent object
+     // $key - key for configuration string
+     function lngStringClass(&$parent, $key) {
+        $this->confStringClass(&$parent, $key);
+     }
+     
+  }
+ 
+?>

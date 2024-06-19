@@ -1,0 +1,62 @@
+<?
+/**
+* Copyright (C) 2002 SIA ESOFTS.
+*
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License 
+* version 2 as published by the Free Software Foundation.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the SIA ESOFTS, 38/40 Blaumana str., 
+* Riga, LV - 1011, LATVIA, e-mail office@esoft.lv 
+*
+* This General Public License does not permit incorporating your program into
+* proprietary programs. Should you require to License Open Effect under the
+* commercial License, please contact SIA ESOFTS for up-to-date information.
+*/
+
+
+
+class document_ extends pluginClass {
+
+   // Constructor
+   function document_(&$parent, $cfg, $template, $DocID,$log=0,$fld=0,$addictionl) {
+      $this->root_dir = TMPL_DIR;
+      $this->pluginClass(&$parent,$cfg);
+      if ($log) $this->log = $this->kernel->loger->reg("Documents view second level plugin CONSTRUCTOR");
+
+      if ($parent->api) $this->api = &$parent->api;
+      else $this->api = new rus_api(&$parent,$cfg,$log);
+
+//      $this->api = new rus_api(&$this, $cfg,$log);
+      
+      if ($this->log) $this->log->put("Read template [$template]");
+      $this->kernel->classLoader->checkClass("templateClass");
+
+      $tmpl = new templateClass($this->root_dir, "remove");
+
+
+//   function parse_ex(&$parent, &$tmpl, &$array, $log=0) {
+      if ($fld) 
+        $ex = new parse_ex(&$this, &$tmpl, &$fld,$log);
+
+      $tmpl->halt_on_error = "yes";
+      $tmpl->set_file(array("body_out_array" => $template));
+      if ($fld) 
+        $ex->init("body_out_array");
+
+      $tmp = array_merge( $this->api->SetFields($DocID), $addictionl);
+      if (!$fld) 
+         $tmpl->set_var($tmp);
+      else 
+         $ex->make($tmp);
+
+      $tmpl->parse("out", array("body_out_array"));
+
+      $this->html = $tmpl->get("out");
+      $this->tmpl = $tmpl;
+   }
+
+}
+
+?>

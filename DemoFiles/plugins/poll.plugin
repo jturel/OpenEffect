@@ -1,0 +1,168 @@
+<?
+/*********************************************
+*
+*  FORM constructor plugin
+*
+*  Types :
+*  0 - Hidden
+*  1 - Text
+*  2 - Select box
+*  3 - CheckBox
+*  4 - List
+*
+*********************************************/
+
+
+class poll extends pluginClass {
+
+
+   // Constructor
+   function poll(&$parent, $cfg) {
+      $this->root_dir = TMPL_DIR;
+      $this->pluginClass(&$parent, $cfg);
+      $this->api = new rus_api(&$this,$cfg);
+      $this->main();
+   }
+
+   
+   // Main function
+   function main() {
+      $this->log         = $this->kernel->loger->reg("Poll CONSTRUCTOR");
+//      $this->log->put("tEST :  $this->Documents $this->DocLinks ");
+      $this->GroupID     = $this->cfg->get("groupid");
+      $this->action      = $this->cfg->get("action");        
+      $this->tmpl        = $this->parse();
+   }
+   
+   // Parse template into HTML vars
+   function parse() {
+      $this->ID = $this->GetID(); 
+      $this->SetFields($this->ID);
+
+      if ($this->test($this->ID)&&!$this->cfg->get("Results"))
+         $out = $this->readTemplateForm($this->cfg->get("templateForm"));
+       else 
+         $out = $this->readTemplateResult($this->cfg->get("templateResult"));        
+
+      return $out;
+   }
+
+   function test($id){
+    $this->log->put("Rusel :  Call Test");
+        global $vout,$Vouting_cookies;
+        $this->vout = $vout;
+        $ip = getenv('REMOTE_ADDR'); 
+    $this->log->put(" IP:$ip");
+//        $ip = rand();
+        if ($Vouting_cookies == $id) return 0;
+    $this->log->put("Rusel :  No cookes");
+        if ($ip == $this->contents['ip']) return 0;
+    $this->log->put(" New IP:$ip");
+        if ($this->kernel->Vouting_update_complit) return 0;
+    $this->log->put("Rusel :  No previos plugin");
+    $this->log->put("Rusel :  Vouting : [$vout]");
+        if (preg_match('/^[0-9]$/',$vout)) {
+    $this->log->put("Rusel :  Set cookes");
+              setcookie('Vouting_cookies',$id,time()+3600000);
+    $this->log->put("Rusel :  Uppdate");
+              if (preg_match('/[0-9]+/',$this->contents["r$vout"])) {
+    $this->log->put("Rusel :  Call Updater");
+                $this->updater($vout);
+              } else {
+    $this->log->put("Rusel :  Call createnewr");
+                $this->createnewr($vout);
+              }    
+                   $this->kernel->api->magicTxt($id,'ip',$ip);
+            $this->kernel->Vouting_update_complit = 1;
+            $this->contents["r$vout"]++;
+            return 0;
+        }
+
+        return 1;               
+   }
+
+   function readTemplateForm($fName) {
+      $this->log->put("Read template [$fName]");
+      $this->kernel->classLoader->checkClass("templateClass");
+      $tmpl = new templateClass($this->root_dir, "remove");
+      $tmpl->halt_on_error = "yes";
+      $tmpl->set_file(array("base" => $fName));
+      $tmpl->set_block("base", "vout_block", "VoutingBlock");
+      $this->contents['action'] = $this->contents["q$this->vout"];
+      $tmpl->set_var($this->contents);
+
+        for($i = 1; $i < $this->numquestions; $i++) {
+            $tmpl->set_var(array("name"   => "vout",
+                                 "num"    => $i,
+                                 "text"   => $this->contents["q$i"]));
+            $tmpl->parse("VoutingBlock", "vout_block", true);
+        }
+
+      $tmpl->set_var(array("action"   => $this->action));      
+      $tmpl->parse("out", array("base"));
+      $out =$tmpl->get("out");
+      $this->html = $out;
+      return $tmpl;
+   }
+
+   function readTemplateResult($fName) {
+      $this->log->put("Read template [$fName]");
+      $this->kernel->classLoader->checkClass("templateClass");
+      $tmpl = new templateClass($this->root_dir, "remove");
+      $tmpl->halt_on_error = "yes";
+      $tmpl->set_file(array("base" => $fName));
+      $tmpl->set_block("base", "res_block", "ResultsBlock");
+
+       for($i = 1; $i < $this->numquestions; $i++) {
+               $count += $this->contents["r$i"];
+       }
+
+      $this->contents['ANSWER'] = $this->contents["q$this->vout"];
+      $this->contents['COUNT'] = $count;
+      $this->contents['action'] = $this->contents["q$this->vout"];
+      $tmpl->set_var($this->contents);
+       
+       $pic=($count==0)?0:($this->cfg->get("picmax")/$count);
+       $count=($count==0)?0:(1000/$count);
+       
+       for($i = 1; $i < $this->numquestions; $i++) {
+            $x = ($this->contents["r$i"]+0);
+            $tmpl->set_var(array("percent"         => round($x*$count)/10,
+                                 "picture_size"    => round($x*$pic),
+                                 "count"           => $x,
+                                 "text"            => $this->contents["q$i"]));
+            $tmpl->parse("ResultsBlock", "res_block", true);
+       }
+
+      $tmpl->set_var(array("action"   => $this->action));      
+      $tmpl->parse("out", array("base"));
+      $out =$tmpl->get("out");
+      $this->html = $out;
+      return $tmpl;
+   }
+
+   function GetID(){
+        if ($this->cfg->get("Results") && $this->parent->docNr) {
+           return $this->parent->docNr;
+        }
+        return $this->api->GetFirstDocumentID($this->GroupID);
+   }
+
+   function createnewr($n) {  $this->kernel->api->createTxt($this->ID,"r$n",1);  }
+
+   function updater($n) {
+         $id = $this->kernel->api->getTxtIDByDocID($this->ID,"r$n");
+         if (!$id) return false;
+         $SqlStr = "update TxtContents set content = content+1 where ID = $id";
+         $this->kernel->db->query($SqlStr);
+   }
+
+   function SetFields($ID){
+         $this->contents = $this->api->SetFieldsEx($ID);
+         for ($i=1;$i<7;$i++){
+                if ($this->contents["q$i"]=="") break;
+         }
+         $this->numquestions = $i;
+   }
+}
+?>

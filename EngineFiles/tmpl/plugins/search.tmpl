@@ -1,0 +1,96 @@
+<script language="JavaScript">
+<!--
+var searchreswin;
+function searchres(){
+  var urls = 'parse.php?25&&&StartSearch=1&searchstr=';
+  var dosmth = true;
+  if(document.searchform.searchstr.value!='') urls+=document.searchform.searchstr.value;
+  else dosmth = false;
+  if(document.searchform.radiovalue.value=='') dosmth = false;
+  else urls+='&radiobutton='+document.searchform.radiovalue.value;
+  if(dosmth){
+    searchreswin = window.showModelessDialog(urls,"","dialogHeight: 400px; dialogWidth: 240px; edge: Raised; center: Yes; help: No; resizable: Yes; status: No; dialogHide: Yes; unadorned: Yes; scroll: Yes;");
+  }
+}   
+function OpenDialog(id,grupid,docid ,width, height){
+  var option = "dialogHeight: "+height+"px; dialogWidth: "+width+"px; dialogTop: px; dialogLeft: px; edge: Raised; center: Yes; help: No; resizable: Yes; status: No; dialogHide: Yes; unadorned: Yes; scroll: Yes;"
+  return window.showModelessDialog("parse.php?28&"+grupid+"&"+docid+"&forms_Nr="+id,"", option);
+}
+
+function showhide(){
+  tmpS = top.leftfs.rows.split(',');
+  if(parseInt(tmpS[0])>19){
+    document.getElementById('showhidepic').src="files/img/gn_maximise.gif";
+    top.leftfs.rows="19,*";
+  } else {
+    document.getElementById('showhidepic').src="files/img/gn_minimise.gif";
+    top.leftfs.rows="87,*";
+  }
+}
+var ActiveSet=false;
+function setActiveWin(doIt){
+  if(doIt && !ActiveSet){
+    top.topFrame.SetActive(0, "");
+  }
+  ActiveSet=doIt;
+  if(typeof(document.all.winhead)=='object') document.all.winhead.className = (doIt)?'mainSelected':'caption';
+}
+
+function doncl(){                                                    
+  if(typeof(top.rightFrame.document.all.winhead)=='object') top.rightFrame.setActiveWin(false);
+  if(typeof(top.leftFrame.document.all.winhead)=='object') top.leftFrame.setActiveWin(false);
+  setActiveWin(true);
+
+}
+document.onclick=doncl;
+// -->
+</script>
+<link rel="stylesheet" href="files/norm_window.css" type="text/css">
+
+<form action="" name="searchform" target="" method="" onsubmit="searchres();return false;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" class="main">
+    <tr> 
+      <td> 
+        <table width="100%" border="0" cellspacing="0" id="winhead" cellpadding="0" class="caption">
+          <tr valign="middle" align="left"> 
+            <td width="18"><img src="files/img/gn_search.gif" width="18" height="18"></td>
+            <td class="captionText">##SEARCH##</td>
+            <td width="19"><img src="files/img/gn_minimise.gif" id="showhidepic" onclick="showhide();" style="cursor:hand;"></td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr> 
+      <td> 
+        <table width="100%" border="0" cellspacing="10" cellpadding="0" height="100%" class="body">
+          <tr> 
+            <td class="bg_color_light" align="center" valign="middle">
+              <input type="text" name="searchstr" class="inputz" style="width : 100%;">
+            </td>
+            <td class="bg_color_light" align="center" valign="middle" width="50">
+              <input type="button" name="StartSearch" value="##search##" class="buttonz" onclick="searchres();" style="width : 50px;">
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr> 
+      <td> 
+        <table border="0" cellspacing="2" cellpadding="0" width="100%" class="list">
+          <tr> 
+            <td width="10"> 
+              <input type="radio" name="radiobutton" value="document" class="input_dark" onchange="document.searchform.radiovalue.value='document'" checked>
+            </td>
+            <td class="captionTextTable"><nobr>##in Name##</nobr></td>
+            <td width="10"> 
+              <input type="radio" name="radiobutton" value="group" class="input_dark" onchange="document.searchform.radiovalue.value='group'">
+              <input type="hidden" name="radiovalue" value="document">
+            </td>
+            <td class="captionTextTable"><nobr>##Full Text##</nobr></td>
+            <td class="captionTextTable" width="100%">&nbsp;</td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</form>

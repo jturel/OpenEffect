@@ -1,0 +1,58 @@
+<!-- BEGIN close_block -->
+<script language="JavaScript">
+<!--
+   self.location.href = 'parse.php?5&{_GROUP_ID}&{DOC_ID}';
+// -->
+</script>
+<!-- END close_block -->
+<!-- BEGIN tree_block --><!-- END tree_block -->
+<center>
+  <form name='docs' action="{_LINK_SELF}" method="post">
+  <input type="hidden" name="delete" id="deleteid" value="">
+  <input type="hidden" name="move" id="moveid" value="">
+    <table width="600" border="0" cellspacing="0" cellpadding="0" class="main">
+      <tr> 
+      <td> 
+        <table width="100%" border="0" id="winhead" cellspacing="0" cellpadding="0" class="caption">
+          <tr valign="middle" align="left"> 
+            <td width="20"><img src="img/gn_folder.gif" width="18" height="18"></td>
+            <td width="588"><B>DOCUMENTS</B></td>
+            <td width="17"><!img src="img/gn_minimise.gif"></td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr> 
+      <td> 
+        <table width="100%" border="0" cellspacing="10" cellpadding="0" height="100%" class="bg_color_light">
+          <tr> 
+            <td> 
+              <table width="100%" border="0" cellspacing="0" cellpadding="0" class="browse" >
+                <tr> 
+                  <td width="88%" class="caption" >Documents name</td>
+                </tr>
+{output}
+<!-- BEGIN addDocWithTmpl_block -->
+<!-- END addDocWithTmpl_block -->
+<!-- BEGIN addDocWithOutTmpl_block -->
+<!-- END addDocWithOutTmpl_block -->
+
+              </table>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr> 
+      <td> 
+      </td>
+    </tr>
+  </table>
+</form>
+</center>
+
+<!-- BEGIN item_block -->
+              <tr> 
+                <td width="88%"><a href="parse.php?5&{_GROUP_ID}&{ID}" onclick="top.topFrame.SetActive(3, '{ID}');">{TITLE}</a> <b>[{ID}]</b></td>
+              </tr>
+<!-- END item_block -->

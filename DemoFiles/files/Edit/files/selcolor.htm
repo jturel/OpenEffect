@@ -1,0 +1,176 @@
+<HTML>
+<HEAD>
+<TITLE>Select Color</TITLE>
+
+<STYLE TYPE="text/css">
+ BODY   {margin-left:10; font-family:Verdana; font-size:10; background:menu}
+ BUTTON {width:5em}
+ P      {text-align:center}
+ TABLE  {cursor:hand}
+ .smalltext{font-family:Verdana; font-size:10; background:menu}
+ </STYLE>
+
+<SCRIPT LANGUAGE="JavaScript">
+<!--
+var colelm, numberOfColors=15, curcolor='#ffffff', last=0;
+function setcolsrg(b){
+	for ( var y = 0; y < colelm.length; y++) {
+		for ( var x = 0; x < colelm.length; x++) {
+			eval('r' + x + 'g' + y + '.style.backgroundColor = "#' + setrgb(colelm[x] + colelm[y] + colelm[b]) + '"');
+		}
+		eval('b' + y + '.style.backgroundColor = "menu"');
+		eval('g' + y + '.style.backgroundColor = "#' + setrgb(colelm[colelm.length - 1] + colelm[0] + colelm[y]) + '"')
+	}
+	eval('b' + b + '.style.backgroundColor = "#' + setrgb(colelm[colelm.length - 1] + colelm[0] + colelm[b]) + '"')
+}
+function setrgb(str){
+	if(rgb.value==2) return str.substr(2)+str.substr(0,2);
+	if(rgb.value==1) return str.substr(4)+str.substr(0,4);
+	if(rgb.value==0) return str;
+}
+function makeArray(){
+	t = numberOfColors;
+	var str='', tmp=256/t;
+	colelm = new Array(t+1)
+	for( var i = 0; i < t; i++  ) {
+		str = '' + ml(Math.floor(i*tmp/16)) + ml((i*tmp)%16)
+		colelm[i]=str
+	}
+	colelm[ colelm.length - 1 ] = 'ff'
+}
+function ml(t){
+	var r=(t<10)?Math.floor(t):(t==10)?'a':(t==11)?'b':(t==12)?'c':(t==13)?'d':(t==14)?'e':'f'
+	return r
+}
+function verifyColor(str){
+	if((str.length==7 && str.charAt(0)=='#')||str.length==6){
+		for(i=str.length-6; i<str.length; i++) {
+			c=str.charCodeAt(i);
+			if(!((c>47&&c<58)||(c>64&&c<71)||(c>96&&c<103))) return false;
+		}
+	} else return false;
+	return true;
+}
+//-->
+</SCRIPT>
+
+<SCRIPT LANGUAGE=JavaScript FOR=ctrg EVENT=onmousedown>
+  curcolor=event.srcElement.style.backgroundColor;
+  SelColor.value = event.srcElement.style.backgroundColor;
+  selcol.style.backgroundColor = event.srcElement.style.backgroundColor;
+</SCRIPT>
+
+<SCRIPT LANGUAGE=JavaScript FOR=ctrg EVENT=onmouseover>
+curcol.style.backgroundColor = event.srcElement.style.backgroundColor;
+</SCRIPT>
+
+<SCRIPT LANGUAGE=JavaScript FOR=ctrg EVENT=onmouseout>
+curcol.style.backgroundColor = 'silver';
+</SCRIPT>
+
+<SCRIPT LANGUAGE=JavaScript FOR=Ok EVENT=onclick>
+  if(verifyColor(SelColor.value)){
+    window.returnValue = SelColor.value;
+    window.close();
+  } else alert("Not a color: "+SelColor.value)
+</SCRIPT>
+<SCRIPT LANGUAGE="JavaScript" FOR=ctb EVENT=onmousedown>
+<!--
+if(!isNaN(event.srcElement.id.substr(1))){
+	setcolsrg(event.srcElement.id.substr(1))
+}
+//-->
+</SCRIPT>
+<SCRIPT LANGUAGE="JavaScript" FOR=rgb EVENT=onchange>
+<!--
+	var t=0;
+	tmp = curcolor.substr(1+last*2,2+last*2).substr(0,2)
+	t=findNumber(tmp);
+	setcolsrg(t)
+	last=rgb.value;
+	function findNumber(st){
+		for(i=0; i<colelm.length; i++) if(colelm[i]==st) return i;
+		return 0;
+	}
+//-->
+</SCRIPT>
+</HEAD>
+
+<BODY>
+<TABLE BORDER=0 CELLSPACING=0 CELLPADDING=0>
+<TR>
+	<TD>
+		<TABLE>
+			<TR>
+				<TD>
+					<TABLE ID=ctrg class=ColTable WIDTH=256 HEIGHT=256 BORDER=0 CELLSPACING=0 CELLPADDING=0>
+						<SCRIPT LANGUAGE="JavaScript">
+							<!--
+							var r, g, s = '';
+							makeArray()
+							for ( g = 0; g < colelm.length; g++) {
+								s = '<TR>'
+								document.write(s);
+								for ( r = 0; r < colelm.length; r++) {
+									s = '<TD WIDTH="' + eval(256/colelm.length) + '" HEIGHT="' + eval(256/colelm.length) + '" ID="r' + r + 'g' + g + '" STYLE=" background-color:#' + colelm[r] + colelm[g] + colelm[0] + ';"><IMG SRC="!pix.gif"></TD>';
+									document.write(s);
+								}
+								s = '</TR>'
+								document.write(s);
+							}
+//-->
+						</SCRIPT>
+					</TABLE>
+				</TD>
+				<TD>
+					<TABLE ID=ctb class=ColTable WIDTH=40 HEIGHT=256 BORDER=0 CELLSPACING=0 CELLPADDING=0>
+						<SCRIPT LANGUAGE="JavaScript">
+							<!--
+							var bb, s;
+							for ( bb = 0; bb < colelm.length; bb++) {
+								s = '<TR><TD WIDTH=10 HEIGHT=' + eval(256/colelm.length) + '" ID="g' + bb + '" STYLE=" background-color:#' + colelm[colelm.length-1] + colelm[0] + colelm[bb] + ';"><IMG SRC="!pix.gif"></TD><TD WIDTH=10 HEIGHT=' + eval(256/colelm.length) + '" ID="b' + bb + '"><IMG SRC="!pix.gif"></TD></TR>'
+								document.write(s);
+							}
+							//-->
+						</SCRIPT>
+					</TABLE>
+				</TD>
+			</TR>
+		</TABLE>
+	</TD>
+</TR>
+<TR>
+	<TD>
+		<TABLE>
+		<TR>
+			<TD ID=curcol width=50 height=30 STYLE="background-color:silver">
+				<IMG SRC="!pix.gif">
+			</TD>
+			<TD class=smalltext>
+				Current color
+			</TD>
+			<TD ID=selcol width=50 height=30 STYLE="background-color:silver">
+				<IMG SRC="!pix.gif">
+			</TD>
+			<TD class=smalltext>
+				Selected color
+			</TD>
+			<TD class=smalltext>
+				<SELECT NAME="rgb"><OPTION value=0 selected>r</OPTION><OPTION value=1>g</OPTION><OPTION value=2>b</OPTION></SELECT>
+			</TD>
+		<TR>
+		</TABLE>
+	</TD>
+</TR>
+</TABLE>
+<BR>
+<LABEL FOR=SelColor>Color:</LABEL>
+<INPUT TYPE=TEXT SIZE=15 ID=SelColor>
+&nbsp;&nbsp;&nbsp;<INPUT TYPE="Submit" NAME="Ok" VALUE="    OK    ">
+<INPUT TYPE="Button" NAME="Cancel" VALUE="Cancel" ONCLICK="window.close();">
+<SCRIPT LANGUAGE="JavaScript">
+<!--
+eval('b0.style.backgroundColor = "#' + setrgb(colelm[colelm.length - 1] + colelm[0] + colelm[0]) + '"');
+//-->
+</SCRIPT>
+</BODY></HTML>

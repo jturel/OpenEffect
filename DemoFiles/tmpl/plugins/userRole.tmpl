@@ -1,0 +1,65 @@
+<script language="JavaScript">
+<!--
+    function openWin(id) {
+	var target = "_blank";
+	var option = "status=no,top=10,left=10,height=145,width=240,resizable=no";
+	window.open("{LINK}?16&&&RoleID=" + id + "&UserID={UserID}", target, option);
+    }
+//-->
+</script>
+
+
+<form action="{_LINK_SELF}" method="POST">
+  <input type="Hidden" name="UserID" value="{UserID}">
+    <table width="600" border="0" cellspacing="0" cellpadding="0" class="main">
+      <tr> 
+      <td> 
+        <table width="100%" border="0" cellspacing="0" cellpadding="0" class="caption">
+          <tr valign="middle" align="left"> 
+            <td width="20"><img src="img/gn_folder.gif" width="18" height="18"></td>
+            <td width="588"><b>##Roles##</b></td>
+            <td width="17"><!img src="img/gn_minimise.gif"></td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr> 
+      <td> 
+        <table width="100%" border="0" cellspacing="10" cellpadding="0" height="100%" class="bg_color_light">
+          <tr> 
+            <td> 
+              <table width="100%" border="0" cellspacing="0" cellpadding="0" class="browse" >
+{output}
+              </table>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr> 
+      <td> 
+        <table width="100%" border="0" cellspacing="5" cellpadding="0">
+          <tr> 
+            <td> 
+              <input type="Submit" value="##Save##" name="save" class="input">
+              <input type="Submit" value="##Delete##" name="delete" onClick="return confirm('##Are you sure want delete## ?')" class="input">
+              <input type="Button" value="##Add new role##" onClick="openWin(0)" class="input">
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</form>
+</center>
+
+<!-- BEGIN item_block -->
+              <tr> 
+                <td width="5%">
+                  <input type="checkBox" name="check[{RoleID}]" {CHECKED}>
+                  <input type="Hidden" name="hidden[{RoleID}]" value="1">
+                </td>
+                <td width="88%"><a href="javascript:openWin({RoleID})">{Name}</a></td>
+              </tr>
+
+<!-- END item_block -->

@@ -1,0 +1,341 @@
+<?
+/**
+* Copyright (C) 2002 SIA ESOFTS.
+*
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License 
+* version 2 as published by the Free Software Foundation.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the SIA ESOFTS, 38/40 Blaumana str., 
+* Riga, LV - 1011, LATVIA, e-mail office@esoft.lv 
+*
+* This General Public License does not permit incorporating your program into
+* proprietary programs. Should you require to License Open Effect under the
+* commercial License, please contact SIA ESOFTS for up-to-date information.
+*/
+
+
+
+/*********************************************
+*
+*  TREE constructor plugin
+*
+*********************************************/
+
+
+//class treePlugin extends pluginClass {
+class treePlugin extends listPlugin {
+
+   // Variable
+   var $xSql    = "";
+   var $xAddSql = "";
+   var $predadiction = "node";
+
+   // Constructor
+   function treePlugin(&$parent, $cfg) {
+//      $this->root_dir = TMPL_DIR;
+      $this->listPlugin(&$parent, $cfg);
+//      $this->main();
+   }
+   
+   // Read template
+   // $fName - file name of template
+   function readTemplate($fName) {
+      $this->log->put("Read template [$fName]");
+      $this->kernel->classLoader->checkClass("templateClass");
+      $tmpl = new templateClass($this->root_dir, "remove");
+      $tmpl->halt_on_error = "yes";
+      
+      $tmpl->set_file(array("body" => $fName));
+      $tmpl->set_block("body", "item_block", "itemBlock");
+
+      // Define current form,group and doc ID's...
+      global $REQUEST_URI;
+      $tmpl->set_var(array("_FORM_ID"   => $this->parent->formNr,
+                           "_GROUP_ID"  => $this->parent->groupNr,
+                           "_DOC_ID"    => $this->parent->docNr,
+                           "_LINK_SELF" => $REQUEST_URI));
+      
+      return $tmpl;
+   }
+
+   // Parse tree and move into HTML var
+   // RETURN : echo of tree
+   function parse() {
+   
+      $rootID = (!$this->parent->groupNr)?$this->cfg->get("rootID"):$this->parent->groupNr;
+      $this->table  = $this->cfg->get("table");
+      $this->tmplTable  = $this->cfg->get("tmplTable");
+      if ($this->cfg->check("xTable")) {
+         $this->xTable = $this->cfg->get("xTable");
+      } else $this->xTable = "";
+  
+      $this->extFun();
+      $this->tree($rootID);
+      
+      $this->tmpl->parse("out", array("body"));
+      $out = $this->tmpl->get("out");
+      $this->html = $out;
+      return $out;
+   }
+   
+   // Tree work function (recursive)
+   // $pID - parentID of items
+   // $deep - deep level
+   function tree($pID, $deep = 0) {
+      $pID = intval($pID);         
+      $checked = '';
+//$ttb = $this->table;
+//echo "ttb= $ttb";
+      $SqlStr = 'SELECT ID,name,visible,templateID FROM '.$this->table." WHERE parentID = $pID ORDER BY sortNr";
+      $result = $this->kernel->db->query($SqlStr);
+
+      $cArray = $this->cfg->get("checkArray");
+      global $$cArray;
+      
+      if (!is_array($$cArray)) $$cArray = array();
+
+      if ($result && $count = $result->numrows()) {
+         for ($Cn = 0; $Cn < $count; $Cn++) {
+             list($id, $name, $vsible, $templateID) = $result->getrow();
+             if ($this->xTable) $checked = $this->getChecked($id);
+//echo "TID = $templateID<br>";
+//                                                                           $type = 1;
+//             if ($this->issub($id))                                        $type = 0;
+//             if (!$this->kernel->api->checkGroupSecurity($id, "R"))        $type = 2;
+                                                                           $types = 0;
+             if ($this->issub($id))                                        $types = 1;
+             if ($this->isvisble($id))                                     $types += 2;
+             if ($this->kernel->api->checkGroupSecurity($id, "R"))         $types += 4;
+             if ($this->kernel->api->checkGroupSecurity($id, "W"))         $types += 8;
+             if ($this->issubdoc($id)>0)                                   $types += 64;
+               
+             $this->tmpl->set_var(array('ID'      => $this->predadiction.$id,
+                                        'NAME'    => ($name)?$name:'undefined',
+                                        'TYPE'    => $types,
+                                        'TYPES'   => $types,
+                                        'PARENTID'=> $pID,
+                                        'CHECKED' => in_array($id,$$cArray)?'1':'',
+                                        'CHKBX'   => in_array($id,$$cArray)?1:0,
+                                        'FRMSID'  => '-1',
+                                        'DOC'     => 0));
+             $this->tmpl->parse('itemBlock', 'item_block', true);
+         }
+      }
+      $this->withfiles = 1;
+      if ($this->withfiles) {
+         $SqlStr = "SELECT d.ID,d.name,d.templateID FROM ".$this->kernel->tab_cfg->get("docTable")." d, ".
+                    $this->kernel->tab_cfg->get("docXgroupTable").
+                    " g WHERE g.GrpID = $pID AND g.DocID = d.ID ORDER BY g.sortNr DESC";
+            $res = $this->kernel->db->query($SqlStr);
+           
+            if ($res && $countt = $res->numrows()) {
+               for ($C = 0; $C < $countt; $C++) {
+                   list($docid,$docname,$doctemplateID) = $res->getrow();
+
+        $SqlStr = 'SELECT frmID FROM '.$this->tmplTable." WHERE ID = $doctemplateID";
+        $SRez = $this->kernel->db->query($SqlStr);
+        list($frmID) = $SRez->getrow();
+        $frmID = ($frmID)?$frmID:'-1';
+                                     
+
+                   $this->tmpl->set_var(array('ID'  => $docid,
+                                          'NAME'    => ($docname)?$docname:'undefined',
+                                          'PARENTID'=> $this->predadiction.$id,
+                                          'TYPE'    => 32,
+                                          'CHKBX'   => 0,
+                                          'FRMSID'  => $frmID,
+                                          'DOC'     => 1));
+                   $this->tmpl->parse('itemBlock', 'item_block', true);
+               }
+            }
+      }
+      if ($this->recursive)
+         $this->tree($id, $deep + 1);
+   }
+   
+   // Ext function for child classes
+   // check records in X tables
+   // example: $this->xSql = "GrpID=1 AND DocID=";
+   function getChecked($id) {
+      $SqlStr = 'SELECT * FROM '.$this->xTable.' WHERE '.$this->xSql.$id;
+      $result = $this->kernel->db->query($SqlStr);
+      if ($result && $result->numrows()) return "checked";
+      return "";
+   }
+/* ---  extends listPlugin
+   
+   // Decode extend functions
+   function extFun() {
+      global $move;
+      
+//      if ($move) $this->extFun_move($move);
+      if ($move) {
+         $moveArray = $this->cfg->get("checkArray");
+         $moveField = $this->cfg->get("delField");
+         if ($this->cfg->check("xTable")) $table   = $this->cfg->get("xTable");
+                                     else $table   = $this->cfg->get("table");
+         global $$moveArray;
+   
+         if (!is_array($$moveArray)) return;
+          
+         for ($Cn = 0; $Cn < count($$moveArray); $Cn++) {
+             $this->extFun_move($move,$$moveArray[$Cn]);
+         }
+      }
+
+
+   }*/
+
+   // Move groups (change order)
+   function extFun_move($move,$id) {
+
+
+//   print "$move,$id";
+//      $id = $this->parent->groupNr;
+      $SqlStr = "SELECT parentID FROM ".$this->table." 
+                 WHERE ID = $id";
+//      print $SqlStr;
+      $result = $this->kernel->db->query($SqlStr);
+      if ($result && $result->numrows()) {
+         list ($pID) = $result->getrow();
+                $SqlStr = "SELECT ID, sortNr FROM ".$this->table."
+                           WHERE parentID = $pID ORDER BY sortNr";
+//      print $SqlStr;
+                $result = $this->kernel->db->query($SqlStr);
+                if ($result && $count = $result->numrows()) {
+                   for ($Cn = 0; $Cn < $count; $Cn++) {
+                       list ($ID , $sortNr) = $result->getrow();
+                              if ($id != $ID) { $sID = $ID; $sSortNr = $sortNr; continue; }
+                              
+                              if ($move == "up"   && $Cn == 0) break;
+                              if ($move == "down" && $Cn >= $count - 1) break;
+                              
+                              if ($move == "down") list($sID, $sSortNr) = $result->getrow();
+                              
+                              $SqlStr = "UPDATE ".$this->table." 
+                                         SET sortNr = $sortNr
+                                                WHERE ID = $sID";
+//      print $SqlStr.'<br>';
+                              $this->kernel->db->query($SqlStr);
+                              $SqlStr = "UPDATE ".$this->table." 
+                                         SET sortNr = $sSortNr
+                                                WHERE ID = $ID";
+//      print $SqlStr.'<br>';
+                              $this->kernel->db->query($SqlStr);
+                              break;
+                   }
+                }
+      }
+   }
+      
+   // Delete tree items from base
+   // $sql - math filter
+   // $recursive - if true delete recursive
+   function delete($sql = "1", $recursive = true) {
+      $table    = $this->cfg->get("table");
+      $delArray = $this->cfg->get("checkArray");
+      $delField = $this->cfg->get("delField");
+      global $$delArray;
+      
+      if (!is_array($$delArray)) return;
+      $sSql = "";
+      reset($$delArray);
+
+      while(list($key, $val) = each($$delArray)) {
+         if (!$this->kernel->api->checkGroupSecurity($key, "W")) continue;   // tut pohodu $id netu :)
+         if ($sSql) $sSql .= " OR ";
+         $sSql .= "$delField = $key";
+         if ($recursive) $this->deleteRecursive($key, $table, $sql);
+      }
+
+      $SqlStr = "DELETE FROM $table WHERE $sql AND ($sSql)";
+
+/*      $this->kernel->sysLog->put("Sha budet ssql $SqlStr");
+      $this->kernel->sysLog->put("recursive $recursive");
+
+      $tty = $this->kernel->api->checkGroupSecurity($id, "W");
+      $this->kernel->sysLog->put("Sha budet del dlja id=$id : $tty");
+      if (!$this->kernel->api->checkGroupSecurity($id, "W")) return;   // tut pohodu $id netu :)
+  */
+      $this->kernel->db->query($SqlStr);
+   }
+   
+   
+   // work delete function (for recursive)
+   // $pID - parent ID
+   function deleteRecursive($pID, $table, $sql = "1") {
+      $SqlStr = "SELECT ID FROM $table WHERE parentID = $pID";
+      $result = $this->kernel->db->query($SqlStr);
+      if ($result && $count = $result->numrows()) {
+         for ($Cn = 0; $Cn < $count; $Cn++) {
+                    list($id) = $result->getrow();
+                    $this->deleteRecursive($id, $table, $sql);
+                }
+      }
+      $SqlStr = "DELETE FROM $table WHERE parentID = $pID AND $sql";
+      $this->kernel->db->query($SqlStr);
+   }
+
+   // save into x Table
+   function saveX($sql) {
+      $checkArray = $this->cfg->get("checkArray");
+      $xTable     = $this->cfg->get("xTable");
+      $xAddField  = $this->cfg->get("xAddField");
+      global $$checkArray;
+      
+      if (!is_array($$checkArray)) return;
+
+      $SqlStr = "DELETE FROM $xTable WHERE $sql";
+      $this->kernel->db->query($SqlStr);
+
+      while(list($key, $val) = each($$checkArray)) {
+         $SqlStr = "INSERT INTO ".$xTable." ($xAddField)
+                           VALUES (".$this->xAddSql." $key)";
+//        print $SqlStr.'<br>';
+                $this->kernel->db->query($SqlStr);
+      }
+   }
+
+   function issub($ID){
+      $SqlStr = 'SELECT count(ID) FROM '.$this->table." WHERE parentID = $ID";
+      $result = $this->kernel->db->query($SqlStr);
+      if (!$result) return 0;
+      list($c) = $result->getrow();
+      return $c;
+   }
+
+   function issubdoc($ID){
+      $SqlStr = 'SELECT count(*) FROM '.$this->kernel->tab_cfg->get("docXgroupTable")." WHERE GrpID = $ID";
+      $result = $this->kernel->db->query($SqlStr);
+      if (!$result) return 0;
+      list($c) = $result->getrow();
+      return $c;
+   }
+
+   function isvisble($ID){
+      $SqlStr = 'SELECT visible FROM '.$this->table." WHERE ID = $ID";
+      $result = $this->kernel->db->query($SqlStr);
+      if (!$result) return 0;
+      list($c) = $result->getrow();
+      return $c;
+   }
+
+   // Fucncion issubdoc  
+   // B0rland (rus@esoft.lv) 
+   function issubdoc($ID){
+         $SqlStr = "SELECT count(d.ID) FROM ".$this->kernel->tab_cfg->get("docTable")." d, ".
+                    $this->kernel->tab_cfg->get("docXgroupTable").
+                    " g WHERE g.GrpID = $ID AND g.DocID = d.ID";
+         $res = $this->kernel->db->query($SqlStr);
+         if ($res && $countt = $res->numrows()) {
+             list($c) = $res->getrow();
+             return $c;
+         }
+         return 0;
+   }
+
+}
+
+?>

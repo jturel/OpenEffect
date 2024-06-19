@@ -1,0 +1,23 @@
+<?
+
+  $fields  = array(array("name" => "ID",   "type" => 1),
+                   array("name" => "list", "type" => 2, "select" => "list", "nodb" => true));
+
+   global $lists,$docs;
+   $id = explode(',',$docs[0]);
+   $id = $id[0];
+
+  $lists["list"]  = array();
+  $SqlStr = "SELECT r.RoleID, r.Name, ds.Access FROM ".$this->kernel->tab_cfg->get("docXroleTable")." ds
+             , ".$this->kernel->tab_cfg->get("roleTable")." r 
+             WHERE DocID = $id AND r.Name IS NOT NULL
+                   AND r.RoleID = ds.roleID AND r.Name != ''";
+  $result = $this->kernel->db->query($SqlStr);
+  if ($result && $count = $result->numrows()) for ($Cn = 0; $Cn < $count; $Cn++) {
+     list($roleID, $role, $access) = $result->getrow();
+     $lists["list"][] = array("name" => "$role [$access]", "value" => $roleID);
+     $lists["role"][] = array("NAME" => $role, "ID" => $roleID,"ACCESS" => $access);
+
+  }
+
+?>

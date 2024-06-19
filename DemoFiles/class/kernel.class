@@ -1,0 +1,210 @@
+<?
+
+/*************************************
+*  This is KERNEL Class. main object in system
+*  
+*************************************/
+
+  // start Kerenl class
+  class kernelClass {
+     var $className = "kernelClass"; // Class name
+     var $kernel;                    // Pointer on kernel (na samu sebja)
+
+     // Constructor
+     function kernelClass($confFile) {
+        list($usec, $sec) = explode(" ",microtime()); 
+        $time = ((float)$usec + (float)$sec); 
+        $this->debug_text = ' value of $this->debug_text';
+
+        $this->confFile = $confFile; // 
+        $this->kernel   = &$this;    // create pointer on kernel object 
+        
+        $this->classLoader = new classLoaderClass(KERNEL_CLASS_DIR); // Load other classes from kernel class dir
+        $this->createObjects();
+
+//        $this->langID = $this->cfg->get("languageID");
+        $this->formNr = $this->getFormNr();
+        $this->is_engine = ($this->formNr < 100);
+        if ($this->formNr) {
+           $cache = $this->getFormCache($this->formNr);
+           if (!$cache) {
+              $this->createPluginManager();
+              $out = $this->admin->html;
+              $this->formCacheUpdate($this->formNr, $out);
+              print $out;
+           } else print $cache;
+        }
+
+        // Debug info RB rus@esoft.lv
+       if ($this->debug_ip)
+          $this->debug_end();             
+     }
+
+
+     // Destructor
+     function close() {
+        // Close DB conection
+
+//        print $this->secure->userID;
+
+        $this->db->close();
+     }
+
+
+     // Main object creation
+     function createObjects() {
+        // Create DB object and open conection
+        $this->db    = new dbClass($this);
+        $this->db->open();
+
+
+        // Create API object
+        $this->api   = new apiClass($this);
+
+        // Create log object    
+        $this->loger = new logerClass($this);
+        $this->log   = &$this->loger->reg("KERNEL");
+
+        // Create config object
+        $this->cfger   = new confClass($this);
+        $this->cfg     = &$this->cfger->reg("KERNEL", $this->confFile);
+        $this->tab_cfg = &$this->cfger->reg("TABLES", CONF_DIR.$this->cfg->get("tables"));
+
+        $this->debug_start();
+        
+        // Create ERROR log object
+        $this->errorLog = &$this->loger->reg("ERROR LOG");
+        $this->errorLog->setOutput($this->cfg->get("ErrorLogOutput"));
+
+        // Create SYSTEM Log object (hronologic)
+        $this->sysLog = new sysLogClass($this);
+
+        // Create language object
+        $lngDir      = LANGUAGE_DIR.$this->cfg->get("language")."/";
+        $this->lnger = new lngClass($this, $lngDir);
+        $this->lng   = &$this->lnger->reg("KERNEL", $this->cfg->get("kernelLngFile"));
+
+        if ($this->debug_ip){
+          list($usec, $sec) = explode(' ',microtime()); 
+          $time = ((float)$usec + (float)$sec) - $this->debug_time; 
+          $this->debugplugins .= 'LNG Install \t :['.$time.'](From start)<br>';
+        }
+
+        // Create Error object
+        $this->error = new errorClass($this, $this->cfg->get("errorLngFile"));
+
+        // Secure class
+        $this->secure = new accessClass($this);
+
+//        $this->plugins = new pluginLoaderClass($this, PLUGIN_DIR);
+     }
+
+     function createPluginManager(){
+        // Plugin Managers classes      
+        $this->admin = new pluginManagerClass($this);
+     }
+     
+     // Get formNR
+     // RETURN: Number of current Form
+     function getFormNr() {
+        // Scan URL and put formNR to variable
+        $this->urlDecode  = new urlDecodeClass($this);
+        return $this->urlDecode->formNr;
+//        return $this->admin->formNr;
+     }
+
+     // Get form page from cache
+     // RETUR: Content og cached page, or false 
+     //        if page is not in cache or time expire
+     function getFormCache($formNr) {
+        if (!$this->cfg->check("formCache") ||
+            !$this->cfg->check("defaultFormCache")) return false;
+        $value    = $this->cfg->get("formCache");
+        $defValue = $this->cfg->get("defaultFormCache");
+        if (strtoupper($value) == "TRUE" || strtoupper($value) == "YES") {
+           $this->classLoader->checkClass("cacheFormClass");
+           $this->formCache = new cacheFormClass($this, $formNr);
+           if ($this->formCache->checkTimeExpireCache()) return false;
+           $out = $this->formCache->readCache();
+           return $out;
+        }
+        return false;
+     }
+
+
+     // Save page to cache
+     function formCacheUpdate($formNr, &$out, $checkTimeExpire = true) {
+        if (!$this->cfg->check("formCache")) return false;
+        $value = $this->cfg->get("formCache");
+        if (strtoupper($value) == "TRUE" || strtoupper($value) == "YES") {
+           if (!$checkTimeExpire || $this->formCache->timeExpire) {
+              $this->formCache->updateTimeExpireCache();
+              $this->formCache->saveCache($out);
+              return true;
+           }
+        }
+        return false;
+     }
+
+    // Debug info RB rus@esoft.lv
+     function debug_start(){
+        global $debugip;
+        if ($this->cfg->check('debugip'))
+           $ip = $this->cfg->get('debugip');
+           if (!is_array($ip)) $ip = array($ip);
+           if (in_array(getenv('REMOTE_ADDR'),$ip)) {
+               list($usec, $sec) = explode(" ",microtime()); 
+               $this->debug_time = ((float)$usec + (float)$sec); 
+               $this->debug_text = ' value of $this->debug_text';
+               ini_set ('display_errors', 1);
+//               ini_set ('error_append_string', 1);
+               ini_set ('display_startup_errors', 1);
+               $this->debug_ip = true;
+               $debugip =1;
+               
+           }
+
+     }
+
+     function debug_end(){
+//        if (in_array(getenv('REMOTE_ADDR'),$ip)) {
+             global $debuglang;
+             $debuglng = $debuglang;
+             $debuglang = '';
+
+             print '<HR>';
+             $t = posix_times();
+             foreach ($t as $k=>$v)
+                print "$k = $v<br>";
+             list($usec, $sec) = explode(' ',microtime()); 
+             $time = ((float)$usec + (float)$sec) - $this->debug_time; 
+             print "Work time \t time:[$time]<br>";
+             print $this->debugplugins;
+             print 'User name \t :['.$this->secure->user.']<br>';
+             print 'User ID   \t :['.$this->secure->userID.']<br>';
+             print '<HR>';
+
+             while (list($k,$v)=each($GLOBALS)){
+               if ($k!='LS_COLORS')
+               print "$k =$v<br>";
+             }
+             print '<HR> SqL<BR><TABLE>';
+             print $this->debug_sql;
+             print '<TR><TD>Total :</TD><TD>['.$this->debug_sql_total.']</TD></TR>';
+             print '</TABLE><HR> Log<BR><table>';
+             print $this->debug_log;
+             print '</table>';             
+             global $debuglang;
+             print '<HR> lng<BR><TABLE>';
+             print $debuglng;
+             $debuglang = '';
+             print '</TABLE>';
+             print '<HR>';
+             print $this->debug_text;
+//        }       
+     }
+
+     
+  } // finished Kernel class
+ 
+?>

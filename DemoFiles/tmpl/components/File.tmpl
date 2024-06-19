@@ -1,0 +1,20 @@
+<!--font ID="{FIELD}_view"></font><br>
+<input type="Hidden" name="{FIELD}" value="{{FIELD}}">
+<input type="Button" value="##Add##" onClick="openBrowseWin('{FIELD}','{DIR_FILE}')">
+<input type="Button" value="##Clear##" onClick="mainForm.{FIELD}.value='';convert('{FIELD}')">
+<script language="javaScript">convert("{FIELD}");</script-->
+<table border="0" cellspacing="0" cellpadding="0" width="100%">
+  <TR>
+    <TD align=left>
+      <input type="text" id=fileupload_{FIELD} name="{FIELD}" size="50" class="input" value="" style="width:300px;">
+    </TD>
+    <TD align=left>
+      <img src="img/gn_pictures.gif" onclick="ShowUploadFile('fileupload_{FIELD}')">
+    </TD>
+  </TR>
+</table>
+
+
+
+
+

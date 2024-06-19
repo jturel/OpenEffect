@@ -1,0 +1,123 @@
+<?
+/*********************************************
+*
+*  CSV import plugin 
+*  Ruslan Bondar (rus@esoft.lv)
+*  29/11/01
+*
+*********************************************/
+
+
+class CSVimport extends pluginClass {
+
+   // Constructor
+   function CSVimport(&$parent, $cfg) {
+      $this->root_dir = TMPL_DIR;
+      $this->pluginClass(&$parent, $cfg);
+
+      global $group, $CVStext;
+      $TName = $this->cfg->get('template');
+      $TOPGROUP = $this->cfg->get('topgroup');
+      $this->kernel->classLoader->checkClass("templateClass");
+      $tmpl = new templateClass($this->root_dir, "remove");
+      $tmpl->halt_on_error = "yes";
+      $tmpl->set_file(array("base_qwe43" => $TName));
+      $tmpl->set_block('base_qwe43', 'group_block', 'itemBlock');
+      $tmpl->set_block('base_qwe43', 'template_block', 'iitemBlock');
+
+      $list = $this->groupEditTree($TOPGROUP, $this->kernel);
+       for ($i=0;$i<count($list);$i++){
+           $tmpl->set_var($list[$i]);
+           $tmpl->parse("itemBlock", "group_block", true);
+       }
+      $list = $this->templates($this->kernel);
+       for ($i=0;$i<count($list);$i++){
+           $tmpl->set_var($list[$i]);
+           $tmpl->parse("iitemBlock", "template_block", true);
+       }
+
+      if ($group&&$CVStext) {
+         $group = intval($group);
+         $CVSlines = explode("\n", $CVStext); 
+         $names = explode("\t", $CVSlines[1]);
+         for ($i=2;$i<count($CVSlines);$i++){
+             $val = explode("\t", $CVSlines[$i]);
+             if (count($val)>2)
+             $this->adddoc($names,$val,$group);
+         }
+      }
+           
+      $tmpl->set_var('LOG',$this->logg);
+
+      $tmpl->parse("out", array("base_qwe43"));
+      $this->html = $tmpl->get("out");
+   }
+
+   function groupEditTree($pID, &$kernel, $deep = 0) {
+      $list = array();
+      $SqlStr = 'SELECT ID, name FROM '.$kernel->tab_cfg->get('groupTable').
+                " WHERE parentID = $pID ORDER BY sortNr";
+      $result = $kernel->db->query($SqlStr);
+      if ($result && $count = $result->numrows()) for ($Cn = 0; $Cn < $count; $Cn++) {
+         list($id, $name) = $result->getrow();
+         for ($i = 0; $i < $deep; $i++) $name = "-&nbsp;&nbsp;".$name;
+             $list[] = array("name" => $name, "value" => $id);
+             $list = array_merge($list, $this->groupEditTree($id, $kernel, $deep + 1));
+      }
+      return $list;
+   }
+
+   function templates(&$kernel) {
+      $list = array();
+      $SqlStr = 'SELECT ID, name FROM '.$kernel->tab_cfg->get('templateTable');
+      $result = $kernel->db->query($SqlStr);
+      if ($result && $count = $result->numrows()) 
+        for ($Cn = 0; $Cn < $count; $Cn++) {
+         list($id, $name) = $result->getrow();
+         $list[] = array("name" => $name, "value" => $id);
+        }
+      return $list;
+   }
+
+   // Fucncion adddoc  
+   // B0rland (rus@esoft.lv) 
+   function adddoc(&$names,&$values,$group){
+
+       $doc_id = $this->kernel->api->createDocument($group,0);
+
+       $this->logg .= "ADD doc id [$doc_id] in [$group]<br>";
+
+       $this->kernel->secure->group->CashG[$group] = "PRW";
+       $this->kernel->secure->group->CashG[1] = "PRW";
+       $this->kernel->secure->doc->Cash[$doc_id] = "PRW";
+       $this->kernel->api->magicSecurityDoc($doc_id, 1, "RWP");              
+       $this->kernel->api->magicSecurityDoc($doc_id, 2, "R");
+       $this->kernel->api->magicSecurityDoc($doc_id, 3, "R");
+         
+
+       $this->logg .= "SECURITY doc id [$doc_id] in [$group]<br>";
+         
+       for ($j=0;$j<count($values);$j++){
+           $v = $values[$j];
+           if (trim($v)) {
+               $n = $names[$j];
+               if (preg_match("/picture[0-9]*/",$n)){
+                  if ($v)
+                  $v = "/img".$v;
+               }
+               $v = str_replace("\\","/",$v);
+               $v = str_replace("//","/",$v);
+               $this->kernel->api->createTxt($doc_id, $n, $v,0);
+              
+               $this->logg .= "ADD RESURS doc id [$doc_id] in [$group] name [$n] val [$v]<br>";
+           }
+       }       
+       global $template;
+       $template = intval($template);
+       $this->kernel->api->updateDocInfo($doc_id,array('visible' => 1,'name'=>$values[0], 'templateID'=>$template));
+   }
+
+   
+} 
+
+?>

@@ -1,0 +1,142 @@
+<!-- BEGIN close_block -->
+<script language="JavaScript">
+<!--
+   parent.returnValue = 'refresh';
+   parent.close();
+// -->
+</script>
+<!--
+<!-- END close_block -->
+<script language="JavaScript">
+<!--
+var disabledNames = new Array();
+for(var i = 0; i < parent.dialogArguments.length; i++) disabledNames[i] = parent.dialogArguments[i];
+function checkSBMT(){
+  var doIt = true;
+  for(var i = 0; i < disabledNames.length; i++) {
+    if(mainForm.Nick.value == disabledNames[i]){
+      alert("Name "+mainForm.Nick.value+" is already in use....");
+      doIt = false;
+    }
+  }
+  if(doIt && mainForm.Nick.value == ""){
+    alert("Name cannot be empty....");
+    doIt = false;
+  }
+  if(doIt) if(mainForm.Password1.value != mainForm.Password2.value){
+    alert("Passwords should be equal....");
+    doIt = false;
+  }
+  if(doIt){
+    for(var j = 0; j < mainForm.elements.length; j++) if(mainForm.elements[j].typez=="required" && mainForm.elements[j].value==""){
+      alert("Field " +mainForm.elements[j].textz+ " could not be empty...");
+      doIt = false;
+    }
+  }
+  if(doIt){
+    mainForm.save.value="ok";
+    mainForm.submit();
+  }
+}
+// -->
+</script>
+
+<html>
+<head>
+<link rel="stylesheet" href="files/norm_window.css" type="text/css">
+</head>
+<body leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
+<center>
+  <form method="POST" action="{_LINK_SELF}" name="mainForm">
+    <input type="hidden" value="" name="save">
+    <table width="100%" border="0" cellspacing="0" cellpadding="0" class="main">
+      <tr> 
+        <td> 
+          <table width="100%" border="0" id="winhead" cellspacing="0" cellpadding="0" class="captionText">
+            <tr valign="middle" align="left"> 
+              <td width="20"><img src="files/img/gn_access.gif" width="18" height="18"></td>
+              <td>
+<script language="JavaScript">
+<!--
+document.write((("{UserID}"=="0")?"##ADD USER##":"##EDIT USER##"));
+// -->
+</script>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr> 
+        <td> 
+          <table width="100%" border="0" cellspacing="10" cellpadding="0" height="100%" class="bodyWithText">
+            <tr> 
+              <td> 
+                <table border="0" cellpadding="2" cellspacing="0" width="100%">
+                  <tr> 
+                    <td class="captionTextTable"><nobr>##User ID##:&nbsp;</nobr></td>
+                    <td class="captionText" width="100%">{UserID}</td>
+                  </tr>
+                  <tr> 
+                    <td class="captionTextTable"><nobr>##Login##:&nbsp;</nobr></td>
+                    <td> 
+                      <input type="Text" name="Nick" value="{Nick}" size="15" maxlength="10" class="inputz" style="width:100%;">
+                    </td>
+                  </tr>
+                  <tr> 
+                    <td class="captionTextTable"><nobr>##Password##:&nbsp;</nobr></td>
+                    <td> 
+                      <input type="Password" name="Password1" value="{Password}" size="15" maxlength="10" class="inputz" style="width:100%;">
+                    </td>
+                  </tr>
+                  <tr> 
+                    <td class="captionTextTable"><nobr>##Re-Password##:&nbsp;</nobr></td>
+                    <td> 
+                      <input type="Password" name="Password2" value="{Password}" size="15" maxlength="10" class="inputz" style="width:100%;">
+                    </td>
+                  </tr>
+                  <tr> 
+                    <td class="captionTextTable"><nobr>##First Name##:&nbsp;</nobr></td>
+                    <td> 
+                      <input type="Text" name="Name" value="{Name}" size="15" maxlength="10" class="inputz" style="width:100%;">
+                    </td>
+                  </tr>
+                  <tr> 
+                    <td class="captionTextTable"><nobr>##Last Name##:&nbsp;</nobr></td>
+                    <td> 
+                      <input type="Text" name="SName" value="{SName}" size="15" maxlength="10" class="inputz" style="width:100%;">
+                    </td>
+                  </tr>
+                  <tr> 
+                    <td class="captionTextTable"><nobr>##Email##:&nbsp;</nobr></td>
+                    <td> 
+                      <input type="Text" name="Email" value="{Email}" size="15" maxlength="20" class="inputz" style="width:100%;">
+                    </td>
+                  </tr>
+                  <tr> 
+                    <td class="captionTextTable" valign="top"><nobr>##Remarks##:&nbsp;</nobr></td>
+                    <td> 
+                      <textarea name="Remarks" rows="5" style="width:100%; height:98px;" class="inputz">{Remarks}</textarea>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr> 
+        <td> 
+          <table width="100%" border="0" cellspacing="5" cellpadding="0">
+            <tr> 
+              <td align="right"> 
+                <input type="button" name="save1" value="##OK##" class="buttonz" onclick="checkSBMT();">
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </form>
+</center>
+</body>
+</html>

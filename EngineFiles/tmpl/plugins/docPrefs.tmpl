@@ -1,0 +1,136 @@
+<!-- BEGIN close_block -->
+<script language="JavaScript">
+<!--
+// -->
+</script>
+<!-- END close_block -->
+
+<html>
+<head>
+<script language="JavaScript">
+<!--
+var inData;
+function initIt(){inData = parent.dialogArguments;}
+function getSelected(){
+  var arrOut = new Array();
+  for(var i = 0; i < formz.groups.options.length; i++){
+    if(formz.groups.options[i].selected) arrOut[arrOut.length]=i;
+  }
+  return arrOut;
+}
+function rem(){
+  selectedItems=getSelected();
+  for(var i = selectedItems.length-1; i >= 0; i--){
+    formz.groups.options.remove(selectedItems[i]);
+  }
+}
+function add(){
+  var option = "dialogHeight: 280px; dialogWidth: 250px; dialogTop: px; dialogLeft: px; edge: Raised; center: Yes; help: No; resizable: Yes; status: No; dialogHide: Yes; unadorned: Yes; scroll: No;"
+  grToAdd = showModalDialog("parse.php?32&&{ID}",inData, option);
+  if(typeof(grToAdd)!="undefined" && grToAdd!='') grToAdd = grToAdd.split('@#$%^');
+  if(typeof(grToAdd)!="undefined" && grToAdd!='') for(var i=0; i<grToAdd.length/2; i++) addOption(grToAdd[i*2],grToAdd[i*2+1]);
+
+}
+function addOption(ids,titlez){
+  dosmth=true;
+  for(var i=0; i < formz.groups.options.length; i++){
+    if(formz.groups.options[i].value==ids){
+      dosmth=false;
+      break;
+    }
+  }
+  if(dosmth){
+    oOption = document.createElement("OPTION");
+    formz.groups.options.add(oOption);
+    oOption.innerText = titlez;
+    oOption.value     = ids;
+  }
+}
+function saveIt(){
+  for(var i=0; i < formz.groups.options.length; i++) formz.groupsID.value+=((formz.groupsID.value=='')?'':',')+formz.groups.options[i].value;
+  doIt=true;
+  if(formz.groupsID.value=="") doIt=confirm("Document does not belong to any group and wll be deleted! \n Proceed?");
+  if(doIt){
+    formz.save.value="save";
+    formz.submit();
+  }
+}
+// -->
+</script>
+<link rel="stylesheet" href="files/norm_window.css" type="text/css">
+</head>
+<body leftmargin="0" topmargin="0" marginwidth="0" marginheight="0" onload="initIt();">
+<form method="post" action="" name="formz">
+  <input type="Hidden" name="ID" value="{ID}">
+  <input type="Hidden" name="save" value="">
+  <input type="Hidden" name="groupsID" value=''>
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" class="main">
+    <tr> 
+      <td> 
+        <table width="100%" border="0" cellspacing="0" cellpadding="0" class="caption">
+          <tr valign="middle" align="left"> 
+            <td width="20"><img src="files/img/gn_access.gif" width="18" height="18"></td>
+            <td class="captionText">##DOCUMENT PREFERENCES## [{ID}]</td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr> 
+      <td> 
+        <table width="100%" border="0" cellspacing="10" cellpadding="0" height="100%" class="body">
+          <tr> 
+            <td align="left" valign="middle" class="captionTextTable">##Groups##</td>
+            <td align="left" valign="middle" class="captionTextTable">&nbsp;</td>
+          </tr>
+          <tr> 
+            <td align="left" valign="middle"> 
+              <select name="groups" size="5" class="inputzSelect" style="width : 228px;" multiple>
+<!-- BEGIN group_item_block --> 
+<option value="{ID}">{NAME}</option>
+<!-- END group_item_block --> 
+              </select>
+            </td>
+            <td align="left" valign="middle" class="captionTextTable">
+              <table width="100%" border="0" cellspacing="10" cellpadding="0" height="100%" class="body">
+                <tr><td> 
+                  <input type="button" name="addGroups" value="##add##" class="buttonz" onclick="add()">
+                </td><tr> 
+                </tr><td> 
+                  <input type="button" name="removeGroups" value="##remove##" class="buttonz" onclick="rem();">
+                </td></tr>
+              </table>
+            </td>
+          </tr>
+          <tr> 
+            <td align="left" valign="middle" class="captionTextTable" colspan=2>##Template##</td>
+          </tr>
+          <tr> 
+            <td> 
+              <select name="template" size="1" class="inputzSelect" style="width : 228px;">
+<!-- BEGIN temlate_item_block --> 
+<option value="{ID}">{NAME}</option>
+<!-- END temlate_item_block --> 
+<!-- BEGIN temlate_selected_item_block --> 
+<option value="{ID}" selected>{NAME}</option>
+<!-- END temlate_selected_item_block --> 
+              </select>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr> 
+      <td> 
+        <table width="100%" border="0" cellspacing="5" cellpadding="0">
+          <tr> 
+            <td align="right"> 
+              <input type="button" name="saveButton" value="##Save##" class="buttonz" onclick="saveIt();">
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</form>
+</body>
+</html>

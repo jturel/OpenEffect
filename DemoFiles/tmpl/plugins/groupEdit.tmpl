@@ -1,0 +1,88 @@
+<!--  BEGIN close_block -->
+<script language="JavaScript">
+<!--
+   top.returnValue = '1';
+   top.close();
+// -->
+</script>
+<!--
+<!-- END close_block -->
+
+<head>
+<link rel="stylesheet" href="files/norm_window.css" type="text/css">
+</head>
+<body leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
+<form method="POST" action="{ACTION}?9&{_GROUP_ID}" name="mainForm" >
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" class="main">
+    <tr> 
+      <td> 
+        <table width="100%" border="0" id="winhead" cellspacing="0" cellpadding="0" class="captionText">
+          <tr valign="middle" align="left"> 
+            <td width="20"><img src="img/gn_prefer.gif" width="18" height="18"></td>
+            <td>##Group preferences##</td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr> 
+      <td> 
+        <table width="100%" border="0" cellspacing="10" cellpadding="0" height="100%" class="bodyWithText">
+          <tr> 
+            <td> 
+              <table width="100%" border="0" class="bodyWithText">
+                <tr> 
+                  <td>##Parent##</td>
+                  <td> 
+                    <select name="parentID" class="inputz">
+                    {parentID}
+                    </select>
+                  </td>
+                </tr>
+                <tr> 
+                  <td>##Template##</td>
+                  <td> 
+                    <select name="templateID" class="inputz">
+                    {templateID}    
+                    </select>
+                  </td>
+                </tr>
+                <tr> 
+                  <td>##Name##</td>
+                  <td> 
+                    <input type="text" name="name" value="{name}" class="inputz">
+                  </td>
+                </tr>
+                <tr> 
+                  <td>##include in search##</td>
+                  <td> 
+                      <input type="checkbox" name="_visible_prewew" value="1" {visible} onclick="mainForm.elements['visible'].value = mainForm.elements['_visible_prewew'].checked?'1':'0'">
+                      <input type="hidden" name="visible" value="">
+                        <script language="JavaScript">
+                            <!-- 
+                            mainForm.elements['visible'].value = mainForm.elements['_visible_prewew'].checked?'1':'0'; 
+//                            alert(mainForm.elements['_visible_prewew'].checked);
+//                            alert(mainForm.elements['visible'].value);
+                            //-->
+                       </script>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr> 
+      <td> 
+        <table width="100%" border="0" cellspacing="5" cellpadding="0">
+          <tr> 
+            <td align="right"> 
+              <input type="submit" name="save" value="##OK##" class="buttonz">
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</form>
+</body>

@@ -1,0 +1,99 @@
+<?
+/**
+* Copyright (C) 2002 SIA ESOFTS.
+*
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License 
+* version 2 as published by the Free Software Foundation.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the SIA ESOFTS, 38/40 Blaumana str., 
+* Riga, LV - 1011, LATVIA, e-mail office@esoft.lv 
+*
+* This General Public License does not permit incorporating your program into
+* proprietary programs. Should you require to License Open Effect under the
+* commercial License, please contact SIA ESOFTS for up-to-date information.
+*/
+
+
+
+/***************************************
+*  Stream class (parent class)
+*  Operate  
+*  
+***************************************/
+
+#
+# Main Stream class
+#
+
+  $this->checkClass("linkerClass", "streamClass, streamItemClass");
+  
+
+  class streamClass extends linkerClass {
+     var $className = "streamClass";          // Class name
+     var $childClassName = "streamItemClass"; // Child class name
+     var $childItems;                         // Array of child items 
+
+  
+     // Constructor
+     // $parent - pointer on parent object
+     function streamClass(&$parent) {
+        $this->linkerClass(&$parent);
+     }
+
+
+     // Stream registrator
+     // $name - name of registred stream
+     // RETURN : pointer on create stream OR false if FALSE
+     function &regStream($name) {
+        if (!$name) return false;
+    $name = strtoupper($name);
+        if (is_object($this->childItems[$name])) return $this->childItems[$name];
+    $this->childItems[$name] = $this->createStream($name);
+    return $this->childItems[$name]; 
+     }
+     
+     
+     // Delete stream from array
+     // $name - name of delete stream
+     // RETURN : true - if TRUE, false - if FALSE
+     function delStream($name) {
+        if (!$name) return false;
+        if (!is_object($this->childItems[$name])) return false;
+    
+    // SOMETHING....
+    
+    return true;
+     }
+     
+     
+     // Create Stream item object
+     // $name - name of creating stream
+     // RETURN : create stream object
+     function createStream($name) {
+    eval("\$obj = new ".$this->childClassName."(\$this, \$name);");
+    return $obj;
+     }
+     
+  } // finished Main Stream class
+
+
+#
+# Item Stream class
+#
+ 
+  class streamItemClass extends linkerClass {
+     var $className  = "streamItemClass"; // Class name
+     var $streamName;                     // Item name
+  
+     // Constructor
+     // $parent - pointer on parent object
+     // $name - name of stream
+     function streamItemClass(&$parent, $name) {
+        $this->linkerClass(&$parent);
+    $this->streamName = $name;
+     }
+  } // finished Item Stream class
+ 
+?>

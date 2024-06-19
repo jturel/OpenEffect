@@ -1,0 +1,97 @@
+<?
+
+/***************************************
+*  Access class [document]
+*  
+***************************************/
+
+  $this->checkClass("linkerClass", "accessDocClass");
+  
+  define("fullAccess", "RWP");
+  define("defaultAccess", "R");
+
+  class accessDocClass extends linkerClass {
+     var $className = "accessDocClass";          // Class name
+     var $die = true;   // if true then script die after tamplate draw
+     var $active = true;   // if false then alwayse true
+     var $Cash = array();
+  
+     // Constructor
+     // $parent - pointer on parent object
+     function accessDocClass(&$parent) {
+        $this->linkerClass(&$parent);
+
+        if ($this->kernel->tab_cfg->check("docXroleTable"))
+              $this->table = $this->kernel->tab_cfg->get("docXroleTable");
+         else $this->table = "DocSec";
+         
+        if ($this->parent->cfg->check("docAccess"))
+              $value = strtoupper($this->parent->cfg->get("docAccess"));
+         else $value = "TRUE";
+        if ($value == "TRUE" || $value == "ON" || $value == "YES") $this->access = true;
+           else $this->access = false;
+     }
+
+        
+     // Get access current user to document
+     // $docNr - checked document
+     // RETURN: access
+     function get($docNr = 0) {
+        if (!$this->access) return fullAccess;
+        if (isset($this->Cash[$docNr])) return $this->Cash[$docNr];        // By RB
+        if (!$docNr) return "";
+        $SqlStr = "SELECT Access FROM ".$this->table.
+                  " WHERE DocID = $docNr";
+        $SqlStr2 = "";
+        for ($Cn = 0; $Cn < count($this->parent->groupsID); $Cn++)
+            $SqlStr2 .= ($Cn ? " OR" : "").' RoleID='.$this->parent->groupsID[$Cn];
+        if ($SqlStr2) $SqlStr .= ' AND ('.$SqlStr2.')';
+                else return "";
+        $result = $this->kernel->db->query($SqlStr);
+        if ($result && $result->numrows()) {
+           list($stat) = $result->getrow();
+           $this->Cash[$docNr] = strtoupper($stat);                        // By RB
+           return strtoupper($stat);
+        }
+        return "";
+     }
+
+     // Check access
+     // RETURN: true if have access
+     function check($docNr = 0, $access = defaultAccess,$recusiv = true) {
+//        print "[d$docNr*[$access]*]<BR>";
+//        return true;       
+        if (!$this->active) return true;
+        $docNr = intval($docNr);
+        $stat = strtoupper($this->get($docNr));
+        for ($Cn = 0; $Cn < strlen($access); $Cn++) {
+            $char = strtoupper(substr($access, $Cn, 1));
+            if (!strpos(" ".$stat, $char)) return false;
+        }
+        if (!$recusiv) return true;
+
+           $SqlStr = 'SELECT GrpID FROM '.$this->kernel->tab_cfg->get('docXgroupTable').
+                     " WHERE DocID = $docNr GROUP BY GrpID";
+           $result = $this->kernel->db->query($SqlStr);
+           if (!$result || !$count = $result->numrows()) return true;
+           for ($Cn = 0; $Cn < $count; $Cn++) {
+               list($grpID) = $result->getrow();
+               if ($this->parent->group->check($grpID, $access)) return true;
+           }
+           return false;
+     }
+
+     
+     // Check access and if not then drow template and die
+     // RETURN: true if have access
+     function checkEnd($docNr = 0, $access = defaultAccess) {
+        if (!$this->check($docNr, $access)) {
+           $this->kernel->error->die = $this->die;
+           $this->kernel->error->parse('Access deny to doc', array($docNr));
+           return false;
+        }
+        return true;
+     }
+     
+  } // finished Access doc class 
+?>

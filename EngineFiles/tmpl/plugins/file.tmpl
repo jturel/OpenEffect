@@ -1,0 +1,63 @@
+<!-- BEGIN image_block -->
+<img src="{URL}" height="30">
+<!-- END image_block -->
+
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<link rel="stylesheet" href="files/upload.css" type="text/css">
+<script language="JavaScript">
+function SelectIt(i){
+  tag = i;
+  while (tag.tagName != "TR"){
+    tag = tag.parentElement;
+  }
+  if (i.checked) tag.className = 'list_light';
+  else tag.className = '';
+}
+
+function SelectAllDocs(stat){
+  for (i=0;i<docs.elements.length;i++){
+    var tag = docs.elements[i];
+    if ((tag.type=='checkbox') && (tag.typez=='doc')){
+      tag.checked = stat; SelectIt(tag);
+    }
+  }
+}
+
+function Selected(){
+  var el = event.srcElement;
+  if (el.type == 'checkbox') SelectIt(el);
+}
+
+document.onclick=Selected;
+</script>
+</head>
+<body leftmargin="0" topmargin="0" marginwidth="0" marginheight="0" bgcolor="#e1e9ff" class="bg_color_light">
+<form name="docs" method="post">
+  <input type="hidden" name="deleteF" value="">
+  <table border="0" cellspacing="0" cellpadding="0" class="browse" width="100%" >
+{output}
+  </table>
+</form>
+</body>
+</html>
+
+<!-- BEGIN dir_block -->
+    <tr> 
+      <td width="20"><img src="files/img/tr_open.gif"></td>
+      <td width="20"> 
+        <input type="checkbox" name="check[{DIR_ID}]" value="{NAME}" typez="doc" onfocus="if(this.blur)this.blur()">
+      </td>
+      <td><a href="parse.php?{_FORM_ID}&&&fl={FIELD}&dir={DIR_URL}" onclick="parent.list.dir_url.value='{DIR_URL}';" onfocus="if(this.blur)this.blur()">{NAME}</a></td>
+    </tr>
+<!-- END dir_block -->
+<!-- BEGIN item_block -->
+    <tr > 
+      <td><img src="files/img/gn_pictures.gif"></td>
+      <td> 
+        <input type="checkbox" name="check[{FILE_ID}]" value="{NAME}" typez="doc" onfocus="if(this.blur)this.blur()">
+      </td>
+      <td><a href="#" onclick="parent.returnValue='{URL}'; parent.close();" onfocus="if(this.blur)this.blur()">{NAME}</a></td>
+    </tr>
+<!-- END item_block -->

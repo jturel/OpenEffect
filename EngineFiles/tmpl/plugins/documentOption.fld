@@ -1,0 +1,8 @@
+<?
+
+  $fields  = array(array("name" => "ID",            "type" => 1),
+                   array("name" => "LastUpdate",    "type" => 1),
+                   array("name" => "searchVisible", "type" => 3),
+                   array("name" => "keyWords",      "type" => 1));
+                                 
+?>

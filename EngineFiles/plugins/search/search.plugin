@@ -1,0 +1,130 @@
+<?
+/**
+* Copyright (C) 2002 SIA ESOFTS.
+*
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License 
+* version 2 as published by the Free Software Foundation.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the SIA ESOFTS, 38/40 Blaumana str., 
+* Riga, LV - 1011, LATVIA, e-mail office@esoft.lv 
+*
+* This General Public License does not permit incorporating your program into
+* proprietary programs. Should you require to License Open Effect under the
+* commercial License, please contact SIA ESOFTS for up-to-date information.
+*/
+
+
+class search extends pluginClass {
+
+   // Constructor
+   function search(&$parent, $cfg) {
+      $this->root_dir = TMPL_DIR;
+      $this->pluginClass(&$parent, $cfg);
+      $this->api = new rus_api(&$this,$cfg);
+      $this->main();
+   }
+   
+   // Main function
+   function main() {
+      $this->log = $this->kernel->loger->reg('Search');
+      $this->ReadCfg();
+      if (!$this->Result) $this->tmpl = $this->readTemplate($this->template);
+      else {
+             $this->Serch($this->template);
+      }
+   }
+
+   // Read Configuration
+   function ReadCfg() {
+       $this->template    = $this->cfg->get('template');
+       $this->Result      = $this->cfg->get('result');
+       if ($this->Result){
+          $this->Fast     = $this->cfg->get('fast');        
+          $Grp      = $this->cfg->get('groups'); 
+          $Drc      = $this->cfg->get('direct');
+          for($i=0;$i<count($Grp);$i++)
+            $tmp[$Grp[$i]] = $Drc[$i];
+          $this->Grp = $tmp;
+        }
+   }
+   
+   // Read template
+   // $fName - file name of template
+   function Serch($fName) {
+        global $search;
+        
+        if (strlen($search)<3) $res = array();
+        else $res = $this->kernel->api->findDocByPriority(0,10, $search);
+
+        $this->StartTemplate();
+        $this->tmpl->set_var(array('grpsearchblock' => ''));
+        $this->tmpl->set_block('body_qscv_asdf','search_block','searchblock');
+        $this->tmpl->set_block('body_qscv_asdf','group_search_block','grpsearchblock');
+
+//        if (!count($res)) $array = array();
+        $groups = array();
+        for ($i=0;$i<count($res);$i++){
+             $tmp = $this->kernel->api->GetLinkedGroup($res[$i]);
+             $groups = array_merge($groups,$tmp);
+             $result[$res[$i]] = $tmp;
+        }
+        $groups = array_unique($groups);
+//        $groups = sort(array_unique($groups));
+
+//        while (list($k,$v) = each($groups))
+//                echo '['.$k.']='.$v;
+
+//      $this->log->put("Groups count [".count($groups)."]");
+//      $this->log->put("Groups count [".$groups[0]."]");
+
+                         
+        while (list($k,$v) = each($groups)){
+           if (!$this->Grp[$v]) continue;
+           $this->log->put('Group ['.count($groups).']');
+           $this->tmpl->set_var(array('searchblock' => ''));
+           for ($i=0;$i<count($res);$i++)
+               if (in_array($v,$result[$res[$i]]))
+               {
+                  $this->tmpl->set_var($this->api->SetFields($res[$i]));
+                  $this->tmpl->set_var(array('SEARCH_URL'=>'?'.$this->Grp[$v].'&0&'.$res[$i]));
+                  $this->tmpl->parse('searchblock','search_block',true);
+               }
+           $this->tmpl->set_var(array('GROUP_NAME'=> '##'.$this->kernel->api->getgroupName($v).'##'));
+           $this->tmpl->parse('grpsearchblock','group_search_block',true);
+        }
+
+/*        for ($i=0;$i<count($res);$i++){
+            $this->tmpl->set_var($this->api->SetFields($res[$i]));
+            $this->tmpl->set_var(array('SEARCH_URL'=>"?0&0&$res[$i]"));
+            $this->tmpl->parse('searchblock','search_block',true);
+        }
+*/
+        $this->tmpl->set_var(array('SEARCH_KEYWORD' => $search,
+                                   'SEARCH_COUNT'  => count($res)));
+
+        $this->EndTemplate();
+   }
+
+   function readTemplate($fName) {
+        $this->StartTemplate();
+        $this->EndTemplate();
+   }   
+
+   function StartTemplate() {      
+      $this->log->put("Read template [$this->template]");
+      $this->kernel->classLoader->checkClass('templateClass');
+      $tmpl = new templateClass($this->root_dir, 'remove');
+      $tmpl->halt_on_error = 'yes';
+      $tmpl->set_file(array('body_qscv_asdf' => $this->template));
+      $this->tmpl = $tmpl;
+   }
+
+   function EndTemplate() {
+      $this->tmpl->parse('out', array('body_qscv_asdf'));
+      $out = $this->tmpl->get('out');
+      $this->html = $out;
+   }   
+}
+?>
