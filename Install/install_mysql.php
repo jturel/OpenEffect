@@ -40,16 +40,16 @@ $connStr = "mysql:host=".$DBhost.";dbname=".$DBname;
 try {
   $conn = new PDO($connStr, $DBusr, $DBpwd);
 } catch (PDOException $e) {
-	switch($e->getCode()) {
-	case 1698:
-	  $err[] = 'dbincorrect';
-	  break;
-	case 1049:
-	  $err[] = 'dbmissing';
-	  break;
-	default:
-	  die("Unhandled DB Error");
-	}
+  switch($e->getCode()) {
+  case 1698:
+    $err[] = 'dbincorrect';
+    break;
+  case 1049:
+    $err[] = 'dbmissing';
+    break;
+  default:
+    die("Unhandled DB Error");
+  }
 }
 
 if ($AdminEmail=='') $err[]='admin_email';

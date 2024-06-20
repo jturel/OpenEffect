@@ -1,4 +1,4 @@
-<?
+<?php
 $instTitle='Open Effect Demo Install Script';
 $errors=array(); $err=array();
 $errors['dbmissing']='Database/configuration error: Database is missing or incorrect.';
@@ -27,7 +27,7 @@ include ('../DemoFiles/conf/db_schemes.conf.php');
 <tr>
 <td colspan=2>
 
-<?
+<?php
 $DB=$db_schemes['default']['type'];
 $DBhost=$db_schemes['default']['host'];
 $DBusr=$db_schemes['default']['user'];
@@ -38,12 +38,30 @@ $AdminEmail=$db_schemes['default']['errors_to'];
 if (file_exists("./install_$DB.sql")) {
 
 /* Check for database working properly */
-if (!@mysql_connect($DBhost, $DBusr, $DBpwd)) $err[]='dbincorrect';
-if (!@mysql_select_db($DBname)) $err[]='dbmissing';
+$connStr = "mysql:host=".$DBhost.";dbname=".$DBname;
+try {
+  $conn = new PDO($connStr, $DBusr, $DBpwd);
+} catch (PDOException $e) {
+  switch($e->getCode()) {
+  case 1698:
+    $err[] = 'dbincorrect';
+    break;
+  case 1049:
+    $err[] = 'dbmissing';
+    break;
+  default:
+    die("Unhandled DB Error");
+  }
+}
 
 if ($AdminEmail=='') $err[]='admin_email';
 
 /* GO ON */
+if (isset($_POST['step'])) {
+  $step = $_POST['step'];
+} else {
+  $step = null;
+}
 
 switch ($step) {
 case 'install':
@@ -68,13 +86,14 @@ if (trim($stringsSQL[$i])!='') {
 //$stringsSQL[$i] = str_replace ("\r\n", '', $stringsSQL[$i]);
 $stringsSQL[$i] = str_replace ("\n", '', $stringsSQL[$i]);
 
-$rs = mysql_query($stringsSQL[$i].');');
+try {
+  $rs = $conn->exec($stringsSQL[$i].');');
+} catch (PDOException $e) {
+  echo "<p>Operation failed: <b>".$e->getMessage()."</b>";
+  $errs++;
+}
 //preg_match("/CREATE TABLE ([a-zA-Z_]+) \(/i", $stringsSQL[$i], $tbName);
 //$tbName=$tbName[1];
-if (mysql_error()) {
-echo "<p>Operation failed: <b>".mysql_error()."</b>, request \"$stringsSQL[$i]\"";
-$errs++;
-}
 //else echo "<p>Table {$tbName} successfully created...";
 }
 }
@@ -83,9 +102,15 @@ if ($errs==0) {
 
 function insertData($req, $reason){
 global $errs;
-$rs=mysql_query($req);
-if (mysql_error()) { "<p>$reason data WAS NOT added, reason: ".mysql_error(); $errs++; }
+global $conn;
 //echo "<p>$reason data successfully added...";
+
+try {
+  $conn->exec($req);
+} catch (PDOException $e) {
+  $errs++;
+  echo "<p>".$reason." data WAS NOT added, reason: ".$e->getMessage();
+}
 }
 
 $inserts=array(
