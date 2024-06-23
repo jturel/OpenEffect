@@ -1,4 +1,4 @@
-<?
+<?php
 
 /***************************************
 *  Access class
@@ -16,8 +16,8 @@
   
      // Constructor
      // $parent - pointer on parent object
-     function accessClass(&$parent, $user = "", $pass = "") {
-        $this->linkerClass(&$parent);
+     function __construct(&$parent, $user = "", $pass = "") {
+        parent::__construct($parent);
 
         // Create CFG object
         $this->getCfg();
@@ -198,7 +198,7 @@
                              "LOGIN_NAME"  => $loginName,
                              "PASS_NAME"   => $passName));
         $tmpl->parse("out", array("body"));
-        $tmpl->parseLng("out", $lngObj, &$this);
+        $tmpl->parseLng("out", $lngObj, $this);
         $out = $tmpl->get("out");
 
         print $out;

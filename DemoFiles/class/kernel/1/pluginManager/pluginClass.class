@@ -1,4 +1,4 @@
-<?
+<?php
 
 /***************************************
 *  Plugin main class
@@ -14,8 +14,8 @@
     
      // Constructor
      // $parent - pointer on parent object
-     function pluginClass(&$parent, $cfg = "") {
-        $this->linkerClass(&$parent);
+     function __construct(&$parent, $cfg = "") {
+        parent::__construct($parent);
 	
 	if (!is_object($cfg)) {
 	   if ($cfg) {

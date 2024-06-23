@@ -1,4 +1,4 @@
-<?
+<?php
 
 /*********************************************
 *
@@ -14,10 +14,10 @@ class treePlugin extends pluginClass {
    var $xAddSql = "";
 
    // Constructor
-   function treePlugin(&$parent, $cfg) {
+   function __construct(&$parent, $cfg) {
       $this->kernel->sysLog->put("Object poshe'l ");
       $this->root_dir = TMPL_DIR;
-      $this->pluginClass(&$parent, $cfg);
+      parent::__construct($parent, $cfg);
       $this->main();
    }
    

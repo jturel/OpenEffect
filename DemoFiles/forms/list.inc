@@ -1,4 +1,4 @@
-<?
+<?php
 
    $page = &$this->start($this->kernel->cfg->get("mainTemplate"));
 #####################################################

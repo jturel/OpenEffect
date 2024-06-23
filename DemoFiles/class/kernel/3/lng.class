@@ -1,4 +1,4 @@
-<?
+<?php
 
 /***************************************
 *  Language class
@@ -20,8 +20,8 @@
      // Constructor
      // $parent - pointer on parent object
      // $fileName - open stream "DEFAULT" and scan this file
-     function lngClass(&$parent, $lngDir = "/") {
-        $this->confClass(&$parent, "");
+     function __construct(&$parent, $lngDir = "/") {
+        parent::__construct($parent, "");
 	$this->rootDir = $lngDir;
 	
 	$this->log = $this->kernel->loger->reg("LANGUAGE");
@@ -39,14 +39,6 @@
   class lngItemClass extends confItemClass {
      var $className = "lngItemClass"; // Class name
      var $childClassName = "lngStringClass"; // Child class name
-     
-     
-     // Constructor
-     // $parent - pointer on parent object
-     // $name - empty parametrs
-     function lngItemClass(&$parent, $name) {
-        $this->confItemClass(&$parent, $name);
-     }
      
      // Get value , or key string if key not exists...
      // $key - key for get value from array
@@ -68,14 +60,6 @@
   // Configuration  
   class lngStringClass extends confStringClass {
      var $className = "lngStringClass";
-     
-     // Constructor
-     // $parent - pointer on parent object
-     // $key - key for configuration string
-     function lngStringClass(&$parent, $key) {
-        $this->confStringClass(&$parent, $key);
-     }
-     
   }
  
 ?>

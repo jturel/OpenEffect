@@ -1,4 +1,4 @@
-<?
+<?php
 
 /*********************************************
 *
@@ -9,11 +9,11 @@
 class doclist_ extends pluginClass {
 
    // Constructor
-   function doclist_(&$parent, $cfg, $template, $GrpID, $start = 0, $count = 9999,$sort=0, $direction=0) {
+   function __construct(&$parent, $cfg, $template, $GrpID, $start = 0, $count = 9999,$sort=0, $direction=0) {
       $this->root_dir = TMPL_DIR;
-      $this->pluginClass(&$parent, $cfg);
+      parent::__construct($parent, $cfg);
       if ($parent->api) $this->api = &$parent->api;
-      else $this->api = new rus_api(&$parent,$cfg);
+      else $this->api = new rus_api($parent,$cfg);
 
       $this->log = $this->kernel->loger->reg("!!Documents list");
       $this->Grp         = $GrpID;

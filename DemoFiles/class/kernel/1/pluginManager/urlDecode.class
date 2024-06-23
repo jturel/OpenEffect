@@ -1,4 +1,4 @@
-<?
+<?php
 
 /***************************************
 *  URL Decode
@@ -20,8 +20,8 @@
   
      // Constructor
      // $parent - pointer on parent object
-     function urlDecodeClass(&$parent) {
-        $this->linkerClass(&$parent);
+     function __construct(&$parent) {
+        parent::__construct($parent);
 	$this->setDefaultValues();
 	
 	global $QUERY_STRING, $SCRIPT_NAME;

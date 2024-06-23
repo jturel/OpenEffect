@@ -11,10 +11,10 @@ class priview extends pluginClass {
 
 
    // Constructor
-   function priview(&$parent, $cfg) {
+     function __construct(&$parent, $cfg) {
       $this->root_dir = TMPL_DIR;
-      $this->pluginClass(&$parent, $cfg);
-//      $this->api = new rus_api(&$this,$cfg);
+      parent::__construct($parent, $cfg);
+//      $this->api = new rus_api($this,$cfg);
 
       global $template,$HTTP_GET_VARS;
 //      $this->log         = $this->kernel->loger->reg("priview CONSTRUCTOR");

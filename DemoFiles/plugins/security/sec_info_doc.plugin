@@ -4,12 +4,12 @@ class sec_info_doc extends pluginClass {
 
   
    // Constructor
-   function sec_info_doc(&$parent, $cfg) {
+   function __construct(&$parent, $cfg) {
       global $UserId;
       if (!$UserId) return;
       
       $this->root_dir = TMPL_DIR;
-      $this->pluginClass(&$parent, $cfg);
+      parent::__construct($parent, $cfg);
       $this->log = $this->kernel->loger->reg('Security info  view CONSTRUCTOR');
 
       if ($this->cfg->check('SpecialOutPut'))
@@ -30,7 +30,7 @@ class sec_info_doc extends pluginClass {
 
 //   function parse_ex(&$parent, &$tmpl, &$array, $log=0) {
       if ($fld) 
-        $ex = new parse_ex(&$this, &$tmpl, &$fld,$log);
+        $ex = new parse_ex($this, $tmpl, $fld,$log);
 
       $tmpl->halt_on_error = "yes";
       $tmpl->set_file(array("body_out_array" => $template));

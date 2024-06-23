@@ -3,10 +3,10 @@ class groupebrowse extends pluginClass {
     var $debug=1;
         
    // Constructor
-   function groupebrowse(&$parent,$cfg) {
+   function __construct(&$parent, $cfg) {
 
       $this->root_dir = TMPL_DIR;
-      $this->pluginClass(&$parent, $cfg);
+      parent::__construct($parent, $cfg);
       $arrays = count($array);  
       if ($debug) $this->log = $this->kernel->loger->reg('Groupe Browse');
       if ($debug) $this->log->put("Read template [$template]");
@@ -48,7 +48,7 @@ class groupebrowse extends pluginClass {
 
             $name = $this->kernel->api->getGroupName($arrays[$x]);
 
-            $d = new doclist_(&$parent, $cfg, $templatelist, $name);
+            $d = new doclist_($parent, $cfg, $templatelist, $name);
 
 //            $this->kernel->debug_text .=  $d->html .' '..'<br>';
 //            $this->kernel->debug_text .=  ' '.$arrays[$x].'<br>';

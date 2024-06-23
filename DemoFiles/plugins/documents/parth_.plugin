@@ -9,9 +9,9 @@
 class parse_ex extends pluginClass {
 
    // Constructor
-   function parse_ex(&$parent, &$tmpl, &$array, $log=0) {
+   function __construct(&$parent, &$tmpl, &$array, $log=0) {
       $this->root_dir = TMPL_DIR;
-      $this->pluginClass(&$parent);
+      parent::__construct($parent);
       if ($log) $this->log = $this->kernel->loger->reg('Advanced Parser CONSTRUCTOR');
       $this->tmpl = &$tmpl;
       if (!$this->tmpl){

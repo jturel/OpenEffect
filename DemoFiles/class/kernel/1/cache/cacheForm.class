@@ -1,4 +1,4 @@
-<?
+<?php
 
 /***************************************
 *  Cache class 
@@ -16,8 +16,8 @@
      // Constructor
      // $parent - pointer on parent object
      // $formNr - number of cached form
-     function cacheFormClass(&$parent, $formNr = 0) {
-        $this->linkerClass(&$parent);
+     function __construct(&$parent, $formNr = 0) {
+        parent::__construct($parent);
                $this->log = &$this->kernel->loger->reg("FORM CACHE");
                $this->formNr = $formNr;
                $this->log->put("start class with formNr : $formNr");

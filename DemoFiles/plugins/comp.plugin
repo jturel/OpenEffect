@@ -1,4 +1,4 @@
-<?
+<?php
 /*********************************************
 *
 *  COMPONENT plugin
@@ -8,8 +8,8 @@
 class compPlugin extends pluginClass {
 
    // Constructor
-   function compPlugin(&$parent) {
-      $this->pluginClass(&$parent, 'components.conf');
+   function __construct(&$parent) {
+      parent::__construct($parent, 'components.conf');
       $this->root_dir = COMPONENT_TMPL_DIR;
       $this->log  = $this->kernel->loger->reg('COMPONENS');
    }
@@ -135,7 +135,7 @@ class compPlugin extends pluginClass {
         }
       }
       $tmpl->set_var(array('FIELD'=>$field));
-      return $this->getTmpl(&$tmpl);
+      return $this->getTmpl($tmpl);
    }
 
    // Group Connector component
@@ -161,7 +161,7 @@ class compPlugin extends pluginClass {
 
       $tmpl->set_var(array('HIDDEN'=>$qqq));
       
-      return $this->getTmpl(&$tmpl);
+      return $this->getTmpl($tmpl);
    }   
  
    // Group Connector component
@@ -193,7 +193,7 @@ class compPlugin extends pluginClass {
 //      $this->log->put('GRP End ');
       $tmpl->set_var(array('HIDDEN'=>$qqq));
       
-      return $this->getTmpl(&$tmpl);
+      return $this->getTmpl($tmpl);
    }         
 
    function Radio($name, $value, $checked) {
@@ -208,12 +208,12 @@ class compPlugin extends pluginClass {
    }     
 
    function D_Select($field,$group) {
-      $q =  new d_select(&$this,'',$this->cfg->get('D_Select'),$group,$this->getDocumentByID($this->parent->parent->docNr,$field));
+      $q =  new d_select($this,'',$this->cfg->get('D_Select'),$group,$this->getDocumentByID($this->parent->parent->docNr,$field));
       return str_replace("{FIELD}", $field, $q->html);
    }   
 
    function MD_Select($field,$group) {
-      $q =  new d_select(&$this,'',$this->cfg->get('MD_Select'),$group,
+      $q =  new d_select($this,'',$this->cfg->get('MD_Select'),$group,
                explode(',',$this->getDocumentByID($this->parent->parent->docNr,$field)));
       return str_replace("{FIELD}", $field, $q->html);
    }   
@@ -317,7 +317,7 @@ class compPlugin extends pluginClass {
                $tmpl->set_var('FIELD',$field);
 
 
-               $inStr  = $this->getTmpl(&$tmpl);
+               $inStr  = $this->getTmpl($tmpl);
                return $inStr;
    }
 
@@ -334,7 +334,7 @@ class compPlugin extends pluginClass {
                                     'CAPTION'=>   'System Name',
                                     'VALUE'  =>   $Value));
 
-               $inStr  = $this->getTmpl(&$tmpl);
+               $inStr  = $this->getTmpl($tmpl);
                return $inStr;
    }
 
@@ -350,7 +350,7 @@ class compPlugin extends pluginClass {
                $tmpl->set_var(array('FIELD'  =>   $field,
                                     'VALUE'  =>   $Value));
 
-               $inStr  = $this->getTmpl(&$tmpl);
+               $inStr  = $this->getTmpl($tmpl);
                return $inStr;
    }
 

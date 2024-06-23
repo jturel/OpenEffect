@@ -1,16 +1,16 @@
 <?
-class error extends pluginClass {
+class errorPlugin extends pluginClass {
 
 var $error, $error_descr;
 
    // Constructor
-   function error(&$parent, $cfg, $error, $error_descr) {
+   function __construct(&$parent, $cfg, $error, $error_descr) {
 
       $this->error = $error;
       $this->error_descr = $error_descr;
 
       $this->root_dir = TMPL_DIR;
-      $this->pluginClass(&$parent, $cfg);
+      parent::__construct($parent, $cfg);
       $this->main();
    }
                                       

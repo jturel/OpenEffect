@@ -1,4 +1,4 @@
-<?
+<?php
 /*********************************************
 *
 *  Default LIST plugin
@@ -13,10 +13,10 @@ class TlistClass extends pluginClass {
       var $url_name = 'qq';
 
    // Constructor
-   function TlistClass(&$parent, $cfg) {
+   function __construct(&$parent, $cfg) {
       $this->root_dir = TMPL_DIR;
-      $this->pluginClass(&$parent, $cfg);
-      $this->api = new rus_api(&$this,$cfg,$this->log);
+      parent::__construct($parent, $cfg);
+      $this->api = new rus_api($this,$cfg,$this->log);
       $this->main();
    }
    
@@ -26,7 +26,7 @@ class TlistClass extends pluginClass {
       $this->readConf();
       $this->tmpl = &$this->readTemplateStart($this->cfg->get('template'));
       if ($this->SOut) {
-         $this->ex = new parse_ex(&$this, &$this->tmpl, &$this->fld,($this->log));
+         $this->ex = new parse_ex($this, $this->tmpl, $this->fld,($this->log));
          $this->ex->init('body_of_list');
       }
       $this->listF();
@@ -80,7 +80,7 @@ class TlistClass extends pluginClass {
       if ($this->navigatorTemplate) {
          if ($this->log) $this->log->put("Run navigator [$this->pageStart,$this->count,'']");
          
-         $navigator = new navigator(&$this,$cfg,$this->navigatorTemplate,$this->pageStart,$this->count / $this->pagesize ,'',$this->api->genURL($this->url_name,0),$this->globalVar);
+         $navigator = new navigator($this,$cfg,$this->navigatorTemplate,$this->pageStart,$this->count / $this->pagesize ,'',$this->api->genURL($this->url_name,0),$this->globalVar);
          $this->globalVar['NAVIGATOR'] = $navigator->html;        
       }
       $this->tmpl->set_var($this->globalVar);
@@ -112,7 +112,9 @@ class TlistClass extends pluginClass {
    }
 
    function CleatF($r){
-        while (list ($key, $val) = each ($r)) $r[$key]='';
+        foreach($r as $key => $var) {
+          $r[$key] = '';
+        }
         return $r;
    }
 

@@ -19,12 +19,11 @@ class dbClass {
                # - 'halt_on_error' - in any error terminates executing of script
                # - 'errors_to' - sends email to addresses specified there when dbh error occours
                # - 'mail_cc' - carbon copy error messages to addresses specified there
-               function dbClass(&$parent,$scheme = DEFAULT_DB_SCHEME, $options = "") { 
+               function __construct(&$parent,$scheme = DEFAULT_DB_SCHEME, $options = "") {
 
                               $this->parent = &$parent;         // create pointer on parent object
                               $this->kernel = &$parent->kernel; // create pointer on kernel object
 
-                              
                               $this->kernel->debug_sql .= 'Start;<br>';
 
                               $this->initscheme($scheme);
@@ -177,8 +176,9 @@ class db_class {
                var $super ; // class db
                var $classname = 'db_class';
                var $connect_id; // connection id to database
+               var $dbh;
 
-               function db_class(&$super) { 
+               function __construct(&$super) {
                               $this->super = &$super;
 
                }
@@ -223,7 +223,7 @@ class db_query_class {
                var $db;
 
                // Constructor of the query object.
-               function db_query_class(&$super, $query="") {
+               function __construct(&$super, $query="") {
                               $this->super = &$super;
                               $this->db = &$super->db;
                               $this->query($query);
@@ -283,36 +283,22 @@ class db_query_class {
 
 class db_mysql extends db_class {
                var $classname = 'db_mysql';
+               var $conn;
 
                function open() {
-                              if ($this->connect_id) {
-                                             @mysql_close($this->connect_id);
-                              }
-
-                              $this->connect_id = mysql_pconnect($this->scheme('host'), $this->scheme('user'), $this->scheme('password')); 
-                              if ($this->connect_id) {
-                                             $result = @mysql_select_db($this->scheme('database'), $this->connect_id);
-                                             if (!$result) {
-                                                            @mysql_close($this->connect_id);
-                                                            $this->connect_id = $result;
-                                             }
-                                             return $this->connect_id;
-                              } else {
-                                             return 0;
-                              }
+                              $connStr = "mysql:host=".$this->scheme('host').";dbname=".$this->scheme('database');
+                              $this->conn = new PDO($connStr, $this->scheme('user'), $this->scheme('password'));
                }
 
                // Closes the database connection and frees any query results left.
                function close() {
                               if ($this->super->queries && is_array($this->super->queries)) {
                                              reset($this->super->queries);
-                                             while (list($key, $val) = each($this->super->queries)) {
-                                                            @mysql_free_result($val);
-                                             }
+                                             //while (list($key, $val) = each($this->super->queries)) {
+                                             //               @mysql_free_result($val);
+                                             //}
                               }
-                              $result = @mysql_close($this->connect_id);
-                              $this->connect_id = 0;
-                              return $result;
+                              $this->super->conn = null;
                }
 }
 
@@ -346,7 +332,7 @@ class db_mysql_query extends db_query_class {
                                              }
 //                                           print microtime()."<br>";
 
-                                             $this->result = mysql_query($query, $this->super->connect_id);
+                                             $this->result = $this->super->conn->query($query);
 
                                              ##################
                                              #   Debug (RB)   #
@@ -358,7 +344,7 @@ class db_mysql_query extends db_query_class {
                                              $this->db->super->super->kernel->debug_sql .= $query.';5<br>';
                                              $this->db->super->kernel->debug_sql .= $query.';6<br>';
 */
-                                             if ($mic) {
+                                             if (isset($mic)) {
                                                 $this->super->super->kernel->debug_sql .= "<TR><TD>$query.;</TD>";
                                                 list($usec, $sec) = explode(" ",microtime());
                                                 $mic =  ((float)$usec + (float)$sec)-$mic;
@@ -383,8 +369,7 @@ class db_mysql_query extends db_query_class {
    
                // Gets the next row for processing with $this->field function later.
                function getrow() {
-
-                              $this->row = @mysql_fetch_array($this->result);
+                              $this->row = $this->result->fetch();
 #                             if ($this->option('debug')) {
 #                             }
                               return $this->row;
@@ -392,8 +377,7 @@ class db_mysql_query extends db_query_class {
    
                // Gets the number of rows returned in the query
                function numrows() {
-                              $result = @mysql_num_rows($this->result);
-                              return $result;
+                              return $this->result->rowCount();
                }
 
                function numcols() {
@@ -414,7 +398,7 @@ class db_mysql_query extends db_query_class {
                }
 
                // Gets the last error message reported for this query
-               function error() {
+               function error($hand = '') {
                               $result = mysql_error($this->super->connect_id);
                               return $result;
                }
@@ -440,7 +424,7 @@ class db_mysql_query extends db_query_class {
                   return @mysql_data_seek($this->result, $position);
                }
 
-               function free() {
+               function free($stmt) {
                               $res = $this->super->free($this->result);
                               $this->result = 0;
                               return $res;

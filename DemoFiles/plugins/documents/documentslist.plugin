@@ -11,8 +11,8 @@ class documentslist extends TlistClass {
       var $url_name = '3333';
 
 
-   function documentslist(&$parent, $cfg) {
-      $this->TlistClass(&$parent, $cfg);
+   function __construct(&$parent, $cfg) {
+      parent::__construct($parent, $cfg);
 //       $this->main();
    }
 
@@ -69,7 +69,7 @@ class documentslist extends TlistClass {
      }    
 /* mGx leave here */
 
-     while (list ($key, $val) = each  ($Arr)) {
+     foreach($Arr as $key => $val) {
        $val = $this->unezcape($val);  
        $val = str_replace ("{crosslinkzz}", $HstAddr, $val);   
        $Arr[$key] = $val;

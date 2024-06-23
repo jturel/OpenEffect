@@ -1,4 +1,4 @@
-<?
+<?php
 
 /*********************************************
 *
@@ -10,8 +10,8 @@
 class apacheConfPlugin extends pluginClass {
 
    // Constructor
-   function apacheConfPlugin(&$parent, $cfg) {
-      $this->pluginClass(&$parent, $cfg);
+   function __construct(&$parent, $cfg) {
+      parent::__construct($parent, $cfg);
       $this->getCfg();
    }
    

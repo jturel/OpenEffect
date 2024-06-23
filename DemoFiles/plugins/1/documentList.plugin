@@ -1,4 +1,4 @@
-<?
+<?php
 
 /*********************************************
 *
@@ -10,8 +10,8 @@
 class documentListPlugin extends listPlugin {
 
    // Constructor
-   function documentListPlugin(&$parent, $cfg) {
-      $this->listPlugin(&$parent, $cfg);
+   function __construct(&$parent, $cfg) {
+      parent::__construct($parent, $cfg);
       $this->getDocCfg();
 //      $this->parent->endPreParseFun[] = "endPreParse";
    }

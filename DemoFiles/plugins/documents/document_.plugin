@@ -3,13 +3,13 @@
 class document_ extends pluginClass {
 
    // Constructor
-   function document_(&$parent, $cfg, $template, $DocID,$log=0,$fld=0,$addictionl) {
+   function __construct(&$parent, $cfg, $template, $DocID,$log=0,$fld=0,$addictionl) {
       $this->root_dir = TMPL_DIR;
-      $this->pluginClass(&$parent,$cfg);
+      parent::__construct($parent, $cfg);
       if ($log) $this->log = $this->kernel->loger->reg("Documents view second level plugin CONSTRUCTOR");
 
       if ($parent->api) $this->api = &$parent->api;
-      else $this->api = new rus_api(&$parent,$cfg,$log);
+      else $this->api = new rus_api($parent,$cfg,$log);
 
 //      $this->api = new rus_api(&$this, $cfg,$log);
       
@@ -21,7 +21,7 @@ class document_ extends pluginClass {
 
 //   function parse_ex(&$parent, &$tmpl, &$array, $log=0) {
       if ($fld) 
-        $ex = new parse_ex(&$this, &$tmpl, &$fld,$log);
+        $ex = new parse_ex($this, $tmpl, $fld,$log);
 
       $tmpl->halt_on_error = "yes";
       $tmpl->set_file(array("body_out_array" => $template));

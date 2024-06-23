@@ -1,4 +1,4 @@
-<?
+<?php
 /*********************************************
 *
 *  FILE LIST constructor plugin
@@ -9,9 +9,9 @@
 class filePlugin extends pluginClass {
 
    // Constructor
-   function filePlugin(&$parent, $cfg) {
+   function __construct(&$parent, $cfg) {
       $this->root_dir = TMPL_DIR;
-      $this->pluginClass(&$parent, $cfg);
+      parent::__construct($parent, $cfg);
       $this->main();
    }
    

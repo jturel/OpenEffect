@@ -1,4 +1,4 @@
-<?
+<?php
 
 /***************************************
 *  Linker class
@@ -16,7 +16,7 @@
      
      // Constructor
      // $parent - pointer on parent class
-     function linkerClass(&$parent) {
+     function __construct(&$parent) {
         $this->parent = &$parent;         // create pointer on parent object
 	$this->kernel = &$parent->kernel; // create pointer on kernel object
      }

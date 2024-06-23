@@ -10,8 +10,8 @@
 class userRolePlugin extends listPlugin {
 
    // Constructor
-   function userRolePlugin(&$parent, $cfg) {
-      $this->listPlugin(&$parent, $cfg);
+   function __construct(&$parent, $cfg) {
+      parent::__construct($parent, $cfg);
       $this->getCfgL();
    }
 

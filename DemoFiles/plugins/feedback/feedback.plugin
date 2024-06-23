@@ -3,9 +3,9 @@
 class feedback extends pluginClass {
 
    // Constructor
-   function feedback(&$parent, $cfg) {
+   function __construct(&$parent, $cfg) {
       $this->root_dir = TMPL_DIR;
-      $this->pluginClass(&$parent, $cfg);
+      parent::__construct($parent, $cfg);
       $this->main();
    }
    
@@ -111,7 +111,7 @@ class feedback extends pluginClass {
                         $this->kernel->error->parse("Wrong email", array($email) );
                     } 
 //                   mail('max@esoft.lv', 'testituser2','you got it', $headers);
-                    $this->Send($email,$subject,$headers,$fName,&$fields);
+                    $this->Send($email,$subject,$headers,$fName,$fields);
               }
 
                  $ggh=$this->cfg->get("sendadmin");
@@ -124,7 +124,7 @@ class feedback extends pluginClass {
                  echo "mail = $email<br>";
         
 //                 mail('max@esoft.lv', 'testitadmin2','you got it', $headers);
-                 $this->Send($email,$subject,$headers,$fName,&$fields);
+                 $this->Send($email,$subject,$headers,$fName,$fields);
               }
               $this->PutThanx('feedback', 'feedback_text');
      }

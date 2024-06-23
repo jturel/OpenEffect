@@ -1,4 +1,4 @@
-<?
+<?php
 
 /***************************************
 *  API Class
@@ -16,9 +16,9 @@
   
      // Constructor
      // $parent - pointer on parent object
-     function apiClass(&$parent, $langID = 0) {
+     function __construct(&$parent, $langID = 0) {
         $this->langID = $langID;
-        $this->linkerClass(&$parent);
+        parent::__construct($parent);
      }
 
 ###################################

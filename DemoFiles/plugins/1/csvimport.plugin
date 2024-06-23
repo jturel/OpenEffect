@@ -1,4 +1,4 @@
-<?
+<?php
 /*********************************************
 *
 *  CSV import plugin 
@@ -11,9 +11,9 @@
 class CSVimport extends pluginClass {
 
    // Constructor
-   function CSVimport(&$parent, $cfg) {
+   function __construct(&$parent, $cfg) {
       $this->root_dir = TMPL_DIR;
-      $this->pluginClass(&$parent, $cfg);
+      parent::__construct($parent, $cfg);
 
       global $group, $CVStext;
       $TName = $this->cfg->get('template');

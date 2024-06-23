@@ -1,4 +1,4 @@
-<?
+<?php
 
 /***************************************
 *  Access class [form]
@@ -17,8 +17,8 @@
   
      // Constructor
      // $parent - pointer on parent object
-     function accessFormClass(&$parent) {
-        $this->linkerClass(&$parent);
+     function __construct(&$parent) {
+        parent::__construct($parent);
 
         if ($this->parent->cfg->check("formXgroupTable"))
               $this->table = $this->parent->cfg->get("formXgroupTable");

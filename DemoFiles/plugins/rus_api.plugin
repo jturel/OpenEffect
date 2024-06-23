@@ -1,4 +1,4 @@
-<?
+<?php
 
 /*********************************************
 *
@@ -14,10 +14,10 @@ class rus_api extends pluginClass {
 //var $month = array('Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec');
 
    // Constructor
-   function rus_api(&$parent, $cfg='',$log = 0) {
+   function __construct(&$parent, $cfg='',$log = 0) {
       $this->root_dir = TMPL_DIR;
 //      $this->pluginClass(&$parent, $cfg);
-      $this->pluginClass(&$parent);
+      parent::__construct($parent);
       $this->log = $log;
 //      $this->log = 0;
 

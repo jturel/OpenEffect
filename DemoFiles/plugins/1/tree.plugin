@@ -16,9 +16,9 @@ class treePlugin extends listPlugin {
    var $predadiction = "node";
 
    // Constructor
-   function treePlugin(&$parent, $cfg) {
+   function __construct(&$parent, $cfg) {
 //      $this->root_dir = TMPL_DIR;
-      $this->listPlugin(&$parent, $cfg);
+      parent::__construct($parent, $cfg);
 //      $this->main();
    }
    
@@ -45,7 +45,7 @@ class treePlugin extends listPlugin {
 
    // Parse tree and move into HTML var
    // RETURN : echo of tree
-   function parse() {
+   function parse($sql = '1') {
    
       $rootID = (!$this->parent->groupNr)?$this->cfg->get("rootID"):$this->parent->groupNr;
       $this->table  = $this->cfg->get("table");
@@ -289,6 +289,7 @@ class treePlugin extends listPlugin {
       return $c;
    }
 
+/*
    function issubdoc($ID){
       $SqlStr = 'SELECT count(*) FROM '.$this->kernel->tab_cfg->get("docXgroupTable")." WHERE GrpID = $ID";
       $result = $this->kernel->db->query($SqlStr);
@@ -296,6 +297,7 @@ class treePlugin extends listPlugin {
       list($c) = $result->getrow();
       return $c;
    }
+   */
 
    function isvisble($ID){
       $SqlStr = 'SELECT visible FROM '.$this->table." WHERE ID = $ID";

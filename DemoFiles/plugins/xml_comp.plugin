@@ -1,4 +1,4 @@
-<?
+<?php
 /*********************************************
 *
 *  COMPONENT plugin
@@ -8,8 +8,8 @@
 class xmlcompPlugin extends compPlugin {
 
    // Constructor
-   function xmlcompPlugin(&$parent) {
-      $this->compPlugin(&$parent, 'components.conf');
+   function __construct(&$parent) {
+      parent::__construct($parent, 'components.conf');
 //      $this->root_dir = COMPONENT_TMPL_DIR;
       $this->log  = $this->kernel->loger->reg('XML COMPONENS');
    }
@@ -40,8 +40,9 @@ class xmlcompPlugin extends compPlugin {
    
    // File component
 //   function File($field, $dir = "") {
-   
-   function text(&$comp) {  
+   // TODO: Declaration of xmlcompPlugin::text(&$comp) must be compatible with compPlugin::Text($field)
+   //function text(&$comp) {  
+   function text($comp) {
      return $this->addcaption($comp->caption,compPlugin::Text($comp->param_n['name']['_'])); 
    }
 
@@ -49,14 +50,16 @@ class xmlcompPlugin extends compPlugin {
    // Text component
 //   function Text($field) {
    
-   function textarea(&$comp) {  
+   //function textarea(&$comp) {  
+   function textarea($comp) {  
      return $this->addcaption($comp->caption,compPlugin::TextArea($comp->param_n['name']['_']));
    }
 
    // TextArea component
 //   function TextArea($field) {
    
-   function select(&$comp) {  
+   //function select(&$comp) {  
+   function select($comp) {  
       $param = &$comp->param_n;
       $nam  = $comp->caption;
       $elms = &$comp->elms_n;
@@ -80,7 +83,7 @@ class xmlcompPlugin extends compPlugin {
 
 //   function documentInfo() {
 
-   function radio(&$comp) {
+/*   function radio(&$comp) {
             $tmplName = $this->cfg->get('Radio');
             $tmpl = $this->readTmpl($tmplName);
             $tmpl->loadfile('body');
@@ -109,8 +112,8 @@ class xmlcompPlugin extends compPlugin {
 //                $out .= str_replace('{CHECKED}', ($val != $v)?'':'checked', $n);
             }
 //         return $out;
-         return $this->getTmpl(&$tmpl);
-   }     
+         return $this->getTmpl($tmpl);
+   }     */
 
 /*   function GroupeInRadio___________($Group) {
       $tmplName = $this->cfg->get('GroupsRadioTemplate');
@@ -143,28 +146,30 @@ class xmlcompPlugin extends compPlugin {
 
 //   function Radio($name, $value, $checked) {
 
-   function CheckBox(&$comp) {
+   //function CheckBox(&$comp) {
+   function CheckBox($field, $value) {
       $p= &$comp->param_n;
       return $this->addcaption($comp->caption, compPlugin::CheckBox($p['name']['_'], $p['value']['_']));
    }
 //   function CheckBox($field, $value) {
         
-   function calendar(&$comp) {  
+   //function calendar(&$comp) {  
+   function calendar($field) {  
      return $this->addcaption($comp->caption, compPlugin::Calendar ($comp->param_n['name']['_']));
    }
 //   function Calendar($field) {
 
-   function editlite(&$comp) {  
+   function editlite($comp) {  
      return $this->addcaption($comp->caption, compPlugin::EditLite ($comp->param_n['name']['_']));
    }
 //   function EditLite($field){
 
-   function picture(&$comp) {  
+   function picture($comp) {  
      return $this->addcaption($comp->caption, compPlugin::Picture  ($comp->param_n['name']['_']));
    }
 //   function Picture() {
 
-   function pictureex(&$comp) {  
+   function pictureex($comp) {  
      return $this->addcaption($comp->caption, compPlugin::PictureEx($comp->param_n['name']['_']));
    }
 //   function PictureEx($field) {

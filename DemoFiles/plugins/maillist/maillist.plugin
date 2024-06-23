@@ -2,9 +2,9 @@
 class maillist extends pluginClass {
 
    // Constructor
-   function maillist(&$parent, $cfg) {
+   function __construct(&$parent, $cfg) {
       $this->root_dir = TMPL_DIR;
-      $this->pluginClass(&$parent, $cfg);
+      parent::__construct($parent, $cfg);
       $this->main();
    }
    

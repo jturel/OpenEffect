@@ -1,4 +1,4 @@
-<?
+<?php
 class userDynamicLanguagePlugin {
 
 var $_get_res ='';
@@ -29,10 +29,13 @@ var $_get_res ='';
            return $REQUEST_URI;
         }
 
+// TODO: why declared twice?
+/*
         function _link_request(&$q){
            global $SCRIPT_NAME;
            return $SCRIPT_NAME;
         }
+        */
         function _get(&$q){
           if ($this->_get_res) 
              return $this->_get_res;

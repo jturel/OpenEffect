@@ -1,4 +1,4 @@
-<?
+<?php
 
 /***************************************
 *  Error class
@@ -14,8 +14,8 @@
      // Constructor
      // $parent - pointer on parent object
      // $lngFile - File name of Language Configuration file
-     function errorClass(&$parent, $lngFile) {
-        $this->linkerClass(&$parent);
+     function __construct(&$parent, $lngFile) {
+        parent::__construct($parent);
         $this->lngStream = $this->kernel->lnger->reg("ERROR", $lngFile);
      }
 
@@ -23,7 +23,7 @@
      // $name - name of Lng String
      // $param - Dinamic Parametrs for string
      function parse($name, $param = array()) {
-        print $this->getHTML($name, &$param);
+        print $this->getHTML($name, $param);
         if ($this->die) die();
      }
 
@@ -32,7 +32,7 @@
      // $name - name of Lng String
      // $param - Dinamic Parametrs for string
      function msg($name, $param = array()) {
-        print $this->getMsg($name, &$param);
+        print $this->getMsg($name, $param);
         if ($this->die) die();
      }
 
@@ -68,7 +68,7 @@
            $tmpl->set_file(array("body" => $tmplName));
            $tmpl->set_var(array("STRING" => $value));
            $tmpl->parse("out", array("body"));
-           $tmpl->parseLng("out", $this->lngStream, &$tmpl);
+           $tmpl->parseLng("out", $this->lngStream, $tmpl);
            $out = $tmpl->get("out");
         
            return $out;

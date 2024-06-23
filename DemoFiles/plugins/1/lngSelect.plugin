@@ -10,9 +10,9 @@
 class lngSelectPlugin extends pluginClass {
 
    // Constructor
-   function lngSelectPlugin(&$parent, $cfg) {
+   function __construct(&$parent, $cfg) {
       $this->root_dir = TMPL_DIR;
-      $this->pluginClass(&$parent, $cfg);
+      parent::__construct($parent, $cfg);
       $this->main();
    }
    

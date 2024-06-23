@@ -1,4 +1,4 @@
-<?
+<?php
 
 /***************************************
 *  Stream class (parent class)
@@ -16,15 +16,7 @@
   class streamClass extends linkerClass {
      var $className = "streamClass";          // Class name
      var $childClassName = "streamItemClass"; // Child class name
-     var $childItems;                         // Array of child items 
-
-  
-     // Constructor
-     // $parent - pointer on parent object
-     function streamClass(&$parent) {
-        $this->linkerClass(&$parent);
-     }
-
+     var $childItems = [];                         // Array of child items
 
      // Stream registrator
      // $name - name of registred stream
@@ -32,7 +24,9 @@
      function &regStream($name) {
         if (!$name) return false;
 	$name = strtoupper($name);
-        if (is_object($this->childItems[$name])) return $this->childItems[$name];
+        if (array_key_exists($name, $this->childItems)) {
+          return $this->childItems[$name];
+        }
 	$this->childItems[$name] = $this->createStream($name);
 	return $this->childItems[$name]; 
      }
@@ -73,8 +67,8 @@
      // Constructor
      // $parent - pointer on parent object
      // $name - name of stream
-     function streamItemClass(&$parent, $name) {
-        $this->linkerClass(&$parent);
+     function __construct(&$parent, $name) {
+        parent::__construct($parent);
 	$this->streamName = $name;
      }
   } // finished Item Stream class

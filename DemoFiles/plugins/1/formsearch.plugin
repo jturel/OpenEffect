@@ -9,10 +9,10 @@
 class formsearch extends pluginClass {
 
    // Constructor
-   function formsearch(&$parent, $cfg) {
+   function __construct(&$parent, $cfg) {
       $this->root_dir = TMPL_DIR;
-      $this->pluginClass(&$parent, $cfg);
-      $this->api = new rus_api(&$this,$cfg);
+      parent::__construct($parent, $cfg);
+      $this->api = new rus_api($this,$cfg);
       $this->main();
    }
 

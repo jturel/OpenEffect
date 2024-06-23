@@ -5,9 +5,9 @@ class sec_list extends TlistClass {
      $log = 1;
   
    // Constructor
-   function sec_info(&$parent, $cfg) {
+   function __construct(&$parent, $cfg) {
       $this->root_dir = TMPL_DIR;
-      $this->TlistClass(&$parent, $cfg);
+      parent::__construct($parent, $cfg);
       $this->log = $this->kernel->loger->reg('Security  view CONSTRUCTOR');
    }
 

@@ -1,4 +1,4 @@
-<?
+<?php
 
 /***************************************
 *  Loger class
@@ -22,8 +22,8 @@
 
      // Constructor
      // $parent - pointer on parent object
-     function logerClass(&$parent) {
-        $this->streamClass(&$parent);
+     function __construct(&$parent) {
+        parent::__construct($parent);
         $this->regStream(DEFAULT_LOG_STREAM);
      }
      
@@ -63,11 +63,10 @@
      // Constructor
      // $parent - pointer on parent onject
      // $name - name of stream
-     function logerItemClass(&$parent, $name) {
-        $this->streamItemClass(&$parent, $name);
-        $this->setOutput();
+     public function __construct(&$parent, $name) {
+       parent::__construct($parent, $name);
+       $this->setOutput();
      }
-     
      
      // Set log output
      // $str - string with output streams [log,file,db,screen]

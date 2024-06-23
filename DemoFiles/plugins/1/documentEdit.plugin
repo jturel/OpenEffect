@@ -1,4 +1,4 @@
-<?
+<?php
 
 /*********************************************
 *
@@ -15,9 +15,9 @@ class documentEditPlugin extends pluginClass {
    var $action = "index.php";
 
    // Constructor
-   function documentEditPlugin(&$parent, $cfg) {
+   function __construct(&$parent, $cfg) {
       $this->root_dir = TMPL_DIR;
-      $this->pluginClass(&$parent, $cfg);
+      parent::__construct($parent, $cfg);
       $this->main();
    }
 
@@ -83,7 +83,7 @@ class documentEditPlugin extends pluginClass {
 //        if ($this->fields[$Cn]["type"] == 0) continue;
 
 //          print $this->fields[$Cn]["name"];
-          global $$this->fields[$Cn]["name"];
+//          global $$this->fields[$Cn]["name"];
           eval("\$rValue = \$".$this->fields[$Cn]["name"].";");
 //          print $rValue."<br>";
 
@@ -193,7 +193,8 @@ class documentEditPlugin extends pluginClass {
              if ($this->fields[$Cn]["type"] == 4) continue;
              if ($this->fields[$Cn]["nodb"] == true) continue;
 
-             global $$this->fields[$Cn]["name"];             
+// TODO: look into the commented globals in this file
+ //            global $$this->fields[$Cn]["name"];             
              eval("\$rValue = \$".$this->fields[$Cn]["name"].";");
              if ($SqlStr2) $SqlStr2 .= ",";
              $SqlStr2 .= $this->fields[$Cn]["name"]."=";
@@ -241,7 +242,7 @@ class documentEditPlugin extends pluginClass {
              if ($this->fields[$Cn]["type"] == 4) continue;
              if ($this->fields[$Cn]["nodb"] == true) continue;
 
-             global $$this->fields[$Cn]["name"];
+  //           global $$this->fields[$Cn]["name"];
              eval("\$rValue = \$".$this->fields[$Cn]["name"].";");
              if ($SqlStr2) $SqlStr2 .= ",";
 
@@ -270,7 +271,7 @@ class documentEditPlugin extends pluginClass {
    function checkNeedFields() {
       $count = count($this->fields);
       for ($Cn = 0; $Cn < $count; $Cn++) {
-          global $$this->fields[$Cn]["name"];
+   //       global $$this->fields[$Cn]["name"];
           if ($this->fields[$Cn]["need"] &&
              !$$this->fields[$Cn]["name"]) return false;
       }
@@ -381,7 +382,7 @@ class documentEditPlugin extends pluginClass {
 
       foreach ($t->components as $comp) {
          $m = $comp->name;
-         $str .=  $component->$m(&$comp);
+         $str .=  $component->$m($comp);
       }
 
 //      print $str;
@@ -397,8 +398,8 @@ class documentEditPlugin extends pluginClass {
 
       $tmpl->set_file(array('bodyContent' => $fName));
       $tmpl->set_var('bodyContent', $out);
-      $this->fillComponents(&$tmpl);
-      $this->fillUserComponents(&$tmpl);
+      $this->fillComponents($tmpl);
+      $this->fillUserComponents($tmpl);
 
       return $tmpl;
    }

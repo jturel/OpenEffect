@@ -1,4 +1,4 @@
-<?
+<?php
 
 /*********************************************
 *
@@ -19,9 +19,9 @@ class formPlugin extends pluginClass {
    var $action = "index.php";
 
    // Constructor
-   function formPlugin(&$parent, $cfg) {
+   function __construct(&$parent, $cfg) {
       $this->root_dir = TMPL_DIR;
-      $this->pluginClass(&$parent, $cfg);
+      parent::__construct($parent, $cfg);
       $this->main();
    }
    
@@ -77,7 +77,8 @@ class formPlugin extends pluginClass {
 //        if ($this->fields[$Cn]["type"] == 0) continue;
 
 //          print $this->fields[$Cn]["name"];
-          global $$this->fields[$Cn]["name"];
+          //TODO: investigate global
+          //global $$this->fields[$Cn]["name"];
           eval("\$rValue = \$".$this->fields[$Cn]["name"].";");
 //          print $rValue."<br>";
 
@@ -185,7 +186,7 @@ class formPlugin extends pluginClass {
              if ($this->fields[$Cn]["type"] == 4) continue;
              if ($this->fields[$Cn]["nodb"] == true) continue;
 
-             global $$this->fields[$Cn]["name"];             
+             //global $$this->fields[$Cn]["name"];             
              eval("\$rValue = \$".$this->fields[$Cn]["name"].";");
              if ($SqlStr2) $SqlStr2 .= ",";
              $SqlStr2 .= $this->fields[$Cn]["name"]."=";
@@ -231,7 +232,7 @@ class formPlugin extends pluginClass {
              if ($this->fields[$Cn]["type"] == 4) continue;
              if ($this->fields[$Cn]["nodb"] == true) continue;
 
-             global $$this->fields[$Cn]["name"];
+            // global $$this->fields[$Cn]["name"];
              eval("\$rValue = \$".$this->fields[$Cn]["name"].";");
              if ($SqlStr2) $SqlStr2 .= ",";
 
@@ -260,7 +261,7 @@ class formPlugin extends pluginClass {
    function checkNeedFields() {
       $count = count($this->fields);
       for ($Cn = 0; $Cn < $count; $Cn++) {
-          global $$this->fields[$Cn]["name"];
+         // global $$this->fields[$Cn]["name"];
           if ($this->fields[$Cn]["need"] &&
              !$$this->fields[$Cn]["name"]) return false;
       }
