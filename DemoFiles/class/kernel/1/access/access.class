@@ -28,9 +28,8 @@
         if ($this->cfg->check("serverAccess")) {
            $val = strtoupper($this->cfg->get("serverAccess"));
            if ($val == "YES" || $val == "TRUE") {
-              global $PHP_AUTH_USER, $PHP_AUTH_PW;
-              $this->user = $PHP_AUTH_USER;
-              $this->pass = $PHP_AUTH_PW;
+              $this->user = $_SERVER["PHP_AUTH_USER"];
+              $this->pass = $_SERVER["PHP_AUTH_PW"];
               $stat = false;
 //            print '!*0*!';
            }
@@ -64,7 +63,7 @@
            $this->groupsID = $this->getGroupsID($this->userID);
 //            print '!3!';
         }
-        
+
         $this->createObj();
         
         // AutoCheck document and group access
@@ -175,9 +174,6 @@
 
      // Access form (check if login & pass not enter, and draw access form)
      function accessForm() {
-        global $REQUEST_URI;
-
-
 //            print "[$this->serverAccess] [$this->pass] [$this->access]";
 
 
@@ -194,7 +190,7 @@
         $tmpl = new templateClass(TMPL_DIR, "remove");
         $tmpl->halt_on_error = "yes";
         $tmpl->set_file(array("body" => $tmplName));
-        $tmpl->set_var(array("FORM_ACTION" => $REQUEST_URI,
+        $tmpl->set_var(array("FORM_ACTION" => $_SERVER["REQUEST_URI"],
                              "LOGIN_NAME"  => $loginName,
                              "PASS_NAME"   => $passName));
         $tmpl->parse("out", array("body"));
@@ -210,17 +206,12 @@
         $loginName  = $this->cfg->get("accessFormLoginName");
         $passName   = $this->cfg->get("accessFormPassName");
         $expireTime = $this->cfg->get("accessFormCookieExpire");
-        
-        global $$loginName;
-        global $$passName;
-        global $HTTP_POST_VARS,$HTTP_COOKIE_VARS;
 
         // Set cookie
-        global $accessFormSubmitButton;
-        if ($accessFormSubmitButton) {
-           $l = $HTTP_POST_VARS[$loginName];
-           $p = $HTTP_POST_VARS[$passName];
-          
+        if ($_POST["accessFormSubmitButton"]) {
+           $l = $_POST[$loginName];
+           $p = $_POST[$passName];
+
             setCookie($loginName);//, "/");
             setCookie($passName);//, "/");
             setCookie($loginName, $l, time() + $expireTime, "/");
@@ -231,8 +222,8 @@
            
            return array($l, $p);
         } else {
-           $l = $HTTP_COOKIE_VARS[$loginName];
-           $p = $HTTP_COOKIE_VARS[$passName];
+           $l = $_COOKIE[$loginName];
+           $p = $_COOKIE[$passName];
 
             setCookie($loginName);//, "/");
             setCookie($passName);//, "/");
@@ -260,6 +251,7 @@
         if ($manager->groupNr)
            $this->group->checkEnd($manager->groupNr, "R");
 
+        // TODO: change these to $_
         // WRITE Access
         global $save, $delete, $apply;
         if ($save || $delete || $apply) {

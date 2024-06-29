@@ -15,6 +15,7 @@
      public confClass $cfger;
      public confItemClass $tab_cfg;
      public dbClass $db;
+     public errorClass $error;
      public logerItemClass $errorLog;
      public string $debug_sql;
      public string $debug_ip;
@@ -22,19 +23,18 @@
      public $loger;
      public $cfg;
 
-     private apiClass $api;
+     public apiClass $api;
      private bool $is_engine;
      public lngClass $lnger;
      private lngItemClass $lng;
      private logerItemClass $log;
-     private sysLogClass $sysLog;
+     public sysLogClass $sysLog;
      private pluginManagerClass $admin;
      private string $debug_text;
      private string $confFile;
      private string $formNr;
 
      protected bool $debugplugins;
-     protected errorClass $error;
      protected int $debug_time;
      protected cacheFormClass $formCache;
      protected int $debug_sql_total;

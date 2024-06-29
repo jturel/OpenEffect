@@ -26,11 +26,43 @@
      var $className = "kernelClass"; // Class name
      var $kernel;                    // Pointer on kernel (na samu sebja)
 
+     public accessClass $secure;
+     public classLoaderClass $classLoader;
+     public confClass $cfger;
+     public confItemClass $tab_cfg;
+     public dbClass $db;
+     public errorClass $error;
+     public logerItemClass $errorLog;
+     public string $debug_sql;
+     public string $debug_ip;
+     public urlDecodeClass $urlDecode;
+     public $loger;
+     public $cfg;
+
+     public apiClass $api;
+     private bool $is_engine;
+     public lngClass $lnger;
+     private lngItemClass $lng;
+     private logerItemClass $log;
+     public sysLogClass $sysLog;
+     private pluginManagerClass $admin;
+     private string $debug_text;
+     private string $confFile;
+     private string $formNr;
+
+     protected bool $debugplugins;
+     protected int $debug_time;
+     protected cacheFormClass $formCache;
+     protected int $debug_sql_total;
+     protected string $debug_log;
+
      // Constructor
-     function kernelClass($confFile) {
+     function __construct($confFile) {
         list($usec, $sec) = explode(" ",microtime()); 
         $time = ((float)$usec + (float)$sec); 
         $this->debug_text = ' value of $this->debug_text';
+        $this->debug_sql = '';
+        $this->debug_ip = '';
 
         $this->confFile = $confFile; // 
         $this->kernel   = &$this;    // create pointer on kernel object 
@@ -200,7 +232,7 @@
              print 'User ID   \t :['.$this->secure->userID.']<br>';
              print '<HR>';
 
-             while (list($k,$v)=each($GLOBALS)){
+             foreach($GLOBALS as $k => $v) {
                if ($k!='LS_COLORS')
                print "$k =$v<br>";
              }
