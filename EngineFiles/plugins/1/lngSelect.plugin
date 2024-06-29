@@ -27,9 +27,9 @@
 class lngSelectPlugin extends pluginClass {
 
    // Constructor
-   function lngSelectPlugin(&$parent, $cfg) {
+   function __construct(&$parent, $cfg) {
       $this->root_dir = TMPL_DIR;
-      $this->pluginClass(&$parent, $cfg);
+      parent::__construct($parent, $cfg);
       $this->main();
    }
    
@@ -76,7 +76,7 @@ class lngSelectPlugin extends pluginClass {
    // Parse language strings into template
    function parseStrings() {
       reset($this->lngCfg->childItems);
-      while(list($key, $val) = each($this->lngCfg->childItems)) {
+      foreach($this->lngCfg->childitems as $key => $val) {
 //   echo "key = $key, val = $val<br>";
 
          if (trim(strtoupper($key)) == "DEFAULT") continue;

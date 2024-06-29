@@ -16,29 +16,28 @@ var $_get_res ='';
         }
 
         function _link_self(&$q){
-           global $HTTP_REFERER;
-           return $HTTP_REFERER;
+           return $_SERVER["HTTP_REFERER"];
         }
 
         function _link_query(&$q){
-           global $QUERY_STRING;
-           return $QUERY_STRING;
+           return $_SERVER["QUERY_STRING"];
         }
+// TODO: why declared twice w/ different impl?
+/*
         function _link_request(&$q){
            global $REQUEST_URI;
            return $REQUEST_URI;
         }
-
-// TODO: why declared twice?
-/*
-        function _link_request(&$q){
-           global $SCRIPT_NAME;
-           return $SCRIPT_NAME;
-        }
         */
+
+        function _link_request(&$q){
+           return $_SERVER["SCRIPT_NAME"];
+        }
+
         function _get(&$q){
           if ($this->_get_res) 
              return $this->_get_res;
+             throw new Exception("Update me");
           global $HTTP_GET_VARS;
                   $t = $HTTP_GET_VARS;
            while (list($k,$v)=each($t)){
@@ -54,6 +53,7 @@ var $_get_res ='';
         function _post(&$q){
           if ($this->_get_ress) 
              return $this->_get_ress;
+             throw new Exception("Update me");
           global $HTTP_POST_VARS;
                   $t = $HTTP_POST_VARS;
            while (list($k,$v)=each($t)){
@@ -69,6 +69,7 @@ var $_get_res ='';
         // Fucncion part_s  
         // B0rland (rus@esoft.lv) 
         function part_s(&$q){
+            throw new Exception("fix me");
              global $HTTP_GET_VARS;
              return $HTTP_GET_VARS['part_s'];            
         }

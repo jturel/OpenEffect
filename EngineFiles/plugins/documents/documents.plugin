@@ -3,9 +3,9 @@
 class documents extends pluginClass {
 
    // Constructor
-   function documents(&$parent, $cfg) {
+   function __construct(&$parent, $cfg) {
       $this->root_dir = TMPL_DIR;
-      $this->pluginClass(&$parent, $cfg);
+      parent::__construct($parent, $cfg);
       $this->log = $this->kernel->loger->reg('Documents view CONSTRUCTOR');
       $this->log->put('Read document ['.$this->parent->docNr.']');
 
@@ -25,7 +25,7 @@ class documents extends pluginClass {
 
 
 //   function document_(&$parent, $cfg, $template, $DocID,$log=0,$fld=0) {
-      $a = new document_(&$this,$cfg,$this->cfg->get('template'),$this->parent->docNr,0,$exp,0);
+      $a = new document_($this,$cfg,$this->cfg->get('template'),$this->parent->docNr,0,$exp,[]);
       $this->html = $this->unezcape($a->html);
    }
 
