@@ -16,13 +16,14 @@
 */
 
 
+<?
 class search extends pluginClass {
 
    // Constructor
-   function search(&$parent, $cfg) {
+   function __construct(&$parent, $cfg) {
       $this->root_dir = TMPL_DIR;
-      $this->pluginClass(&$parent, $cfg);
-      $this->api = new rus_api(&$this,$cfg);
+      parent::__construct($parent, $cfg);
+      $this->api = new rus_api($this,$cfg);
       $this->main();
    }
    
@@ -53,7 +54,7 @@ class search extends pluginClass {
    // Read template
    // $fName - file name of template
    function Serch($fName) {
-        global $search;
+        $search = $_POST["search"];
         
         if (strlen($search)<3) $res = array();
         else $res = $this->kernel->api->findDocByPriority(0,10, $search);
@@ -80,7 +81,7 @@ class search extends pluginClass {
 //      $this->log->put("Groups count [".$groups[0]."]");
 
                          
-        while (list($k,$v) = each($groups)){
+       foreach ($groups as $k => $v) {
            if (!$this->Grp[$v]) continue;
            $this->log->put('Group ['.count($groups).']');
            $this->tmpl->set_var(array('searchblock' => ''));

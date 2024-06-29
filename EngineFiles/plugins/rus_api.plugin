@@ -31,10 +31,9 @@ class rus_api extends pluginClass {
 //var $month = array('Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec');
 
    // Constructor
-   function rus_api(&$parent, $cfg='',$log = 0) {
+   function __construct(&$parent, $cfg='',$log = 0) {
       $this->root_dir = TMPL_DIR;
-//      $this->pluginClass(&$parent, $cfg);
-      $this->pluginClass(&$parent);
+      parent::__construct($parent);
       $this->log = $log;
 //      $this->log = 0;
 
@@ -45,7 +44,7 @@ class rus_api extends pluginClass {
       $this->inittable('DocLinks','docXgroupTable','db_DocLinks');
       $this->inittable('Groups','groupTable','db_Groups');
       $this->inittable('Documents','docTable','db_Documents');
-      if (!$this->kernel->rus_cache)
+      if (!isset($this->kernel->rus_cache))
         $this->kernel->rus_cash = array();
    }
 
@@ -244,6 +243,7 @@ class rus_api extends pluginClass {
 
    function genURL($need,$post=0,$form=0,$grp=0,$doc=0){
         $post+=0;$form+=0;$grp+=0;$doc+=0;
+        die("Fix HTTP_GET_VARS");
         global $HTTP_GET_VARS;
         $tmp = &$this->parent->parent;
         $url = '?'.($form?$form:$tmp->formNr).

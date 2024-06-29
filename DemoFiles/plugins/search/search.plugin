@@ -36,7 +36,7 @@ class search extends pluginClass {
    // Read template
    // $fName - file name of template
    function Serch($fName) {
-        global $search;
+        $search = $_POST["search"];
         
         if (strlen($search)<3) $res = array();
         else $res = $this->kernel->api->findDocByPriority(0,10, $search);
@@ -63,7 +63,7 @@ class search extends pluginClass {
 //      $this->log->put("Groups count [".$groups[0]."]");
 
                          
-        while (list($k,$v) = each($groups)){
+       foreach ($groups as $k => $v) {
            if (!$this->Grp[$v]) continue;
            $this->log->put('Group ['.count($groups).']');
            $this->tmpl->set_var(array('searchblock' => ''));

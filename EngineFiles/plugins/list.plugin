@@ -27,9 +27,9 @@
 class listPlugin extends pluginClass {
 
    // Constructor
-   function listPlugin(&$parent, $cfg) {
+   function __construct(&$parent, $cfg) {
       $this->root_dir = TMPL_DIR;
-      $this->pluginClass(&$parent, $cfg);
+      parent::__construct($parent, $cfg);
       $this->main();
    }
    
@@ -52,11 +52,10 @@ class listPlugin extends pluginClass {
       $tmpl->set_block("body", "item_block", "itemBlock");
 
       // Define current form,group and doc ID's...
-      global $REQUEST_URI;
       $tmpl->set_var(array("_FORM_ID"   => $this->parent->formNr,
                            "_GROUP_ID"  => $this->parent->groupNr,
                                                 "_DOC_ID"    => $this->parent->docNr,
-                                                "_LINK_SELF" => $REQUEST_URI));
+                                                "_LINK_SELF" => $_SERVER["REQUEST_URI"]));
       
       return $tmpl;
    }
@@ -120,7 +119,7 @@ class listPlugin extends pluginClass {
                     $row = $result->getrow();
                     $this->preParse($row);
                     reset($fields);
-             while(list($key, $val) = each($fields))
+             foreach($fields as $key => $val)
                        $this->tmpl->set_var(array(trim($val) => $row[trim($val)]));
                     $this->tmpl->parse("output", "item_block", true);
                 }
