@@ -33,9 +33,9 @@
   
      // Constructor
      // $parent - pointer on parent object
-     function apiClass(&$parent, $langID = 0) {
+     function __construct(&$parent, $langID = 0) {
         $this->langID = $langID;
-        $this->linkerClass(&$parent);
+        parent::__construct($parent);
      }
 
 ###################################
@@ -1454,7 +1454,7 @@
                return $this->kernel->db->query($SqlStr);
      }
 
-// mGx was here
+     // mGx was here
 // UPDATE
      // Update link from group to document
      // $IDgr - group ID

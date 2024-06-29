@@ -36,8 +36,8 @@
   
      // Constructor
      // $parent - pointer on parent object
-     function accessGroupClass(&$parent) {
-        $this->linkerClass(&$parent);
+     function __construct(&$parent) {
+        parent::__construct($parent);
 
         if ($this->kernel->tab_cfg->check("groupXroleTable"))
               $this->table = $this->kernel->tab_cfg->get("groupXroleTable");

@@ -35,8 +35,8 @@
   
      // Constructor
      // $parent - pointer on parent object
-     function accessDocClass(&$parent) {
-        $this->linkerClass(&$parent);
+     function __construct(&$parent) {
+        parent::__construct($parent);
 
         if ($this->kernel->tab_cfg->check("docXroleTable"))
               $this->table = $this->kernel->tab_cfg->get("docXroleTable");

@@ -80,6 +80,7 @@ class sec_info extends pluginClass {
          $result = $this->kernel->db->query($SqlStr);
          if (!$result || !$count = $result->numrows()) return array();
 
+/*
          for ($Cn = 0; $Cn < $result->numcols(); $Cn++) {
             $name = $result->colname($Cn);
 //            $returnArray[$name] = $result[$name];
@@ -88,6 +89,9 @@ class sec_info extends pluginClass {
 //            $this->kernel->debug_text .=  $name.'['.$returnArray[$name].']<br>';
          }
          return $returnArray;
+         */
+         $row = $result->getrow();
+         return $row;
 
    }
 

@@ -31,7 +31,8 @@
      // Run constructor
      // $dirName - directory name where locate classes
      // $subDir  - (true,false) include subDirectories
-     function classLoaderClass($dirName, $subDir = true) {
+     function __construct($dirName, $subDir = true) {
+        $dirs = null;
         if (!is_dir($dirName)) return false;
                $dir = dir($dirName);
                while($entry = $dir->read()) {
@@ -44,15 +45,17 @@
         // Load class files
                if (is_array($files) && count($files)) {
                   sort($files);
-                  while(list($key, $val) = each($files))
+                  foreach($files as $key => $val) {
                      $this->loadClass("$dirName/$val");
+                  }
                }
 
         // Enter to class dir
                if ($subDir && is_array($dirs) && count($dirs)) {
                   sort($dirs);
-                  while(list($key, $val) = each($dirs))
-                    $this->classLoaderClass("$dirName/$val", true);
+                  foreach($dirs as $key => $val) {
+                    new classLoaderClass("$dirName/$val", true);
+                  }
                }
                return true;
      }
