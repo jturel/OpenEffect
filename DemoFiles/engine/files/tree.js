@@ -1,5 +1,6 @@
-var name, loaded, refresh, data, sync, name0, openedNodes;
+var last, loaded, refresh, data, sync, name0, openedNodes;
 var treeImages = new Array();
+const name = new Array();
 treeImages["doc"]     = new Image(); treeImages["doc"].src     = imgPath + "img/gn_document.gif";
 treeImages["denied"]  = new Image(); treeImages["denied"].src  = imgPath + "img/tr_denied.gif";
 treeImages["sopen"]   = new Image(); treeImages["sopen"].src   = imgPath + "img/tr_sopen.gif";
@@ -9,14 +10,25 @@ treeImages["alone"]   = new Image(); treeImages["alone"].src   = imgPath + "img/
 treeImages["close"]   = new Image(); treeImages["close"].src   = imgPath + "img/tr_close.gif";
 treeImages["sclose"]  = new Image(); treeImages["sclose"].src  = imgPath + "img/tr_sclose.gif";
 
+//TODO: Many cases of nonstandard attrs being accessed ie element.whatEver returning undefined
+
 function openIt(n){
   if(loaded){
     last = n;
     childState = checkNodeState(n);
     if(childState == "unloaded"){
       loaded = false;
-      frameEl = getElById('myiframe');
-      frameEl.src =  'files/tree/html.html?'+((name[n]==divPrefix)?'0':name[n].substr(divPrefix.length));
+      const param = (name[n]==divPrefix) ? '0' : name[n].substr(divPrefix.length);
+      const request = new XMLHttpRequest();
+      request.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+          const parser = new DOMParser();
+          const menuXML = parser.parseFromString(this.responseText, "text/xml");
+          parseXML(menuXML);
+        }
+      };
+      request.open("GET", "parse.php?22&" + param);
+      request.send();
     } else OpenClose(n, childState);
   }
 }
@@ -29,9 +41,9 @@ function OpenClose(n, state){
   var el = getElById(name[n]);
   if(n==0 || (showDoc && el.hasDocs=="Yes") || el.hasGroups=="Yes"){
     var tmpel = getChildrenByTag(el, "DIV");
-    for( var i = 0; i < tmpel.length; i++) {
-      if(state == "opened") tmpel[i].showStat = "notshow";
-      else tmpel[i].showStat = "show";
+    const showStat = (state == "opened") ? "notshow" : "show";
+    for(var i = 0; i < tmpel.length; i++) {
+      tmpel[i].setAttribute("showStat", showStat);
     }
     if(!refresh) showall();
   }
@@ -39,12 +51,22 @@ function OpenClose(n, state){
 
 function showall(){
   sync.style.display = 'none';
-  var tmpel;
   for(var i = 0; i < name.length; i++){
-    tmpel = getElById(name[i]);
+    const tmpel = getElById(name[i]);
     var dsp = "none";
-    if(tmpel.showStat=="show"){
-      dsp = (tmpel.typez=="doc" && showDoc)?"block":(tmpel.typez=="group" && showGroups)?"block":(tmpel.typez=="group" && tmpel.hasGroups=="Yes")?"block":(tmpel.typez=="group" && showDoc && tmpel.hasDocs=="Yes")?"block":dsp;
+    const showStat = tmpel.getAttribute('showStat');
+    if(showStat == "show"){
+      const typez = tmpel.getAttribute('typez');
+      const hasDocs = tmpel.getAttribute('hasDocs');
+      if (typez == "doc" && showDoc) {
+        dsp = "block";
+      } else if (typez == "group" && showGroups) {
+        dsp = "block";
+      } else if (typez == "group" && hasGroups == "Yes") {
+        dsp = "block";
+      } else if (typez == "group" && showDoc && hasDocs == "Yes") {
+        dsp = "block";
+      }
     }
     tmpel.style.display = dsp;
   }
@@ -82,25 +104,23 @@ function parseXML(doc){
    addSubNode();
 }
 function getchildren (node) {
-  var x = node.childNodes;
-  var z = x.length;
-  for(var i = 0; i < z; i++){
-    if (x(i).nodeName=='node'){
-      data[0] += 1
-      data[data.length] = x(i).childNodes(0).firstChild.nodeValue;
-      data[data.length] = x(i).childNodes(1).firstChild.nodeValue;
-      data[data.length] = x(i).childNodes(2).firstChild.nodeValue;
-      data[data.length] = x(i).childNodes(3).firstChild.nodeValue;
-      data[data.length] = x(i).childNodes(4).firstChild.nodeValue;
-    } else getchildren (x(i));
+  const children = node.getElementsByTagName("node");
+  for (var i = 0; i < children.length; i++) {
+    const child = children.item(i);
+    data[0] += 1;
+    for (var y = 0; y < 5; y++) {
+      data[data.length] = child.children[y].innerHTML;
+    }
   }
 }
 var tryNo=0;
 function addSubNode(){
-var retry = false;
+  var retry = false;
   if(tryNo==0){
-    if(data[0]==0) retry = true;
-    else if(data[0] < name.length) {
+
+    if(data[0]==0) {
+      retry = true;
+    } else if(data[0] < name.length) {
       for (var i = 0; i < data[0]; i++) {
         for(var j = name.length - data[0]; j < name.length; j++) {
           if(name[j] == data[i*5 + 1]) {
@@ -213,16 +233,22 @@ function getElById(itId){
 }
 
 function checkNodeState(n){
-  child = getChildrenByTag(getElById(name[n]), "DIV");
+  const element = getElById(name[n])
+  children = getChildrenByTag(element, "DIV");
   var ret = "unloaded";
-  for( var i = 0; i < child.length; i++) { if(child[i].style.display == "block") { ret="opened"; break; } else ret = "closed";}
+  for( var i = 0; i < children.length; i++) {
+    if(children[i].style.display == "block") {
+      ret="opened";
+      break; 
+    } else {
+      ret = "closed";
+    }
+  }
   return ret;
 }
 
 function getChildrenByTag(el, tag){
-  ch = new Array();
-  for(var i = 0; i < el.children.length; i++) if(el.children[i].tagName == tag) ch[ch.length] = el.children[i];
-  return ch;
+  return el.getElementsByTagName(tag);
 }
 
 function getParentByTag(el, tag){
@@ -238,6 +264,7 @@ function getNumderInArray(arr, val){
 }
 
 function changeShowDocProperty(el){
+  throw new Error("Fixme");
   showDoc = el;
   getSelected();
   var tabs = document.all.tags("TABLE");

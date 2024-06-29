@@ -34,7 +34,6 @@ var showCkbxDoc  = false;
 var Active       = "";
 
 function initIt(){
-  name   = new Array();
   loaded = true;
 
   name[0] = divPrefix;
@@ -46,15 +45,19 @@ function initIt(){
 function clickIt(){
   el = event.srcElement;
   event.cancelBubble = true;
-  switch (el.typez){
+  const typez = el.getAttribute('typez');
+  switch (typez){
     case "imgz": 
                      var nodeNo = getNumderInArray(name , divPrefix + el.id.substr(imgPrefix.length));
                      openIt(nodeNo);     
                      break;
     case "linkz":    
-                     var divz = getParentByTag(el, "DIV");
-                     Active = el.hrefReal.substr(((divz.typez=="doc")?hrefPrefixDoc.length:hrefPrefixGroup.length));
-                     if(divz.typez=="doc") while(Active.indexOf('&')!=-1) Active = Active.substr(Active.indexOf('&')+1);
+                     const divz = getParentByTag(el, "DIV");
+                     const hrefReal = el.getAttribute('hrefReal');
+                     const divTypez = divz.getAttribute('typez');
+
+                     Active = hrefReal.substr(((divTypez=="doc")?hrefPrefixDoc.length:hrefPrefixGroup.length));
+                     if(divTypez=="doc") while(Active.indexOf('&')!=-1) Active = Active.substr(Active.indexOf('&')+1);
                      if(ActiveSet) callTop();
                      break;
     case "ckbxz":    if(ActiveSet) callTop();
@@ -75,7 +78,8 @@ function ShowDocProperty(el){
   if(typeof(Active)!="undefined" && !el.checked && Active!=""){
     var divz = document.getElementById(tabPrefix+Active);
     divz = getParentByTag(divz, "DIV");
-    if(divz.typez=="doc") {
+    const typez = divz.getAttribute('typez');
+    if(typez=="doc") {
       divz = getParentByTag(divz.parentElement, "DIV");
       Active = divz.id.substr(divPrefix.length);
     }
@@ -190,6 +194,5 @@ onload  = initIt;
     </tr>
   </table>
   </form>
-  <IFRAME NAME="myiframe" SRC="" WIDTH="1" HEIGHT="1" style="visibility:hidden; display: none;"></IFRAME>
 </body>
 </html>

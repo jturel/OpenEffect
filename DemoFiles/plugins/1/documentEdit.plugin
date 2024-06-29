@@ -338,7 +338,7 @@ class documentEditPlugin extends pluginClass {
                    list($cfgFile) = $result->getrow();
       }
 
-      if ((!docID && $this->parent->groupNr) || !$cfgFile) {
+      if ((!$docID && $this->parent->groupNr) || !$cfgFile) {
          $SqlStr = "SELECT cfgFile, g.templateID FROM $tmplTable t, $groupTable g 
                     WHERE g.templateID = t.ID AND g.ID = ".$this->parent->groupNr;
          $result = $this->kernel->db->query($SqlStr);
@@ -658,7 +658,6 @@ class documentEditPlugin extends pluginClass {
       $this->kernel->api->updateLinkGroupToDoc(trim($expStr[0]), $docID);
 
 /*               $this->kernel->api->removeLinkGroupToDoc(0, $docID);
-               $expStr = explode(",", $groups);
                for ($Cn = 0; $Cn < count($expStr); $Cn++) {
                    $this->kernel->api->createLinkGroupToDoc(trim($expStr[$Cn]), $docID);
                }*/
