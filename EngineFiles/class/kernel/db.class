@@ -1,22 +1,4 @@
 <?php
-/**
-* Copyright (C) 2002 SIA ESOFTS.
-*
-* This program is free software; you can redistribute it and/or
-* modify it under the terms of the GNU General Public License 
-* version 2 as published by the Free Software Foundation.
-*
-* You should have received a copy of the GNU General Public License
-* along with this program; if not, write to the SIA ESOFTS, 38/40 Blaumana str., 
-* Riga, LV - 1011, LATVIA, e-mail office@esoft.lv 
-*
-* This General Public License does not permit incorporating your program into
-* proprietary programs. Should you require to License Open Effect under the
-* commercial License, please contact SIA ESOFTS for up-to-date information.
-*/
-
-
-
 if (!defined( "_DB_LAYER")) {
                define("_DB_LAYER", 1);
 
@@ -37,19 +19,18 @@ class dbClass {
                # - 'halt_on_error' - in any error terminates executing of script
                # - 'errors_to' - sends email to addresses specified there when dbh error occours
                # - 'mail_cc' - carbon copy error messages to addresses specified there
-               function dbClass(&$parent,$scheme = DEFAULT_DB_SCHEME, $options = "") { 
+               function __construct(&$parent,$scheme = DEFAULT_DB_SCHEME, $options = []) {
 
                               $this->parent = &$parent;         // create pointer on parent object
                               $this->kernel = &$parent->kernel; // create pointer on kernel object
 
-                              
                               $this->kernel->debug_sql .= 'Start;<br>';
 
                               $this->initscheme($scheme);
 
                               # add supplied options
                               if (is_array($options)) {
-                                             while (list($key, $val) = each($options)) {
+                                             foreach ($options as $key => $val) {
                                                 $this->option($key, $val);
                                              }
                               }
@@ -104,14 +85,14 @@ class dbClass {
                                              $this->options[$arg] = $val;
                                              return $v;
                               } else {
-                                             return $this->options[$arg];
+                                             return $this->options[$arg] ?? null;
                               }
                }
 
-// handle open() call over to specific database handler
-function open($options = "") {
-return $this->dbh->open();
-}
+               // handle open() call over to specific database handler
+               function open($options = "") {
+                              return $this->dbh->open();
+               }
 
                // handle close() call over to specific database handler
                function close() {
@@ -195,8 +176,9 @@ class db_class {
                var $super ; // class db
                var $classname = 'db_class';
                var $connect_id; // connection id to database
+               var $dbh;
 
-               function db_class(&$super) { 
+               function __construct(&$super) {
                               $this->super = &$super;
 
                }
@@ -241,7 +223,7 @@ class db_query_class {
                var $db;
 
                // Constructor of the query object.
-               function db_query_class(&$super, $query="") {
+               function __construct(&$super, $query="") {
                               $this->super = &$super;
                               $this->db = &$super->db;
                               $this->query($query);
@@ -301,36 +283,22 @@ class db_query_class {
 
 class db_mysql extends db_class {
                var $classname = 'db_mysql';
+               var $conn;
 
                function open() {
-                              if ($this->connect_id) {
-                                             @mysql_close($this->connect_id);
-                              }
-
-                              $this->connect_id = mysql_pconnect($this->scheme('host'), $this->scheme('user'), $this->scheme('password')); 
-                              if ($this->connect_id) {
-                                             $result = @mysql_select_db($this->scheme('database'), $this->connect_id);
-                                             if (!$result) {
-                                                            @mysql_close($this->connect_id);
-                                                            $this->connect_id = $result;
-                                             }
-                                             return $this->connect_id;
-                              } else {
-                                             return 0;
-                              }
+                              $connStr = "mysql:host=".$this->scheme('host').";dbname=".$this->scheme('database');
+                              $this->conn = new PDO($connStr, $this->scheme('user'), $this->scheme('password'));
                }
 
                // Closes the database connection and frees any query results left.
                function close() {
                               if ($this->super->queries && is_array($this->super->queries)) {
                                              reset($this->super->queries);
-                                             while (list($key, $val) = each($this->super->queries)) {
-                                                            @mysql_free_result($val);
-                                             }
+                                             //while (list($key, $val) = each($this->super->queries)) {
+                                             //               @mysql_free_result($val);
+                                             //}
                               }
-                              $result = @mysql_close($this->connect_id);
-                              $this->connect_id = 0;
-                              return $result;
+                              $this->super->conn = null;
                }
 }
 
@@ -364,7 +332,7 @@ class db_mysql_query extends db_query_class {
                                              }
 //                                           print microtime()."<br>";
 
-                                             $this->result = mysql_query($query, $this->super->connect_id);
+                                             $this->result = $this->super->conn->query($query);
 
                                              ##################
                                              #   Debug (RB)   #
@@ -376,7 +344,7 @@ class db_mysql_query extends db_query_class {
                                              $this->db->super->super->kernel->debug_sql .= $query.';5<br>';
                                              $this->db->super->kernel->debug_sql .= $query.';6<br>';
 */
-                                             if ($mic) {
+                                             if (isset($mic)) {
                                                 $this->super->super->kernel->debug_sql .= "<TR><TD>$query.;</TD>";
                                                 list($usec, $sec) = explode(" ",microtime());
                                                 $mic =  ((float)$usec + (float)$sec)-$mic;
@@ -401,8 +369,7 @@ class db_mysql_query extends db_query_class {
    
                // Gets the next row for processing with $this->field function later.
                function getrow() {
-
-                              $this->row = @mysql_fetch_array($this->result);
+                              $this->row = $this->result->fetch();
 #                             if ($this->option('debug')) {
 #                             }
                               return $this->row;
@@ -410,19 +377,19 @@ class db_mysql_query extends db_query_class {
    
                // Gets the number of rows returned in the query
                function numrows() {
-                              $result = @mysql_num_rows($this->result);
-                              return $result;
+                              return $this->result->rowCount();
                }
 
                function numcols() {
-                              $result = @mysql_num_fields($this->result);
+                              $result = $this->result->columnCount();
                               return $result;
                }
 
                function colname($column = 0) {
-//                            if ($column)
-                                             $result = mysql_field_name($this->result, $column);
-                              return $result;
+                              //if ($column)
+                              //               $result = mysql_field_name($this->result, $column);
+                                               $result = $this->result->getColumnMeta($column);
+                              return $result["name"];
                }
 
                // Gets the number of error for this query (0 = success)
@@ -432,7 +399,7 @@ class db_mysql_query extends db_query_class {
                }
 
                // Gets the last error message reported for this query
-               function error() {
+               function error($hand = '') {
                               $result = mysql_error($this->super->connect_id);
                               return $result;
                }
@@ -441,8 +408,10 @@ class db_mysql_query extends db_query_class {
                // in the current row or in row $row if supplied
                function field($field, $row="-1") {
                               if ($row != -1) {
-                                             $result = @mysql_result($this->result, $row, $field);
+                                             $result = $this->result->fetch();
+                                             return $result[$field];
                               } else {
+                                             die("need to verify this");
                                              $result = $this->row[$field];
                               }
 
@@ -455,10 +424,10 @@ class db_mysql_query extends db_query_class {
 
                // move cursor to given line
                function seek($position) {
-                  return @mysql_data_seek($this->result, $position);
+             //     return @mysql_data_seek($this->result, $position);
                }
 
-               function free() {
+               function free($stmt) {
                               $res = $this->super->free($this->result);
                               $this->result = 0;
                               return $res;

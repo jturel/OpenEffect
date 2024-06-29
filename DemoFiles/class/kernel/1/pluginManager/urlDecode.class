@@ -7,30 +7,31 @@
 
   $this->checkClass("linkerClass", "urlDecodeClass");
   
-
-  define("urlSeporator", "&");
-  
   class urlDecodeClass extends linkerClass {
      var $className = "urlDecodeClass";       // Class name
-    
+
      // set default value 
-     var $formNr  = 0;
-     var $groupNr = 0;
-     var $docNr   = 0;
-  
+     public int $formNr  = 0;
+     public int $groupNr = 0;
+     public int $docNr   = 0;
+     private logerItemClass $log;
+     public string $langID;
+     public string $langName;
+
      // Constructor
      // $parent - pointer on parent object
      function __construct(&$parent) {
         parent::__construct($parent);
 	$this->setDefaultValues();
 	
-	global $QUERY_STRING, $SCRIPT_NAME;
+        $qs = $_SERVER["QUERY_STRING"] ?? null;
 	$this->log = &$this->kernel->loger->reg("URL DECODE");
 	$this->log->put("start class");
-	$this->log->put("query string : $QUERY_STRING");
+	$this->log->put("query string : $qs");
 	
-	$this->scan($QUERY_STRING);
-	$this->scanLang($SCRIPT_NAME);
+        $this->scan($qs);
+
+	$this->scanLang($_SERVER["SCRIPT_NAME"]);
      }
 
      
@@ -47,11 +48,26 @@
      
      // Get form,group,doc Number from URL
      function scan(&$urlStr) {
-        $expStr = explode(urlSeporator, $urlStr);
+        if(empty($urlStr)) {
+          return;
+        }
 
-	if ($expStr[0]) $this->formNr  = $expStr[0];
-	if ($expStr[1]) $this->groupNr = $expStr[1];
-	if ($expStr[2]) $this->docNr   = $expStr[2];
+        $expStr = explode("&", $urlStr);
+        foreach($expStr as $key => $val) {
+          $intVal = (int) $val;
+
+          switch ($key) {
+          case 0:
+            $this->formNr = $intVal;
+            break;
+          case 1:
+            $this->groupNr = $intVal;
+            break;
+          case 2:
+            $this->docNr = $intVal;
+            break;
+          }
+        }
 
 	if ($this->formNr <= 0) {
 	   $this->kernel->error->die = true;

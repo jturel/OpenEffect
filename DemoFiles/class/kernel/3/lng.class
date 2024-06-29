@@ -45,7 +45,9 @@
      function get($key = "DEFAULT") {
 //echo "get lng here<br>";
         $upKey = strtoupper($key);
-	if (!is_object($this->childItems[$upKey])) return $key;
+        if (!array_key_exists($upKey, $this->childItems)) {
+          return $key;
+        }
 	return $this->childItems[$upKey]->get();
      }
   }

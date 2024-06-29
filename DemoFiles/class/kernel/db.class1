@@ -19,7 +19,7 @@ class dbClass {
                # - 'halt_on_error' - in any error terminates executing of script
                # - 'errors_to' - sends email to addresses specified there when dbh error occours
                # - 'mail_cc' - carbon copy error messages to addresses specified there
-               function __construct(&$parent,$scheme = DEFAULT_DB_SCHEME, $options = "") {
+               function __construct(&$parent,$scheme = DEFAULT_DB_SCHEME, $options = []) {
 
                               $this->parent = &$parent;         // create pointer on parent object
                               $this->kernel = &$parent->kernel; // create pointer on kernel object
@@ -30,7 +30,7 @@ class dbClass {
 
                               # add supplied options
                               if (is_array($options)) {
-                                             while (list($key, $val) = each($options)) {
+                                             foreach ($options as $key => $val) {
                                                 $this->option($key, $val);
                                              }
                               }
@@ -85,7 +85,7 @@ class dbClass {
                                              $this->options[$arg] = $val;
                                              return $v;
                               } else {
-                                             return $this->options[$arg];
+                                             return $this->options[$arg] ?? null;
                               }
                }
 
@@ -381,14 +381,15 @@ class db_mysql_query extends db_query_class {
                }
 
                function numcols() {
-                              $result = @mysql_num_fields($this->result);
+                              $result = $this->result->columnCount();
                               return $result;
                }
 
                function colname($column = 0) {
-                              if ($column)
-                                             $result = mysql_field_name($this->result, $column);
-                              return $result;
+                              //if ($column)
+                              //               $result = mysql_field_name($this->result, $column);
+                                               $result = $this->result->getColumnMeta($column);
+                              return $result["name"];
                }
 
                // Gets the number of error for this query (0 = success)
@@ -407,8 +408,10 @@ class db_mysql_query extends db_query_class {
                // in the current row or in row $row if supplied
                function field($field, $row="-1") {
                               if ($row != -1) {
-                                             $result = @mysql_result($this->result, $row, $field);
+                                             $result = $this->result->fetch();
+                                             return $result[$field];
                               } else {
+                                             die("need to verify this");
                                              $result = $this->row[$field];
                               }
 
@@ -421,7 +424,7 @@ class db_mysql_query extends db_query_class {
 
                // move cursor to given line
                function seek($position) {
-                  return @mysql_data_seek($this->result, $position);
+             //     return @mysql_data_seek($this->result, $position);
                }
 
                function free($stmt) {

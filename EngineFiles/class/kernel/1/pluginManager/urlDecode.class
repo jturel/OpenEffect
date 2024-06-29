@@ -24,30 +24,31 @@
 
   $this->checkClass("linkerClass", "urlDecodeClass");
   
-
-  define("urlSeporator", "&");
-  
   class urlDecodeClass extends linkerClass {
      var $className = "urlDecodeClass";       // Class name
-    
+
      // set default value 
-     var $formNr  = 0;
-     var $groupNr = 0;
-     var $docNr   = 0;
-  
+     public int $formNr  = 0;
+     public int $groupNr = 0;
+     public int $docNr   = 0;
+     private logerItemClass $log;
+     public string $langID;
+     public string $langName;
+
      // Constructor
      // $parent - pointer on parent object
-     function urlDecodeClass(&$parent) {
-        $this->linkerClass(&$parent);
-    $this->setDefaultValues();
-    
-    global $QUERY_STRING, $SCRIPT_NAME;
-    $this->log = &$this->kernel->loger->reg("URL DECODE");
-    $this->log->put("start class");
-    $this->log->put("query string : $QUERY_STRING");
-    
-    $this->scan($QUERY_STRING);
-    $this->scanLang($SCRIPT_NAME);
+     function __construct(&$parent) {
+        parent::__construct($parent);
+	$this->setDefaultValues();
+	
+        $qs = $_SERVER["QUERY_STRING"] ?? null;
+	$this->log = &$this->kernel->loger->reg("URL DECODE");
+	$this->log->put("start class");
+	$this->log->put("query string : $qs");
+	
+        $this->scan($qs);
+
+	$this->scanLang($_SERVER["SCRIPT_NAME"]);
      }
 
      
@@ -56,24 +57,39 @@
         $this->formNr  = $this->kernel->cfg->get("defaultFormNr");
         $this->groupNr = $this->kernel->cfg->get("defaultGroupNr");
         $this->docNr   = $this->kernel->cfg->get("defaultDocNr");
-    
-    $this->langID   = $this->kernel->cfg->get("defaultLangID");
-    $this->langName = $this->kernel->cfg->get("defaultLangName");
+	
+	$this->langID   = $this->kernel->cfg->get("defaultLangID");
+	$this->langName = $this->kernel->cfg->get("defaultLangName");
      }
 
      
      // Get form,group,doc Number from URL
      function scan(&$urlStr) {
-        $expStr = explode(urlSeporator, $urlStr);
+        if(empty($urlStr)) {
+          return;
+        }
 
-    if ($expStr[0]) $this->formNr  = $expStr[0];
-    if ($expStr[1]) $this->groupNr = $expStr[1];
-    if ($expStr[2]) $this->docNr   = $expStr[2];
+        $expStr = explode("&", $urlStr);
+        foreach($expStr as $key => $val) {
+          $intVal = (int) $val;
 
-    if ($this->formNr <= 0) {
-       $this->kernel->error->die = true;
-       $this->kernel->error->parse("Can't find form", array($this->formNr));
-    }
+          switch ($key) {
+          case 0:
+            $this->formNr = $intVal;
+            break;
+          case 1:
+            $this->groupNr = $intVal;
+            break;
+          case 2:
+            $this->docNr = $intVal;
+            break;
+          }
+        }
+
+	if ($this->formNr <= 0) {
+	   $this->kernel->error->die = true;
+	   $this->kernel->error->parse("Can't find form", array($this->formNr));
+	}
 
         $this->log->put("values : [formNr:".$this->formNr."][groupNr:".$this->groupNr."][docNr:".$this->docNr."]");
 
@@ -85,16 +101,16 @@
 
         if (count($expStr) <= 2) return false;
         $lngDir = $expStr[count($expStr) - 2];
-    
-    $lngConf = $this->kernel->cfger->reg("LANGUAGE CONFIG", 
-               CONF_DIR.$this->kernel->cfg->get("langConfFile"));
-    if (!$lngConf->check($lngDir))
-          $values = $lngConf->get("DEFAULT");
-     else $values = $lngConf->get($lngDir);
+	
+	$lngConf = $this->kernel->cfger->reg("LANGUAGE CONFIG", 
+   	           CONF_DIR.$this->kernel->cfg->get("langConfFile"));
+	if (!$lngConf->check($lngDir))
+	      $values = $lngConf->get("DEFAULT");
+	 else $values = $lngConf->get($lngDir);
 
         $this->langID   = $values[0];
         $this->langName = $values[1];
-     
+	 
         $this->log->put("set current language : [Dir: $lngDir, ID: ".$values[0].", Name: ".$values[1]."]");
      }
 
