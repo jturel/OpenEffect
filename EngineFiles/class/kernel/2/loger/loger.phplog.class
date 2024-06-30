@@ -31,13 +31,6 @@
 
  class logerItemClass_phplog extends linkerClass {
     var $className = "logerItemClass_phplog"; // Class name
-    
-    // Constructor
-    // $parent - pointer on parent object
-    function logerItemClass_phplog(&$parent) {
-       $this->linkerClass(&$parent);
-    }
-
 
     // Send message to stream
     // &$str - pointer on string which will be send in output

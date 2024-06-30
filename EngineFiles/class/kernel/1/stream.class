@@ -33,25 +33,19 @@
   class streamClass extends linkerClass {
      var $className = "streamClass";          // Class name
      var $childClassName = "streamItemClass"; // Child class name
-     var $childItems;                         // Array of child items 
-
-  
-     // Constructor
-     // $parent - pointer on parent object
-     function streamClass(&$parent) {
-        $this->linkerClass(&$parent);
-     }
-
+     var $childItems = [];                         // Array of child items
 
      // Stream registrator
      // $name - name of registred stream
      // RETURN : pointer on create stream OR false if FALSE
      function &regStream($name) {
         if (!$name) return false;
-    $name = strtoupper($name);
-        if (is_object($this->childItems[$name])) return $this->childItems[$name];
-    $this->childItems[$name] = $this->createStream($name);
-    return $this->childItems[$name]; 
+	$name = strtoupper($name);
+        if (array_key_exists($name, $this->childItems)) {
+          return $this->childItems[$name];
+        }
+	$this->childItems[$name] = $this->createStream($name);
+	return $this->childItems[$name]; 
      }
      
      
@@ -61,10 +55,10 @@
      function delStream($name) {
         if (!$name) return false;
         if (!is_object($this->childItems[$name])) return false;
-    
-    // SOMETHING....
-    
-    return true;
+	
+	// SOMETHING....
+	
+	return true;
      }
      
      
@@ -72,8 +66,8 @@
      // $name - name of creating stream
      // RETURN : create stream object
      function createStream($name) {
-    eval("\$obj = new ".$this->childClassName."(\$this, \$name);");
-    return $obj;
+	eval("\$obj = new ".$this->childClassName."(\$this, \$name);");
+	return $obj;
      }
      
   } // finished Main Stream class
@@ -90,9 +84,9 @@
      // Constructor
      // $parent - pointer on parent object
      // $name - name of stream
-     function streamItemClass(&$parent, $name) {
-        $this->linkerClass(&$parent);
-    $this->streamName = $name;
+     function __construct(&$parent, $name) {
+        parent::__construct($parent);
+	$this->streamName = $name;
      }
   } // finished Item Stream class
  

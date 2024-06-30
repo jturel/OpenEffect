@@ -31,18 +31,18 @@
     
      // Constructor
      // $parent - pointer on parent object
-     function pluginClass(&$parent, $cfg = "") {
-        $this->linkerClass(&$parent);
-    
-    if (!is_object($cfg)) {
-       if ($cfg) {
-              $this->kernel->classLoader->checkClass("confItemClass");
-          $cfgObj = new confItemClass($this, "CONF");
-          $cfgObj->rootDir = CONF_PLUGIN_DIR;
-          $cfgObj->scan($cfg);
-          $this->cfg = $cfgObj;
-       }
-    } else $this->cfg = $cfg;
+     function __construct(&$parent, $cfg = "") {
+        parent::__construct($parent);
+	
+	if (!is_object($cfg)) {
+	   if ($cfg) {
+       	      $this->kernel->classLoader->checkClass("confItemClass");
+  	      $cfgObj = new confItemClass($this, "CONF");
+	      $cfgObj->rootDir = CONF_PLUGIN_DIR;
+	      $cfgObj->scan($cfg);
+	      $this->cfg = $cfgObj;
+	   }
+	} else $this->cfg = $cfg;
      }
 
      // Get HTML code

@@ -28,12 +28,13 @@
   class pluginManagerClass extends linkerClass {
      var $className = "pluginManagerClass";       // Class name
      var $showtime = 0;
+     public string $html;
 
   
      // Constructor
      // $parent - pointer on parent object
-     function pluginManagerClass(&$parent) {
-        $this->linkerClass(&$parent);
+     function __construct(&$parent) {
+        parent::__construct($parent);
         
         
         // create log object
@@ -97,7 +98,7 @@
         $this->kernel->langID   = $manager->langID;
         $this->kernel->langName = $manager->langName;
 
-        $this->log->put("value [formNr:".$this->formNr."][groupNr:".$this->groupNr."][docNr:".$tghis->docNr."]");
+        $this->log->put("value [formNr:".$this->formNr."][groupNr:".$this->groupNr."][docNr:".$this->docNr."]");
      }
      
      // Get real NAME of form configurator file
@@ -177,7 +178,7 @@
                 }
            }
 */
-           $this->tmpl->parseLng("out", $mainLngObj, &$this);
+           $this->tmpl->parseLng("out", $mainLngObj, $this);
         }
         $out = $this->tmpl->get("out");
 

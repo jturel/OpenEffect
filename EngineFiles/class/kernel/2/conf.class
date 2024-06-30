@@ -37,8 +37,8 @@
      // Constructor
      // $parent - pointer on parent object
      // $fileName - open stream "DEFAULT" and scan this file
-     function confClass(&$parent, $fileName = "") {
-        $this->streamClass(&$parent);
+     function __construct(&$parent, $fileName = "") {
+        parent::__construct($parent);
         if ($fileName) $this->reg("DEFAULT", $fileName);
                $this->log = $this->kernel->loger->reg("CONFIGURATION");
      }
@@ -77,8 +77,8 @@
      // Constructor
      // $parent - pointer on parent object
      // $name - empty parametrs
-     function confItemClass(&$parent, $name, $fileName = "") {
-        $this->streamClass(&$parent);
+     function __construct(&$parent, $name, $fileName = "") {
+        parent::__construct($parent);
                $this->streamName = $name;
                if ($fileName) $this->scan($fileName);
      }
@@ -96,10 +96,11 @@
              }
      }
 
-     // Load config file
-     // $fileName - which file load
-     // RETURN : array with strings from file
-     function loadFile($fileName) {
+// Load config file
+// $fileName - which file load
+// RETURN : array with strings from file
+
+function loadFile($fileName) {
 if (substr($fileName,0,1)=='/' and file_exists(substr($fileName,1,strlen($fileName)-1))) $fileName=substr($fileName,1,strlen($fileName)-1);
 $array = file($fileName);
 
@@ -119,7 +120,9 @@ $array = file($fileName);
 //               print "!!decode [$str]<BR>";
                    $str = trim($fileArray[$Cn]);
                    if (!$str) continue;
-                   if (ereg("^(;|#|//|\[)", $str)) continue;
+                   //if (preg_match("/^(;|#|//|\[)/", $str)) continue;
+                   if (preg_match("/^(;|#|\[)/", $str)) continue;
+                   //if (ereg("^(;|#|//|\[)", $str)) continue;
                    $this->decodeString($str);
                }
                return true;
@@ -159,8 +162,7 @@ $array = file($fileName);
      function check($ikey = "DEFAULT") {
 //        print "test [$ikey]<BR>";
         $key = strtoupper($ikey);
-               if (!is_object($this->childItems[$key])) return false;
-               return true; 
+               return array_key_exists($key, $this->childItems);
      }
      
      // get Value 
@@ -200,26 +202,22 @@ $array = file($fileName);
      var $className = "confStringClass";
      var $value = "";
      
-     // Constructor
-     // $parent - pointer on parent object
-     // $key - key for configuration string
-     function confStringClass(&$parent, $key) {
-        $this->streamItemClass(&$parent, $key);
-     }
-     
-     
      // Set value
      function set($value) {
                $value = trim($value);
-               if (ereg("^'.*'", $value, $val)) {         // Check if string start with _'_ symbol
+               //if (ereg("^'.*'", $value, $val)) {         // Check if string start with _'_ symbol
+               if (preg_match("/^'.*'/", $value, $val)) {         // Check if string start with _'_ symbol
                   $value = substr($val[0], 1, strlen($val[0]) - 2);
-               } elseif (ereg("^\".*\"", $value, $val)) { // Check if string start with _"_ symbol
+               } elseif (preg_match("/^\".*\"/", $value, $val)) { // Check if string start with _"_ symbol
+               //} elseif (ereg("^\".*\"", $value, $val)) { // Check if string start with _"_ symbol
                   $value = substr($val[0], 1, strlen($val[0]) - 2);
                } else { 
-                  if (is_array($val = split("(;|#|//|\[)", $value)))
+                  if (is_array($val = preg_split("(;|#|//|\[)", $value)))
+                  //if (is_array($val = split("(;|#|//|\[)", $value)))
                      $value = trim($val[0]);
                                                
-                  if (ereg(",", $value)) {               // Explode string if have ','
+                  //if (ereg(",", $value)) {               // Explode string if have ','
+                  if (preg_match("/,/", $value)) {               // Explode string if have ','
                      $value = explode(",", $value);
                      for ($Cn = 0; $Cn < count($value); $Cn++)
                                 $value[$Cn] = trim($value[$Cn]);

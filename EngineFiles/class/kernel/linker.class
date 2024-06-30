@@ -33,16 +33,16 @@
      
      // Constructor
      // $parent - pointer on parent class
-     function linkerClass(&$parent) {
+     function __construct(&$parent) {
         $this->parent = &$parent;         // create pointer on parent object
-    $this->kernel = &$parent->kernel; // create pointer on kernel object
+	$this->kernel = &$parent->kernel; // create pointer on kernel object
      }
      
      // Add child object
      // $obj - Child object which will be add
      function addChild($obj) {
         $this->childs[] = $obj;
-    return $this->childs[count($this->childs) - 1];
+	return $this->childs[count($this->childs) - 1];
      }
 
      // Delete child object
@@ -51,7 +51,7 @@
      function delChild($offset, $cnt = 1) {
         if ($offset + 1 <= count($this->childs)) return false;
         array_splice($this->childs, $offset, $cnt);
-    return true;
+	return true;
      }
 
   } // finished LINKER class

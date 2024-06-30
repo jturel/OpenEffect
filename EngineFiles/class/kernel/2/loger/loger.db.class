@@ -32,13 +32,6 @@
  class logerItemClass_db extends linkerClass {
     var $className = "logerItemClass_db"; // Class name
     
-    // Constructor
-    // $parent - pointer on parent object
-    function logerItemClass_db(&$parent) {
-       $this->linkerClass(&$parent);
-    }
-
-
     // Send message to stream
     // &$str - pointer on string which will be send in output
     function put(&$str) {

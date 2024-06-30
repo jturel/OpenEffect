@@ -29,23 +29,16 @@
   class sysLogClass extends linkerClass {
      var $className = "sysLogClass";         // Class name
    
-
-     // Constructor
-     // $parent - pointer on parent object
-     function sysLogClass(&$parent) {
-    $this->linkerClass(&$parent);
-     }
-     
      // Push Log string in base
      // $str - string push in log
      function put($str) {
         $str = str_replace("'", '"', $str);
         $SqlStr = "INSERT INTO ".$this->kernel->tab_cfg->get("logTable")."
-               (DateTime, UserID, Operation)
-           VALUES
-           (NOW(), ".$this->kernel->secure->userID.", '$str')";
-    $this->kernel->db->query($SqlStr);
-    return true;
+	           (DateTime, UserID, Operation)
+		   VALUES
+		   (NOW(), ".$this->kernel->secure->userID.", '$str')";
+	$this->kernel->db->query($SqlStr);
+	return true;
      }
   }
  

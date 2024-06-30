@@ -54,7 +54,7 @@ class templateClass {
    * root:     template directory.
    * unknowns: how to handle unknown variables.
    */
-  function templateClass($root = ".", $unknowns = "remove") {
+  function __construct($root = ".", $unknowns = "remove") {
     $this->set_root($root);
     $this->set_unknowns($unknowns);
   }
@@ -96,7 +96,7 @@ class templateClass {
       $this->file[$handle] = $this->filename($filename);
     } else {
       reset($handle);
-      while(list($h, $f) = each($handle)) {
+      foreach($handle as $h => $f) {
         $this->file[$h] = $this->filename($f);
       }
     }
@@ -138,7 +138,7 @@ class templateClass {
         $this->varvals[$varname] = $value;
     } else {
       reset($varname);
-      while(list($k, $v) = each($varname)) {
+      foreach ($varname as $k => $v) {
         if (!empty($k))
           if ($this->debug) print "array: set *$k* to *$v*<br>\n";
           $this->varkeys[$k] = "/".$this->varname($k)."/";
@@ -188,7 +188,7 @@ class templateClass {
       }
     } else {
       reset($handle);
-      while(list($i, $h) = each($handle)) {
+      foreach($handle as $i => $h) {
         $str = $this->subst($h);
         $this->set_var($target, $str);
       }
@@ -385,9 +385,9 @@ class templateClass {
         $tmp = $expStr[$Cn];
          if ($Cn % 2) {
                        if (!$tmp) continue;
-                       if (is_array($compArray) and $ind=in_array($tmp,$compArray))
-                          $out .= $component->$tmp(&$kernel);
-                        else {
+                       if (is_array($compArray) and $ind=in_array($tmp,$compArray)) {
+                          $out .= $component->$tmp($kernel);
+                       } else {
                             $rrr = $lngObj->get($tmp);
                             global $debugip, $debuglang;
                             if ($debugip) {

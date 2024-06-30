@@ -32,13 +32,6 @@
  class logerItemClass_screen extends linkerClass {
     var $className = "logerItemClass_screen"; // Class name
     
-    // Constructor
-    // $parent - pointer on parent object
-    function logerItemClass_screen(&$parent) {
-       $this->linkerClass(&$parent);
-    }
-
-
     // Send message to stream
     // &$str - pointer on string which will be send in output
     function put(&$str) {
